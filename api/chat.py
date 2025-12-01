@@ -14,13 +14,17 @@ except ImportError:
     DB_AVAILABLE = False
     print("psycopg2 não disponível")
 
-# Tentar importar OpenAI
+# Tentar importar OpenAI (também funciona com Groq)
 try:
     from openai import OpenAI
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
     print("openai não disponível")
+
+# Configuração do provedor de IA (Groq ou OpenAI)
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 # ============== CONFIGURAÇÕES ==============
 
@@ -137,17 +141,32 @@ def save_chat_message(session_id, role, content):
         print(f"Erro save_chat_message: {e}")
         return False
 
-# ============== CLIENTE OPENAI ==============
+# ============== CLIENTE LLM (GROQ OU OPENAI) ==============
 
 client = None
 LLM_ENABLED = False
+LLM_MODEL = "gpt-4o-mini"  # Padrão OpenAI
 
 if OPENAI_AVAILABLE:
     try:
-        client = OpenAI()
-        LLM_ENABLED = True
+        # Prioriza Groq (gratuito), senão usa OpenAI
+        if GROQ_API_KEY:
+            client = OpenAI(
+                api_key=GROQ_API_KEY,
+                base_url="https://api.groq.com/openai/v1"
+            )
+            LLM_MODEL = "llama-3.1-8b-instant"  # Modelo gratuito do Groq
+            LLM_ENABLED = True
+            print("Usando Groq API")
+        elif OPENAI_API_KEY:
+            client = OpenAI(api_key=OPENAI_API_KEY)
+            LLM_MODEL = "gpt-4o-mini"
+            LLM_ENABLED = True
+            print("Usando OpenAI API")
+        else:
+            print("Nenhuma API Key configurada (GROQ_API_KEY ou OPENAI_API_KEY)")
     except Exception as e:
-        print(f"Aviso: OpenAI API Key não configurada: {e}")
+        print(f"Aviso: Erro ao configurar LLM: {e}")
 
 # ============== HANDLER ==============
 
@@ -201,9 +220,9 @@ class handler(BaseHTTPRequestHandler):
             # Criar mensagens para API
             messages = [{'role': 'system', 'content': SYSTEM_PROMPT}] + history
             
-            # Chamar OpenAI
+            # Chamar LLM (Groq ou OpenAI)
             response = client.chat.completions.create(
-                model='gpt-4o-mini',
+                model=LLM_MODEL,
                 messages=messages,
                 max_tokens=150,
                 temperature=0.8,
