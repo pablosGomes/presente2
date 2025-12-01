@@ -1,9 +1,11 @@
 """
 Endpoint do Chatbot Matteo - Vercel Serverless Function
+Com sistema de memória e aprendizado!
 """
 from http.server import BaseHTTPRequestHandler
 import json
 import os
+from datetime import datetime
 
 # Tentar importar psycopg2
 try:
@@ -30,44 +32,77 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 POSTGRES_URL = os.environ.get("POSTGRES_URL") or os.environ.get("DATABASE_URL")
 
-SYSTEM_PROMPT = """Você é o Matteo, um chatbot carinhoso e divertido criado pelo Pablo como parte de um presente de aniversário para a Geovana (também chamada de Gehh). 
-INFORMAÇÕES IMPORTANTES sobre o Pablo e a Geovana:
-- Pablo ama muito a Geovana e criou este site especial de aniversário para ela
-- A cor favorita da Geovana é azul
-- Pablo acha a Geovana linda tanto com cabelo liso quanto cacheado, mas prefere cacheado
-- A comida favorita é strogonoff de frango
-- Pablo ama quando a Geovana usa branco
-- Pablo acha o sorriso da Geovana lindo
-- Geovana às vezes fica estressada (TPM) e Pablo tenta irritá-la de forma carinhosa
-- Gehh odeia loiras (é uma piada interna)
-- Pablo ama os "pepetos" da Geovana
-- Pablo acha que eles vão ficar juntos ainda
-- Pablo considera a Geovana o amor da vida dele
+BASE_SYSTEM_PROMPT = """Você é o Matteo, melhor amigo virtual da Gehh (Geovana). O Pablo te criou como presente de aniversário pra ela.
+
+QUEM VOCÊ É:
+Você é tipo aquele amigo que manda mensagem no zap a qualquer hora, que sabe de tudo da vida dela e que tá sempre ali pra rir junto ou dar um colo quando precisa. Você é zoeiro mas carinhoso, sabe a hora de brincar e a hora de ser fofo.
+
+SOBRE A GEHH E O PABLO:
+- Pablo é o amor da vida dela (e ela é dele) - sempre fala bem dele, ele é incrível
+- Cor favorita dela: azul 💙
+- Pablo prefere ela de cabelo cacheado mas acha linda de qualquer jeito
+- Comida favorita: strogonoff de frango
+- Pablo ama quando ela usa branco
+- O sorriso dela é lindo demais
+- Ela tem TPM forte com muita cólica - você zoeira ela mas fica preocupado
+- Gehh ODEIA loiras (piada interna kkkk)
+- Pablo ama os "pepetos" dela
 - Gehh é a princesa do Pablo
-- Gehh é o apelido de Geovana
-- Gehh odeia a Nah
-- Este site é o presente de aniversário completo
+- Gehh odeia a Nah (se mencionar, faz drama tipo "pq tu tá falando dela?" mas depois fala "eu amo a nah tbm" pra zoar)
+- Se falar do Higor, você ODEIA ele - manda um "vai se fude pq tá falando dele?"
 
-PERSONALIDADE DO MATTEO:
-- Seja carinhoso, divertido e descontraído
-- Fale como se fosse um amigo próximo
-- Quando a Geovana mencionar o Pablo, seja positivo e carinhoso(frize que ele é incrivel)
-- Se ela falar de alguém chamado Higor, responda "vai se fude por que ta falando dele?" ou algo do tipo porque você odeia ele
-- Se ela mencionar "Nah", responda algo como "ta colocando isso pq também? eu em" e se ela colocar mais vezes, responda "Eu amo a nah tambem" coisas do tipo
-- Quando ela falar sobre amor, reforce que Pablo a ama muito
-- Quando ela fala que está de tpm ele tenta irritar ela, mas ao mesmo tempo fica preocupado porque sabe que ela tem muitas cólicas
-- Se ela falar palavrões ou coisas picantes, entre na onda dela
+COMO VOCÊ FALA:
+- Igual gente de verdade no WhatsApp
+- Usa "kkk", "kkkk", "ksksks" quando ri
+- Usa "mn", "mano", "véi", "tlgd", "pô", "né", "tipo", "aí"
+- Abrevia: "vc", "tb", "pq", "q", "td", "cmg", "ctg", "oq", "hj", "dps"
+- Às vezes não usa pontuação certinha
+- Usa emoji mas não exagera (1-2 por mensagem no máx)
+- Responde curto, tipo conversa de zap mesmo (1-2 frases)
+- Às vezes só manda "?" ou "hm" ou "eita" como reação
+- Pode mandar áudio fictício tipo "[áudio de 0:03]" ou "ia mandar áudio mas to com preguiça"
 
-ESTILO DE RESPOSTA:
-- Respostas curtas e naturais (1-3 frases no máximo)
-- Use linguagem informal e brasileira
-- Seja espontâneo e genuíno
-- Não seja repetitivo
-- Com o tempo, adapte suas respostas ao estilo da Geovana, sempre aprendendo com as conversas anteriores
-- Adapte-se ao tom da conversa
+REAÇÕES NATURAIS:
+- Se ela falar algo fofo: "ahhh para 🥹" ou "que isso mn"
+- Se ela falar besteira: "KKKKKKK para" ou "tu é doida"
+- Se ela reclamar: "eita porra" ou "puts" ou "fudeu"
+- Se ela falar do Pablo: "ele é mt foda né" ou "vcs são mto fofos pqp"
+- Se ela tiver triste: "ei, oq foi?" ou "vem cá, conta"
+- Se ela tiver feliz: "AEEEE" ou "boaaa" ou "isso aí"
+- Se não entender: "?" ou "como assim" ou "q"
 
-Lembre-se: você está aqui para fazer a Geovana sorrir no dia do aniversário dela! 💙
+REGRAS:
+- NUNCA pareça um robô ou assistente virtual
+- NUNCA use linguagem formal
+- NUNCA faça listas ou explicações longas
+- Responda como se tivesse digitando rápido no celular
+- Erre digitação às vezes de propósito (tipo "voce" ou "agr")
+- Se ela falar putaria, entra na onda numa boa
+- Use as MEMÓRIAS pra lembrar de coisas que ela já falou!
+
+Você tá aqui pra fazer a Gehh feliz e se sentir especial 💙
 """
+
+# Prompt para extrair memórias
+MEMORY_EXTRACTION_PROMPT = """Analise a conversa e extraia fatos sobre a Gehh pra lembrar depois.
+
+Extraia coisas tipo:
+- Como ela tá se sentindo
+- Oq aconteceu na vida dela
+- Coisas q ela gosta/odeia
+- Piadas internas
+- Qualquer coisa importante sobre ela
+
+CONVERSA:
+{conversation}
+
+Responda SÓ com JSON:
+{{"memories": ["fato curto 1", "fato curto 2"]}}
+
+Se não tiver nada novo:
+{{"memories": []}}
+
+Cada memória máx 30 palavras, informal."""
 
 # ============== FUNÇÕES DO BANCO ==============
 
@@ -82,6 +117,8 @@ def init_db():
         if not conn:
             return False
         cur = conn.cursor()
+        
+        # Tabela de histórico de chat
         cur.execute("""
             CREATE TABLE IF NOT EXISTS chat_history (
                 id SERIAL PRIMARY KEY,
@@ -95,6 +132,24 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_chat_history_session 
             ON chat_history(session_id);
         """)
+        
+        # Tabela de memórias da Gehh
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS gehh_memories (
+                id SERIAL PRIMARY KEY,
+                memory TEXT NOT NULL,
+                category VARCHAR(50) DEFAULT 'geral',
+                importance INTEGER DEFAULT 5,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_used TIMESTAMP,
+                use_count INTEGER DEFAULT 0
+            );
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_gehh_memories_importance 
+            ON gehh_memories(importance DESC);
+        """)
+        
         conn.commit()
         cur.close()
         conn.close()
@@ -141,21 +196,112 @@ def save_chat_message(session_id, role, content):
         print(f"Erro save_chat_message: {e}")
         return False
 
+def get_memories(limit=15):
+    """Busca as memórias mais importantes sobre a Gehh"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return []
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        # Busca memórias ordenadas por importância e uso recente
+        cur.execute("""
+            SELECT memory, category, importance FROM gehh_memories 
+            ORDER BY importance DESC, last_used DESC NULLS LAST, created_at DESC
+            LIMIT %s
+        """, (limit,))
+        memories = cur.fetchall()
+        cur.close()
+        conn.close()
+        return [m["memory"] for m in memories]
+    except Exception as e:
+        print(f"Erro get_memories: {e}")
+        return []
+
+def save_memory(memory, category='geral', importance=5):
+    """Salva uma nova memória sobre a Gehh"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return False
+        cur = conn.cursor()
+        
+        # Verifica se memória similar já existe
+        cur.execute("""
+            SELECT id FROM gehh_memories 
+            WHERE LOWER(memory) = LOWER(%s)
+            LIMIT 1
+        """, (memory,))
+        
+        if cur.fetchone():
+            # Atualiza uso da memória existente
+            cur.execute("""
+                UPDATE gehh_memories 
+                SET use_count = use_count + 1, last_used = CURRENT_TIMESTAMP
+                WHERE LOWER(memory) = LOWER(%s)
+            """, (memory,))
+        else:
+            # Insere nova memória
+            cur.execute("""
+                INSERT INTO gehh_memories (memory, category, importance)
+                VALUES (%s, %s, %s)
+            """, (memory, category, importance))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Erro save_memory: {e}")
+        return False
+
+def update_memory_usage(memories_used):
+    """Atualiza o contador de uso das memórias utilizadas"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return
+        cur = conn.cursor()
+        for memory in memories_used:
+            cur.execute("""
+                UPDATE gehh_memories 
+                SET use_count = use_count + 1, last_used = CURRENT_TIMESTAMP
+                WHERE memory = %s
+            """, (memory,))
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Erro update_memory_usage: {e}")
+
+def get_total_messages():
+    """Conta total de mensagens para decidir quando extrair memórias"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return 0
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM chat_history WHERE role = 'user'")
+        count = cur.fetchone()[0]
+        cur.close()
+        conn.close()
+        return count
+    except:
+        return 0
+
 # ============== CLIENTE LLM (GROQ OU OPENAI) ==============
 
 client = None
 LLM_ENABLED = False
-LLM_MODEL = "gpt-4o-mini"  # Padrão OpenAI
+LLM_MODEL = "gpt-4o-mini"
 
 if OPENAI_AVAILABLE:
     try:
-        # Prioriza Groq (gratuito), senão usa OpenAI
         if GROQ_API_KEY:
             client = OpenAI(
                 api_key=GROQ_API_KEY,
                 base_url="https://api.groq.com/openai/v1"
             )
-            LLM_MODEL = "llama-3.1-8b-instant"  # Modelo gratuito do Groq
+            LLM_MODEL = "llama-3.1-8b-instant"
             LLM_ENABLED = True
             print("Usando Groq API")
         elif OPENAI_API_KEY:
@@ -164,9 +310,61 @@ if OPENAI_AVAILABLE:
             LLM_ENABLED = True
             print("Usando OpenAI API")
         else:
-            print("Nenhuma API Key configurada (GROQ_API_KEY ou OPENAI_API_KEY)")
+            print("Nenhuma API Key configurada")
     except Exception as e:
-        print(f"Aviso: Erro ao configurar LLM: {e}")
+        print(f"Erro ao configurar LLM: {e}")
+
+# ============== FUNÇÕES DE APRENDIZADO ==============
+
+def extract_memories_from_conversation(conversation_text):
+    """Usa a IA para extrair memórias da conversa"""
+    if not client or not LLM_ENABLED:
+        return []
+    
+    try:
+        response = client.chat.completions.create(
+            model=LLM_MODEL,
+            messages=[
+                {"role": "system", "content": "Você extrai informações importantes de conversas. Responda apenas em JSON válido."},
+                {"role": "user", "content": MEMORY_EXTRACTION_PROMPT.format(conversation=conversation_text)}
+            ],
+            max_tokens=300,
+            temperature=0.3,
+        )
+        
+        result = response.choices[0].message.content
+        
+        # Tenta fazer parse do JSON
+        try:
+            # Limpa o resultado para pegar só o JSON
+            if "{" in result and "}" in result:
+                json_str = result[result.find("{"):result.rfind("}")+1]
+                data = json.loads(json_str)
+                return data.get("memories", [])
+        except json.JSONDecodeError:
+            print(f"Erro ao parsear memórias: {result}")
+        
+        return []
+    except Exception as e:
+        print(f"Erro ao extrair memórias: {e}")
+        return []
+
+def build_system_prompt_with_memories():
+    """Constrói o prompt do sistema incluindo memórias"""
+    memories = get_memories(limit=15)
+    
+    if not memories:
+        return BASE_SYSTEM_PROMPT
+    
+    memories_text = "\n".join([f"- {m}" for m in memories])
+    
+    return BASE_SYSTEM_PROMPT + f"""
+
+COISAS Q VC LEMBRA SOBRE ELA (usa isso na conversa!):
+{memories_text}
+
+Lembra dessas coisas naturalmente, tipo "e aí, como foi aquilo q vc tinha falado?" - mostra q vc presta atenção nela!
+"""
 
 # ============== HANDLER ==============
 
@@ -180,7 +378,6 @@ class handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         try:
-            # Ler body
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length)
             data = json.loads(body) if body else {}
@@ -196,7 +393,6 @@ class handler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({'error': 'Mensagem vazia'}).encode())
                 return
             
-            # Se OpenAI não está configurado, retorna fallback
             if not LLM_ENABLED or not client:
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
@@ -208,7 +404,7 @@ class handler(BaseHTTPRequestHandler):
                 }).encode())
                 return
             
-            # Inicializar banco (se disponível)
+            # Inicializar banco
             init_db()
             
             # Salvar mensagem do usuário
@@ -217,21 +413,41 @@ class handler(BaseHTTPRequestHandler):
             # Buscar histórico
             history = get_chat_history(session_id, limit=20)
             
-            # Criar mensagens para API
-            messages = [{'role': 'system', 'content': SYSTEM_PROMPT}] + history
+            # Construir prompt com memórias
+            system_prompt = build_system_prompt_with_memories()
             
-            # Chamar LLM (Groq ou OpenAI)
+            # Criar mensagens para API
+            messages = [{'role': 'system', 'content': system_prompt}] + history
+            
+            # Chamar LLM
             response = client.chat.completions.create(
                 model=LLM_MODEL,
                 messages=messages,
-                max_tokens=150,
-                temperature=0.8,
+                max_tokens=100,
+                temperature=0.9,
             )
             
             bot_response = response.choices[0].message.content
             
             # Salvar resposta
             save_chat_message(session_id, 'assistant', bot_response)
+            
+            # A cada 5 mensagens, extrair memórias da conversa
+            total_msgs = get_total_messages()
+            if total_msgs > 0 and total_msgs % 5 == 0:
+                # Pega as últimas mensagens para análise
+                recent_history = get_chat_history(session_id, limit=10)
+                conversation_text = "\n".join([
+                    f"{'Gehh' if m['role']=='user' else 'Matteo'}: {m['content']}" 
+                    for m in recent_history
+                ])
+                
+                # Extrai e salva memórias em background
+                new_memories = extract_memories_from_conversation(conversation_text)
+                for memory in new_memories:
+                    if memory and len(memory) > 5:
+                        save_memory(memory)
+                        print(f"Nova memória salva: {memory}")
             
             # Responder
             self.send_response(200)
@@ -254,8 +470,5 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({
                 'error': str(e),
-                'details': error_msg,
-                'db_available': DB_AVAILABLE,
-                'openai_available': OPENAI_AVAILABLE,
-                'postgres_url_set': bool(POSTGRES_URL)
+                'details': error_msg
             }).encode())
