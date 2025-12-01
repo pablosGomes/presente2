@@ -4,9 +4,23 @@ Endpoint do Chatbot Matteo - Vercel Serverless Function
 from http.server import BaseHTTPRequestHandler
 import json
 import os
-import psycopg2
-from psycopg2.extras import RealDictCursor
-from openai import OpenAI
+
+# Tentar importar psycopg2
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+    DB_AVAILABLE = True
+except ImportError:
+    DB_AVAILABLE = False
+    print("psycopg2 não disponível")
+
+# Tentar importar OpenAI
+try:
+    from openai import OpenAI
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+    print("openai não disponível")
 
 # ============== CONFIGURAÇÕES ==============
 
@@ -54,7 +68,7 @@ Lembre-se: você está aqui para fazer a Geovana sorrir no dia do aniversário d
 # ============== FUNÇÕES DO BANCO ==============
 
 def get_db_connection():
-    if not POSTGRES_URL:
+    if not POSTGRES_URL or not DB_AVAILABLE:
         return None
     return psycopg2.connect(POSTGRES_URL)
 
@@ -125,13 +139,15 @@ def save_chat_message(session_id, role, content):
 
 # ============== CLIENTE OPENAI ==============
 
-try:
-    client = OpenAI()
-    LLM_ENABLED = True
-except Exception as e:
-    print(f"Aviso: OpenAI API Key não configurada: {e}")
-    LLM_ENABLED = False
-    client = None
+client = None
+LLM_ENABLED = False
+
+if OPENAI_AVAILABLE:
+    try:
+        client = OpenAI()
+        LLM_ENABLED = True
+    except Exception as e:
+        print(f"Aviso: OpenAI API Key não configurada: {e}")
 
 # ============== HANDLER ==============
 
@@ -210,9 +226,17 @@ class handler(BaseHTTPRequestHandler):
             }).encode())
             
         except Exception as e:
-            print(f"Erro no Chatbot: {str(e)}")
+            import traceback
+            error_msg = traceback.format_exc()
+            print(f"Erro no Chatbot: {error_msg}")
             self.send_response(500)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            self.wfile.write(json.dumps({'error': f'Erro: {str(e)}'}).encode())
+            self.wfile.write(json.dumps({
+                'error': str(e),
+                'details': error_msg,
+                'db_available': DB_AVAILABLE,
+                'openai_available': OPENAI_AVAILABLE,
+                'postgres_url_set': bool(POSTGRES_URL)
+            }).encode())

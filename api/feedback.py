@@ -7,10 +7,17 @@ import os
 import uuid
 from datetime import datetime
 from urllib.parse import urlparse
-import psycopg2
-from psycopg2.extras import RealDictCursor
 import smtplib
 from email.mime.text import MIMEText
+
+# Tentar importar psycopg2
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+    DB_AVAILABLE = True
+except ImportError:
+    DB_AVAILABLE = False
+    print("psycopg2 não disponível")
 
 # ============== CONFIGURAÇÕES ==============
 
@@ -19,7 +26,7 @@ POSTGRES_URL = os.environ.get("POSTGRES_URL") or os.environ.get("DATABASE_URL")
 # ============== FUNÇÕES DO BANCO ==============
 
 def get_db_connection():
-    if not POSTGRES_URL:
+    if not POSTGRES_URL or not DB_AVAILABLE:
         return None
     return psycopg2.connect(POSTGRES_URL)
 
@@ -83,7 +90,7 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
-        self.wfile.write(json.dumps(data).encode())
+        self.wfile.write(json.dumps(data, default=str).encode())
 
     def _get_feedback_id(self):
         parsed = urlparse(self.path)
@@ -121,8 +128,13 @@ class handler(BaseHTTPRequestHandler):
             self._send_json(200, feedback_list)
             
         except Exception as e:
-            print(f"Erro ao buscar feedback: {str(e)}")
-            self._send_json(500, {'error': 'Erro interno ao buscar feedback'})
+            import traceback
+            print(f"Erro ao buscar feedback: {traceback.format_exc()}")
+            self._send_json(500, {
+                'error': str(e),
+                'db_available': DB_AVAILABLE,
+                'postgres_url_set': bool(POSTGRES_URL)
+            })
 
     def do_POST(self):
         try:
