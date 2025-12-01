@@ -3,52 +3,113 @@ Endpoint de Feedback (CRUD) - Vercel Serverless Function
 """
 from http.server import BaseHTTPRequestHandler
 import json
+import os
 import uuid
 from datetime import datetime
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import smtplib
+from email.mime.text import MIMEText
 
-from _db import get_db_connection, init_db
-from _email import send_email_notification
+# ============== CONFIGURAÇÕES ==============
 
+POSTGRES_URL = os.environ.get("POSTGRES_URL") or os.environ.get("DATABASE_URL")
+
+# ============== FUNÇÕES DO BANCO ==============
+
+def get_db_connection():
+    if not POSTGRES_URL:
+        return None
+    return psycopg2.connect(POSTGRES_URL)
+
+def init_db():
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return False
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS feedback (
+                id VARCHAR(36) PRIMARY KEY,
+                author VARCHAR(255) NOT NULL,
+                message TEXT NOT NULL,
+                created_at TIMESTAMP NOT NULL,
+                updated_at TIMESTAMP
+            );
+        """)
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Erro init_db: {e}")
+        return False
+
+# ============== FUNÇÃO DE E-MAIL ==============
+
+def send_email_notification(author, message):
+    SENDER_EMAIL = os.environ.get('SENDER_EMAIL')
+    SENDER_PASSWORD = os.environ.get('SENDER_PASSWORD')
+    RECEIVER_EMAIL = os.environ.get('RECEIVER_EMAIL')
+    SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
+    SMTP_PORT = int(os.environ.get('SMTP_PORT', 587))
+
+    if not all([SENDER_EMAIL, SENDER_PASSWORD, RECEIVER_EMAIL]):
+        return False
+
+    msg = MIMEText(f"Nova mensagem no Mural de Desabafos:\n\nAutor: {author}\n\nMensagem:\n{message}")
+    msg['Subject'] = "🚨 Novo Desabafo da Geovana no Site de Aniversário! 🚨"
+    msg['From'] = SENDER_EMAIL
+    msg['To'] = RECEIVER_EMAIL
+
+    try:
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SENDER_EMAIL, SENDER_PASSWORD)
+            server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, msg.as_string())
+        return True
+    except Exception as e:
+        print(f"Erro ao enviar e-mail: {e}")
+        return False
+
+# ============== HANDLER ==============
 
 class handler(BaseHTTPRequestHandler):
-    def _send_cors_headers(self):
-        """Envia headers CORS"""
+    def _send_json(self, status, data):
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode())
 
     def _get_feedback_id(self):
-        """Extrai o feedback_id da URL se existir"""
         parsed = urlparse(self.path)
         path_parts = parsed.path.strip('/').split('/')
-        if len(path_parts) >= 2:
+        if len(path_parts) >= 2 and path_parts[-1] != 'feedback':
             return path_parts[-1]
         return None
 
     def do_OPTIONS(self):
-        """Handle CORS preflight"""
-        self.send_response(200)
-        self._send_cors_headers()
-        self.end_headers()
+        self._send_json(200, {})
 
     def do_GET(self):
-        """Buscar todos os feedbacks"""
         try:
             init_db()
-            
             conn = get_db_connection()
-            cur = conn.cursor()
+            if not conn:
+                self._send_json(500, {'error': 'Banco de dados não configurado'})
+                return
+                
+            cur = conn.cursor(cursor_factory=RealDictCursor)
             cur.execute("SELECT id, author, message, created_at, updated_at FROM feedback ORDER BY created_at DESC")
-            
-            col_names = [desc[0] for desc in cur.description]
             rows = cur.fetchall()
             
-            # Converter para lista de dicionários e serializar datas
             feedback_list = []
             for row in rows:
-                item = dict(zip(col_names, row))
-                # Converter datetime para string
+                item = dict(row)
                 if item.get('created_at'):
                     item['created_at'] = item['created_at'].isoformat() if hasattr(item['created_at'], 'isoformat') else str(item['created_at'])
                 if item.get('updated_at'):
@@ -57,45 +118,35 @@ class handler(BaseHTTPRequestHandler):
             
             cur.close()
             conn.close()
-            
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self._send_cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps(feedback_list).encode())
+            self._send_json(200, feedback_list)
             
         except Exception as e:
             print(f"Erro ao buscar feedback: {str(e)}")
-            self.send_response(500)
-            self.send_header('Content-Type', 'application/json')
-            self._send_cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': 'Erro interno ao buscar feedback'}).encode())
+            self._send_json(500, {'error': 'Erro interno ao buscar feedback'})
 
     def do_POST(self):
-        """Criar novo feedback"""
         try:
             init_db()
             
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length)
-            data = json.loads(body)
+            data = json.loads(body) if body else {}
             
             author = data.get('author', 'Geovana')
             message = data.get('message')
             
             if not message:
-                self.send_response(400)
-                self.send_header('Content-Type', 'application/json')
-                self._send_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'A mensagem não pode ser vazia'}).encode())
+                self._send_json(400, {'error': 'A mensagem não pode ser vazia'})
+                return
+            
+            conn = get_db_connection()
+            if not conn:
+                self._send_json(500, {'error': 'Banco de dados não configurado'})
                 return
             
             feedback_id = str(uuid.uuid4())
             created_at = datetime.now().isoformat()
             
-            conn = get_db_connection()
             cur = conn.cursor()
             cur.execute(
                 "INSERT INTO feedback (id, author, message, created_at) VALUES (%s, %s, %s, %s)",
@@ -105,59 +156,41 @@ class handler(BaseHTTPRequestHandler):
             cur.close()
             conn.close()
             
-            # Enviar notificação por e-mail
             send_email_notification(author, message)
             
-            self.send_response(201)
-            self.send_header('Content-Type', 'application/json')
-            self._send_cors_headers()
-            self.end_headers()
-            
-            result = {
+            self._send_json(201, {
                 'message': 'Feedback salvo com sucesso!',
                 'id': feedback_id,
                 'created_at': created_at
-            }
-            self.wfile.write(json.dumps(result).encode())
+            })
             
         except Exception as e:
             print(f"Erro ao criar feedback: {str(e)}")
-            self.send_response(500)
-            self.send_header('Content-Type', 'application/json')
-            self._send_cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': 'Erro interno ao salvar feedback'}).encode())
+            self._send_json(500, {'error': 'Erro interno ao salvar feedback'})
 
     def do_PUT(self):
-        """Atualizar feedback existente"""
         try:
             feedback_id = self._get_feedback_id()
-            
             if not feedback_id:
-                self.send_response(400)
-                self.send_header('Content-Type', 'application/json')
-                self._send_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'ID do feedback não fornecido'}).encode())
+                self._send_json(400, {'error': 'ID do feedback não fornecido'})
                 return
             
             init_db()
             
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length)
-            data = json.loads(body)
+            data = json.loads(body) if body else {}
             
             message = data.get('message')
-            
             if not message:
-                self.send_response(400)
-                self.send_header('Content-Type', 'application/json')
-                self._send_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'A mensagem não pode ser vazia'}).encode())
+                self._send_json(400, {'error': 'A mensagem não pode ser vazia'})
                 return
             
             conn = get_db_connection()
+            if not conn:
+                self._send_json(500, {'error': 'Banco de dados não configurado'})
+                return
+            
             cur = conn.cursor()
             updated_at = datetime.now().isoformat()
             
@@ -172,48 +205,32 @@ class handler(BaseHTTPRequestHandler):
             conn.close()
             
             if row_count == 0:
-                self.send_response(404)
-                self.send_header('Content-Type', 'application/json')
-                self._send_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'Feedback não encontrado'}).encode())
+                self._send_json(404, {'error': 'Feedback não encontrado'})
                 return
             
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self._send_cors_headers()
-            self.end_headers()
-            
-            result = {
+            self._send_json(200, {
                 'message': 'Feedback atualizado com sucesso!',
                 'updated_at': updated_at
-            }
-            self.wfile.write(json.dumps(result).encode())
+            })
             
         except Exception as e:
             print(f"Erro ao atualizar feedback: {str(e)}")
-            self.send_response(500)
-            self.send_header('Content-Type', 'application/json')
-            self._send_cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': 'Erro interno ao atualizar feedback'}).encode())
+            self._send_json(500, {'error': 'Erro interno ao atualizar feedback'})
 
     def do_DELETE(self):
-        """Deletar feedback"""
         try:
             feedback_id = self._get_feedback_id()
-            
             if not feedback_id:
-                self.send_response(400)
-                self.send_header('Content-Type', 'application/json')
-                self._send_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'ID do feedback não fornecido'}).encode())
+                self._send_json(400, {'error': 'ID do feedback não fornecido'})
                 return
             
             init_db()
             
             conn = get_db_connection()
+            if not conn:
+                self._send_json(500, {'error': 'Banco de dados não configurado'})
+                return
+            
             cur = conn.cursor()
             cur.execute("DELETE FROM feedback WHERE id = %s", (feedback_id,))
             
@@ -223,24 +240,11 @@ class handler(BaseHTTPRequestHandler):
             conn.close()
             
             if row_count == 0:
-                self.send_response(404)
-                self.send_header('Content-Type', 'application/json')
-                self._send_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'Feedback não encontrado'}).encode())
+                self._send_json(404, {'error': 'Feedback não encontrado'})
                 return
             
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self._send_cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({'message': 'Feedback deletado com sucesso!'}).encode())
+            self._send_json(200, {'message': 'Feedback deletado com sucesso!'})
             
         except Exception as e:
             print(f"Erro ao deletar feedback: {str(e)}")
-            self.send_response(500)
-            self.send_header('Content-Type', 'application/json')
-            self._send_cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': 'Erro interno ao deletar feedback'}).encode())
-
+            self._send_json(500, {'error': 'Erro interno ao deletar feedback'})
