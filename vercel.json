@@ -3,12 +3,9 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" }
-  ],
   "functions": {
     "api/*.py": {
-      "runtime": "@vercel/python@3.0.7"
+      "runtime": "@vercel/python"
     }
   }
 }
