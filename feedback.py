@@ -7,6 +7,9 @@ import os
 import uuid
 from datetime import datetime
 from urllib.parse import urlparse
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # Tentar importar psycopg2
 try:
@@ -51,91 +54,63 @@ def init_db():
         print(f"Erro init_db: {e}")
         return False
 
-# ============== FUNÇÃO DE E-MAIL (RESEND) ==============
+# ============== FUNÇÃO DE E-MAIL (GMAIL SMTP) ==============
 
 def send_email_notification(author, message):
-    import urllib.request
-    import urllib.error
-    
-    RESEND_API_KEY = os.environ.get('RESEND_API_KEY')
+    SENDER_EMAIL = os.environ.get('SENDER_EMAIL')
+    SENDER_PASSWORD = os.environ.get('SENDER_PASSWORD')
     RECEIVER_EMAIL = os.environ.get('RECEIVER_EMAIL')
 
-    print(f"[EMAIL] Tentando enviar e-mail via Resend...")
-    print(f"[EMAIL] RESEND_API_KEY configurado: {bool(RESEND_API_KEY)}")
-    print(f"[EMAIL] RECEIVER_EMAIL configurado: {bool(RECEIVER_EMAIL)}")
+    print(f"[EMAIL] Tentando enviar e-mail...")
+    print(f"[EMAIL] SENDER configurado: {bool(SENDER_EMAIL)}")
+    print(f"[EMAIL] PASSWORD configurado: {bool(SENDER_PASSWORD)}")
+    print(f"[EMAIL] RECEIVER configurado: {bool(RECEIVER_EMAIL)}")
 
-    if not RESEND_API_KEY:
-        print("[EMAIL] RESEND_API_KEY não configurada!")
-        return False
-    
-    if not RECEIVER_EMAIL:
-        print("[EMAIL] RECEIVER_EMAIL não configurado!")
+    if not all([SENDER_EMAIL, SENDER_PASSWORD, RECEIVER_EMAIL]):
+        print("[EMAIL] Credenciais não configuradas!")
         return False
 
-    # Pegar a hora atual formatada
     hora_atual = datetime.now().strftime("%d/%m/%Y às %H:%M")
 
-    # Criar e-mail em HTML bonito
+    # E-mail em HTML
     html_content = f"""
     <html>
     <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
-        <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px;">
             <h1 style="color: #e74c3c; text-align: center;">💌 Nova Mensagem da Gehh!</h1>
-            
             <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3498db;">
-                <p style="margin: 0; font-size: 16px; color: #333; white-space: pre-wrap;">{message}</p>
+                <p style="margin: 0; font-size: 16px; color: #333;">{message}</p>
             </div>
-            
-            <div style="text-align: center; color: #666; font-size: 14px;">
-                <p><strong>Enviado por:</strong> {author}</p>
-                <p><strong>Data:</strong> {hora_atual}</p>
-            </div>
-            
-            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-            
-            <p style="text-align: center; color: #999; font-size: 12px;">
-                Mensagem enviada pelo Mural de Desabafos 💙<br>
-                Site de Aniversário da Gehh
-            </p>
+            <p style="text-align: center; color: #666;"><strong>Enviado por:</strong> {author}</p>
+            <p style="text-align: center; color: #666;"><strong>Data:</strong> {hora_atual}</p>
         </div>
     </body>
     </html>
     """
 
-    # Dados para a API do Resend
-    email_data = {
-        "from": "Mural da Gehh <onboarding@resend.dev>",
-        "to": [RECEIVER_EMAIL],
-        "subject": f"💌 Nova mensagem da Gehh no Mural! - {hora_atual}",
-        "html": html_content
-    }
-
     try:
-        print(f"[EMAIL] Enviando via Resend para {RECEIVER_EMAIL}...")
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f"💌 Mensagem da Gehh - {hora_atual}"
+        msg['From'] = SENDER_EMAIL
+        msg['To'] = RECEIVER_EMAIL
         
-        req = urllib.request.Request(
-            "https://api.resend.com/emails",
-            data=json.dumps(email_data).encode('utf-8'),
-            headers={
-                "Authorization": f"Bearer {RESEND_API_KEY}",
-                "Content-Type": "application/json"
-            },
-            method="POST"
-        )
+        msg.attach(MIMEText(f"Nova mensagem da Gehh:\n\n{message}\n\nEnviado por: {author}\nData: {hora_atual}", 'plain', 'utf-8'))
+        msg.attach(MIMEText(html_content, 'html', 'utf-8'))
+
+        print(f"[EMAIL] Conectando ao Gmail...")
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(SENDER_EMAIL, SENDER_PASSWORD)
+            server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, msg.as_string())
         
-        with urllib.request.urlopen(req) as response:
-            result = json.loads(response.read().decode('utf-8'))
-            print(f"[EMAIL] E-mail enviado com sucesso! ID: {result.get('id')}")
-            return True
-            
-    except urllib.error.HTTPError as e:
-        error_body = e.read().decode('utf-8')
-        print(f"[EMAIL] Erro HTTP {e.code}: {error_body}")
+        print(f"[EMAIL] Enviado com sucesso para {RECEIVER_EMAIL}!")
+        return True
+        
+    except smtplib.SMTPAuthenticationError:
+        print("[EMAIL] ERRO: Falha na autenticação! Use uma Senha de App do Gmail.")
         return False
     except Exception as e:
-        print(f"[EMAIL] Erro ao enviar e-mail: {e}")
-        import traceback
-        print(f"[EMAIL] Traceback: {traceback.format_exc()}")
+        print(f"[EMAIL] ERRO: {e}")
         return False
 
 # ============== HANDLER ==============
