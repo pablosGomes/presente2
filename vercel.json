@@ -2,6 +2,23 @@
   "version": 2,
   "framework": "vite",
   "buildCommand": "npm run build",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/api/chat", "destination": "/api/chat.py" },
+    { "source": "/api/feedback", "destination": "/api/feedback.py" },
+    { "source": "/api/health", "destination": "/api/health.py" },
+    { "source": "/api/subscribe", "destination": "/api/subscribe.py" },
+    { "source": "/api/cron", "destination": "/api/cron.py" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron",
+      "schedule": "0 20 * * *"
+    }
+  ]
 }
-
