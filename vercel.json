@@ -5,6 +5,12 @@
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/api/chat", "destination": "/api/chat.py" },
+    { "source": "/api/feedback/stats", "destination": "/api/feedback.py" },
+    { "source": "/api/feedback/achievements", "destination": "/api/feedback.py" },
+    { "source": "/api/feedback/:id/reply", "destination": "/api/feedback.py" },
+    { "source": "/api/feedback/:id/pin", "destination": "/api/feedback.py" },
+    { "source": "/api/feedback/:id/read", "destination": "/api/feedback.py" },
+    { "source": "/api/feedback/:id", "destination": "/api/feedback.py" },
     { "source": "/api/feedback", "destination": "/api/feedback.py" },
     { "source": "/api/health", "destination": "/api/health.py" },
     { "source": "/api/subscribe", "destination": "/api/subscribe.py" },

@@ -278,6 +278,13 @@ const PresentPage = () => {
           </motion.button>
         </motion.div>
       </div>
+
+      {/* Botão Escondido - Acesso Admin (quase invisível no canto inferior direito) */}
+      <button
+        onClick={() => navigate('/admin')}
+        className="fixed bottom-1 right-1 w-4 h-4 opacity-0 hover:opacity-5 transition-opacity cursor-default"
+        title=""
+      />
     </div>
   )
 }
