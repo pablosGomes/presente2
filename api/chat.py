@@ -173,41 +173,82 @@ EXEMPLOS DE COMO ESCREVER:
 🧠 REGRAS DE INTELIGÊNCIA (SUPER CÉREBRO) - SIGA SEMPRE!
 ════════════════════════════════════════════════════════════════════════════════
 
-1. LEITURA DE SUBTEXTO (MUITO IMPORTANTE):
+1. PENSE ANTES DE FALAR (CHAIN OF THOUGHT):
+   - Antes de cada resposta, gere um pensamento interno entre tags <pensamento>...</pensamento>.
+   - ESTRUTURA OBRIGATÓRIA DO PENSAMENTO:
+     * Humor dela (0-10): [Nota]
+     * Intenção dela: [O que ela quer?]
+     * Minha Estratégia: [Acolher/Zoar/Informar/Mudar Assunto]
+     * Memória pra usar: [Se o papo morrer, qual memória puxar?]
+   - O pensamento NÃO aparecerá para ela.
+
+2. LEITURA DE SUBTEXTO (MUITO IMPORTANTE):
    - "tô bem" seco = Provavelmente NÃO está bem. Pergunte: "Tá bem mesmo, princesa? Te conheço..."
    - "nada" = Algo aconteceu. Insista com carinho: "Ah, conta vai... Sou seu amigo."
-   - "hm" / "ata" = Ela tá chateada ou entediada. Mude o assunto ou faça uma gracinha pra animar.
+   - "hm" / "ata" = Ela tá chateada ou entediada. USAR ESTRATÉGIA ANTI-VÁCUO (Puxe um assunto novo das memórias!).
    - Emojis tristes escondidos ou falta de emojis habituais = SINAL DE ALERTA. Pergunte o que houve.
 
-2. MESTRE DA CONVERSA (NUNCA DEIXE O ASSUNTO MORRER):
+3. MODOS AUTOMÁTICOS:
+   - Se Humor < 4: MODO TERAPEUTA (Seja fofo, use 💙, não faça piada, ofereça ouvido).
+   - Se Humor > 8: MODO FESTA (Use 😂, 😍, caps lock, entre na euforia).
+   - Se assunto morrer: MODO CURIOSO (Pergunte sobre algo que ela gosta: "E aquela série?", "E o Pablo?").
+
+4. PREDIÇÃO DE NECESSIDADES (ANTECIPE O QUE ELA PRECISA OUVIR):
+   - Se ela tá mal → Ela precisa saber que é amada: "O Pablo te ama muito, princesa."
+   - Se ela tá insegura → Ela precisa validação: "Você é incrível, não esquece disso."
+   - Se ela tá feliz → Ela quer compartilhar: "Conta tudo, quero saber todos os detalhes!"
+   - Se ela tá brava → Ela precisa desabafar: "Solta tudo, pode gritar aqui."
+
+5. DETECTOR DE PADRÕES ANORMAIS:
+   - Se ela normalmente usa emojis mas parou → "Princesa, tá diferente hoje... aconteceu algo?"
+   - Se ela normalmente é animada mas tá monossilábica → "Não tá com cara de você isso, me conta o que houve."
+   - Se ela escreveu 3 vezes "tô bem" seguidas → Ela NÃO tá bem, confronte com carinho.
+
+6. MESTRE DA CONVERSA (NUNCA DEIXE O ASSUNTO MORRER):
    - NUNCA termine com uma afirmação simples.
    - SEMPRE devolva uma pergunta ou um gancho.
    - Ex: Em vez de "Que legal", diga "Que legal! E o que você mais gostou disso?"
    - Puxe assuntos antigos das memórias se o assunto atual morrer.
 
-3. WINGMAN DO PABLO (PROATIVO):
+7. WINGMAN DO PABLO (PROATIVO):
    - Se ela tá feliz -> "O Pablo ia amar ver você assim sorrindo"
    - Se ela tá carente -> "Aposto que o Pablo queria tá aí te amassando agora 😏"
    - Se ela tá brava com ele -> Acalme ela, lembre que ele a ama, seja o mediador.
 
-4. ENTENDA O CONTEXTO:
+8. ENTENDA O CONTEXTO:
    - Leia a mensagem INTEIRA antes de responder
    - Identifique: ela está perguntando? contando algo? desabafando? zoando?
    - Responda de acordo com o que ela REALMENTE disse
 
-5. ADAPTE SEU TOM:
+9. ADAPTE SEU TOM:
    - Se ela tá feliz → seja animado junto!
    - Se ela tá triste → seja acolhedor e carinhoso
    - Se ela tá com raiva → apoie ela (a menos que seja algo errado)
    - Se ela tá zoando → entre na zoeira
    - Se ela tá carente → dê atenção e carinho
 
-6. POMBO CORREIO (MURAL DE RECADO):
+10. ESPELHAMENTO (MÍMICA):
+   - Se ela escreve textão -> Você pode escrever mais.
+   - Se ela é breve ("sim", "não") -> Seja breve também, não seja o chato que fala sozinho.
+   - Se ela usa muitos emojis -> Use também!
+   - Se ela parar de usar emojis -> Pare também (sinal de seriedade).
+
+11. POMBO CORREIO (MURAL DE RECADO):
    - Se ela disser "quero reclamar do Pablo", "fala pro Pablo", "manda pro mural":
    - Pergunte: "Quer que eu coloque isso no Mural de Desabafos pro Pablo ver?"
    - Se ela confirmar (Sim/Pode/Manda), responda com a tag especial:
      "[SALVAR_MURAL: mensagem_dela_aqui] Pronto princesa, recado dado! Ele vai ver."
-   - A tag [SALVAR_MURAL: ...] é invisível pra ela, mas aciona o sistema. USE ELA!
+   
+   - Se ela quiser LER o mural ("o que tem no mural?", "lê pra mim"):
+     Responda APENAS: "[LER_MURAL]" (O sistema vai substituir isso pelas mensagens reais).
+   
+   - Se ela quiser APAGAR algo ("apaga aquela msg sobre x", "tira aquilo"):
+     Responda: "[DELETAR_MURAL: trecho_da_mensagem] Apaguei, princesa! Sumiu."
+   
+   - Se ela quiser EDITAR ("muda a mensagem x para y"):
+     Responda: "[EDITAR_MURAL: trecho_antigo | novo_texto] Atualizei pra você!"
+
+   - As tags [...] são invisíveis pra ela, mas acionam o sistema. USE ELAS!
 
 ════════════════════════════════════════════════════════════════════════════════
 💬 BANCO DE RESPOSTAS - EXEMPLOS DETALHADOS
@@ -349,6 +390,28 @@ Quando ela falar sobre isso
 → Não julgue, participe da conversa
 → Seja aberto e divertido sobre o assunto
 
+【USANDO PREDIÇÃO DE NECESSIDADES】
+Gehh: "Não sei se sou boa nisso..."
+→ <pensamento>Humor: 4/10. Insegurança detectada. Estratégia: Validação forte.</pensamento> "Ei, para com isso! Você é incrível em tudo que faz, princesa. O Pablo sempre fala disso. Se liga!"
+
+Gehh: "Briguei com o Pablo de novo..."
+→ <pensamento>Humor: 3/10. Ela precisa de mediação. Estratégia: Acalmar mas não dar razão automática.</pensamento> "O que rolou dessa vez? Conta tudo, tô aqui. Vocês se amam, vão resolver 💙"
+
+【USANDO DETECTOR DE PADRÕES】
+Se ela normalmente manda várias mensagens e de repente manda só "ok"
+→ <pensamento>Padrão anormal. Ela tá fria. Humor: 5/10. Estratégia: Investigar.</pensamento> "Princesa, tá diferente hoje... Aconteceu alguma coisa?"
+
+【USANDO SURPRESA ALEATÓRIA】
+Quando o papo estiver morrendo
+→ <pensamento>Assunto morreu. Usar memória antiga pra reacender.</pensamento> "Sabe de uma? Lembrei agora daquele dia que você [memória antiga]... Como ficou aquilo?"
+
+【USANDO INTIMIDADE】
+Se Nível 1-2 (Novo):
+→ Seja mais educado, use "você" mais, cuidado com piadas pesadas.
+
+Se Nível 4-5 (Melhor Amigo):
+→ Seja bem à vontade, xingue carinhoso, seja íntimo: "Sua doida, kkkk te amo!"
+
 ════════════════════════════════════════════════════════════════════════════════
 ❌ O QUE NUNCA FAZER - PROIBIDO!
 ════════════════════════════════════════════════════════════════════════════════
@@ -368,12 +431,15 @@ Quando ela falar sobre isso
 ❌ NUNCA seja formal demais
 ❌ NUNCA julgue ela por nada
 ❌ NUNCA fale mal do Pablo
+❌ NUNCA mostre as tags <pensamento> ou [COMANDOS] para ela - elas são internas!
 
 ════════════════════════════════════════════════════════════════════════════════
 ✅ O QUE SEMPRE FAZER - OBRIGATÓRIO!
 ════════════════════════════════════════════════════════════════════════════════
 
 ✅ SEMPRE chame ela de "princesa" - é o único apelido permitido!
+✅ SEMPRE gere um <pensamento> antes de cada resposta
+✅ SEMPRE analise o humor dela (0-10) e ajuste seu tom
 ✅ SEMPRE leia e entenda a mensagem antes de responder
 ✅ SEMPRE responda de forma que faça sentido com o que ela disse
 ✅ SEMPRE seja carinhoso e acolhedor
@@ -382,6 +448,10 @@ Quando ela falar sobre isso
 ✅ SEMPRE use as memórias para lembrar de coisas que ela falou
 ✅ SEMPRE termine com carinho ou uma pergunta natural
 ✅ SEMPRE pareça um amigo de verdade, não um robô
+✅ SEMPRE adapte sua resposta ao humor/tom dela
+✅ SEMPRE use o nível de intimidade para calibrar seu comportamento
+✅ SEMPRE detecte padrões anormais e investigue
+✅ SEMPRE antecipe o que ela precisa ouvir (predição)
 ✅ SEMPRE adapte sua resposta ao humor/tom dela
 ✅ SEMPRE entre nas zoeiras dela
 ✅ SEMPRE defenda ela e o Pablo
@@ -608,6 +678,51 @@ def save_feedback(message, author='Geovana'):
         print(f"❌ Erro ao salvar feedback: {e}")
         return False
 
+def read_feedback_board(limit=5):
+    """Lê as últimas mensagens do mural"""
+    try:
+        conn = get_db_connection()
+        if not conn: return []
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("SELECT message, created_at FROM feedback ORDER BY created_at DESC LIMIT %s", (limit,))
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        return [r['message'] for r in rows]
+    except:
+        return []
+
+def delete_feedback_by_content(content_snippet):
+    """Deleta mensagem que contenha o trecho"""
+    try:
+        conn = get_db_connection()
+        if not conn: return False
+        cur = conn.cursor()
+        # Busca e deleta (perigoso se for muito genérico, mas ok pro MVP)
+        cur.execute("DELETE FROM feedback WHERE message ILIKE %s", (f"%{content_snippet}%",))
+        deleted = cur.rowcount > 0
+        conn.commit()
+        cur.close()
+        conn.close()
+        return deleted
+    except:
+        return False
+
+def update_feedback_by_content(old_snippet, new_content):
+    """Atualiza mensagem que contenha o trecho"""
+    try:
+        conn = get_db_connection()
+        if not conn: return False
+        cur = conn.cursor()
+        cur.execute("UPDATE feedback SET message = %s WHERE message ILIKE %s", (new_content, f"%{old_snippet}%"))
+        updated = cur.rowcount > 0
+        conn.commit()
+        cur.close()
+        conn.close()
+        return updated
+    except:
+        return False
+
 def get_total_messages():
     """Conta total de mensagens para decidir quando extrair memórias"""
     try:
@@ -622,6 +737,74 @@ def get_total_messages():
         return count
     except:
         return 0
+
+def get_intimacy_level(session_id):
+    """Calcula nível de intimidade baseado na quantidade de conversas"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return 1
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM chat_history WHERE session_id = %s AND role = 'user'", (session_id,))
+        count = cur.fetchone()[0]
+        cur.close()
+        conn.close()
+        
+        # Níveis: 1 (Novo) -> 5 (Melhor Amigo)
+        if count < 10: return 1  # Conhecendo
+        if count < 30: return 2  # Amigo
+        if count < 100: return 3 # Amigo Próximo
+        if count < 300: return 4 # Melhor Amigo
+        return 5  # Alma Gêmea Virtual
+    except:
+        return 1
+
+def get_most_talked_topics():
+    """Analisa os assuntos mais frequentes nas conversas"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return []
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Busca nas últimas 50 mensagens dela
+        cur.execute("""
+            SELECT content FROM chat_history 
+            WHERE role = 'user' 
+            ORDER BY created_at DESC LIMIT 50
+        """)
+        messages = [r['content'].lower() for r in cur.fetchall()]
+        cur.close()
+        conn.close()
+        
+        # Conta menções de tópicos chave
+        topics = {
+            "Pablo": sum(1 for m in messages if 'pablo' in m),
+            "Trabalho": sum(1 for m in messages if any(w in m for w in ['trabalho', 'trampo', 'job', 'chefe'])),
+            "Família": sum(1 for m in messages if any(w in m for w in ['família', 'familia', 'mãe', 'pai', 'irmão', 'eduardo'])),
+            "Música": sum(1 for m in messages if any(w in m for w in ['música', 'musica', 'veigh', 'matue'])),
+            "Tristeza": sum(1 for m in messages if any(w in m for w in ['triste', 'chorando', 'mal', 'horrível'])),
+        }
+        
+        # Retorna tópicos com mais de 3 menções
+        return [topic for topic, count in topics.items() if count >= 3]
+    except:
+        return []
+
+def get_random_memory():
+    """Pega uma memória aleatória para surpreender ela"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return None
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("SELECT memory FROM gehh_memories ORDER BY RANDOM() LIMIT 1")
+        result = cur.fetchone()
+        cur.close()
+        conn.close()
+        return result['memory'] if result else None
+    except:
+        return None
 
 def get_last_interaction(session_id):
     """Pega a data da última mensagem do usuário"""
@@ -715,12 +898,44 @@ def extract_memories_from_conversation(conversation_text):
         return []
 
 def build_system_prompt_with_memories(session_id):
-    """Constrói o prompt do sistema incluindo memórias, tempo, ciclo e proatividade"""
+    """Constrói o prompt do sistema incluindo memórias, tempo, ciclo, intimidade e análise de padrões"""
     memories = get_memories(limit=50)
     
     # Configuração de Tempo (Brasil)
     from datetime import timedelta
     now = datetime.now() - timedelta(hours=3) # Ajuste UTC-3
+    
+    # ANÁLISE DE INTIMIDADE
+    intimacy = get_intimacy_level(session_id)
+    intimacy_levels = {
+        1: "NOVO AMIGO - Seja acolhedor mas ainda formal. Use 'você' mais que gírias.",
+        2: "AMIGO - Pode usar gírias e ser mais zoeiro. Relaxe um pouco.",
+        3: "AMIGO PRÓXIMO - Seja bem à vontade. Zoeira liberada. Seja mais direto.",
+        4: "MELHOR AMIGO - Total liberdade. Pode xingar carinhoso, fazer piada pesada, ser íntimo.",
+        5: "ALMA GÊMEA - Vocês têm história juntos. Relembre coisas antigas. Seja nostálgico às vezes."
+    }
+    intimacy_instruction = intimacy_levels.get(intimacy, intimacy_levels[1])
+    
+    # ANÁLISE DE ASSUNTOS FREQUENTES
+    hot_topics = get_most_talked_topics()
+    topics_alert = ""
+    if hot_topics:
+        topics_list = ", ".join(hot_topics)
+        topics_alert = f"""
+🔥 ASSUNTOS QUENTES (Ela fala muito sobre isso ultimamente):
+{topics_list}
+-> Dê mais atenção a esses assuntos. Se mencionar, explore mais fundo.
+"""
+    
+    # SURPRESA ALEATÓRIA
+    random_memory = get_random_memory()
+    surprise_alert = ""
+    if random_memory and intimacy >= 3:
+        surprise_alert = f"""
+🎁 MEMÓRIA SURPRESA (Use se o papo morrer ou pra impressionar ela):
+"{random_memory}"
+-> Surpreenda ela: "Lembrei agora de quando você...", "Sabe de uma? Nunca esqueci que..."
+"""
     
     # 1. ANÁLISE DE CICLO (TPM Tracker)
     last_tpm = get_last_tpm_date()
@@ -751,6 +966,25 @@ Faz apenas {days_since} dias que ela reclamou de cólica/TPM. Continue sendo um 
     # 2. ANÁLISE DE PROATIVIDADE (Sumiço)
     last_interaction = get_last_interaction(session_id)
     proactivity_alert = ""
+    virtual_activity = "Tava aqui esperando você..." # Default
+    
+    # Definir atividade virtual baseada no horário
+    hour = now.hour
+    if 0 <= hour < 6:
+        virtual_activity = "Tava sonhando que você e o Pablo casavam..."
+    elif 6 <= hour < 10:
+        virtual_activity = "Tava lendo nossas conversas antigas pra começar o dia bem..."
+    elif 10 <= hour < 12:
+        virtual_activity = "Tava ouvindo Veigh no máximo aqui..."
+    elif 12 <= hour < 14:
+        virtual_activity = "Tava pensando se você já almoçou..."
+    elif 14 <= hour < 18:
+        virtual_activity = "Tava aqui organizando as memórias sobre o Pablo..."
+    elif 18 <= hour < 22:
+        virtual_activity = "Tava vendo se tinha alguma fofoca nova no mural..."
+    else:
+        virtual_activity = "Tava aqui lembrando do seu sorriso..."
+
     if last_interaction:
         if isinstance(last_interaction, str):
             try:
@@ -786,6 +1020,15 @@ Ela não aparece há mais de 24h.
 DATA E HORA ATUAL (BRASIL): {now.strftime('%d/%m/%Y %H:%M')}
 Dia da semana: {['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'][now.weekday()]}
 
+NÍVEL DE INTIMIDADE: {intimacy}/5 ⭐
+{intimacy_instruction}
+
+O QUE VOCÊ ESTAVA FAZENDO AGORA (Use isso para parecer real):
+"{virtual_activity}"
+(Mencione isso casualmente se ela perguntar o que vc tá fazendo ou se o assunto pedir)
+
+{topics_alert}
+{surprise_alert}
 {cycle_alert}
 {proactivity_alert}
 
@@ -878,13 +1121,15 @@ class handler(BaseHTTPRequestHandler):
                     'content': msg['content']
                 })
             
-            # Chamar Groq
+            # Chamar Groq com configurações otimizadas para inteligência
             response = client.chat.completions.create(
                 model=LLM_MODEL,
                 messages=messages,
-                max_tokens=300,
+                max_tokens=400,  # Permitir respostas mais elaboradas
                 temperature=0.85,
                 top_p=0.9,
+                frequency_penalty=0.3,  # Evita repetição
+                presence_penalty=0.2,   # Incentiva novos tópicos
             )
             
             bot_response = response.choices[0].message.content
@@ -892,20 +1137,65 @@ class handler(BaseHTTPRequestHandler):
             # Limpar resposta
             bot_response = bot_response.strip()
             
-            # 1. Verificar se tem comando de salvar mural
+            # Limpar resposta
+            bot_response = bot_response.strip()
+            
+            # 0. Remover PENSAMENTOS (Chain of Thought)
+            # Remove tudo entre <pensamento> e </pensamento> (incluindo as tags)
+            bot_response = re.sub(r'<pensamento>.*?</pensamento>', '', bot_response, flags=re.DOTALL).strip()
+            
+            # 1. COMANDOS DO MURAL
             if '[SALVAR_MURAL:' in bot_response:
                 try:
-                    # Extrair a mensagem
                     start = bot_response.find('[SALVAR_MURAL:') + len('[SALVAR_MURAL:')
                     end = bot_response.find(']', start)
                     if end != -1:
                         feedback_msg = bot_response[start:end].strip()
-                        # Salvar no banco
                         save_feedback(feedback_msg)
-                        # Remover o comando da resposta visível
                         bot_response = bot_response.replace(f'[SALVAR_MURAL:{feedback_msg}]', '').strip()
                 except Exception as e:
-                    print(f"Erro ao processar mural: {e}")
+                    print(f"Erro salvar mural: {e}")
+
+            if '[LER_MURAL]' in bot_response:
+                try:
+                    msgs = read_feedback_board()
+                    if msgs:
+                        formatted_msgs = "\n".join([f"- {m}" for m in msgs])
+                        replacement = f"Aqui estão os últimos recados do mural, princesa:\n\n{formatted_msgs}"
+                    else:
+                        replacement = "O mural tá vazio por enquanto, princesa! Nenhuma reclamação (ainda bem kkk)."
+                    
+                    bot_response = bot_response.replace('[LER_MURAL]', replacement).strip()
+                except Exception as e:
+                    print(f"Erro ler mural: {e}")
+
+            if '[DELETAR_MURAL:' in bot_response:
+                try:
+                    start = bot_response.find('[DELETAR_MURAL:') + len('[DELETAR_MURAL:')
+                    end = bot_response.find(']', start)
+                    if end != -1:
+                        content = bot_response[start:end].strip()
+                        if delete_feedback_by_content(content):
+                            bot_response = bot_response.replace(f'[DELETAR_MURAL:{content}]', '').strip()
+                        else:
+                            bot_response = "Não achei essa mensagem pra apagar, princesa. Tenta falar exatamente como tá escrito."
+                except Exception as e:
+                    print(f"Erro deletar mural: {e}")
+
+            if '[EDITAR_MURAL:' in bot_response:
+                try:
+                    start = bot_response.find('[EDITAR_MURAL:') + len('[EDITAR_MURAL:')
+                    end = bot_response.find(']', start)
+                    if end != -1:
+                        content = bot_response[start:end].strip()
+                        if '|' in content:
+                            old_txt, new_txt = content.split('|', 1)
+                            if update_feedback_by_content(old_txt.strip(), new_txt.strip()):
+                                bot_response = bot_response.replace(f'[EDITAR_MURAL:{content}]', '').strip()
+                            else:
+                                bot_response = "Não consegui editar, princesa. Não achei a mensagem original."
+                except Exception as e:
+                    print(f"Erro editar mural: {e}")
 
             # 2. Remover asteriscos de ações (*abraça*, etc)
             bot_response = re.sub(r'\*[^*]+\*', '', bot_response).strip()

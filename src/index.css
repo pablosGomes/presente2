@@ -10,19 +10,38 @@
 
 html, body {
   font-family: 'Poppins', sans-serif;
-  overflow: hidden !important;
-  height: 100vh;
-  width: 100vw;
-  position: fixed;
-  top: 0;
-  left: 0;
+  height: 100%;
+  width: 100%;
+  -webkit-overflow-scrolling: touch; /* Scroll suave no iOS */
 }
 
 #root {
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  overflow: auto;
   position: relative;
+}
+
+/* Safe areas para iPhone com notch */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Melhorias para mobile */
+@supports (-webkit-touch-callout: none) {
+  /* iOS specific styles */
+  body {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Previne zoom em inputs no iOS (fonte mínima 16px) */
+input, textarea, select {
+  font-size: 16px !important;
 }
 
 @keyframes float {
