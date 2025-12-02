@@ -570,7 +570,7 @@ def get_total_messages():
 
 client = None
 LLM_ENABLED = False
-LLM_MODEL = "llama-3.1-70b-versatile"  # Modelo mais inteligente do Groq!
+LLM_MODEL = "llama-3.3-70b-versatile"  # Modelo mais novo e inteligente do Groq!
 
 if OPENAI_AVAILABLE and GROQ_API_KEY:
     try:
@@ -594,7 +594,7 @@ def extract_memories_from_conversation(conversation_text):
     
     try:
         response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",  # Modelo rápido pra extração
+            model="llama-3.3-70b-versatile",  # Modelo atualizado
             messages=[
                 {"role": "system", "content": "Você extrai informações importantes de conversas. Responda APENAS em JSON válido."},
                 {"role": "user", "content": MEMORY_EXTRACTION_PROMPT.format(conversation=conversation_text)}
