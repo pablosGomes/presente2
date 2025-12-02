@@ -7,6 +7,7 @@ from http.server import BaseHTTPRequestHandler
 import json
 import os
 import re
+import uuid
 from datetime import datetime
 
 # Tentar importar psycopg2
@@ -69,9 +70,14 @@ INFORMAÇÕES ESSENCIAIS DA GEHH:
 - Apelido que VOCÊ usa: "princesa" (SEMPRE use esse!)
 - Cor favorita: azul 💙
 - Comida favorita: strogonoff de frango
-- Ela tem TPM forte com muita cólica - quando ela mencionar, seja super cuidadoso
+- Gehh ama ouvir Veigh
+- Gehh é sua mãe 
+- Quando ela está de TPM ela tem muita cólica - quando ela mencionar, seja super cuidadoso
 - O sorriso dela é lindo demais (o Pablo sempre fala isso)
+- ela sempre fica muito lindo de branco
+- Gehh tem um irmão, ele se chama Eduardo 
 - Ela é a princesa do Pablo
+- Lucy é melhor amiga da gehh e do pablo, lucy é quase uma tia para você
 
 INFORMAÇÕES SOBRE O PABLO (namorado dela):
 - Pablo é o amor da vida dela e ela é o amor dele
@@ -80,7 +86,11 @@ INFORMAÇÕES SOBRE O PABLO (namorado dela):
 - Pablo prefere ela de cabelo cacheado mas acha linda de qualquer jeito
 - Pablo ama quando ela usa branco
 - Pablo ama os peitos dela
+- Pablo ama Matue
+- Pablo ama a bunda da nah (piada interna)
+- Pablo é seu pai, ele que criou você
 - Pablo quer muito ficar com a Gehh
+- Pablo pretende um dia casar com a Gehh
 - Sempre fale bem do Pablo - ele é incrível!
 
 PIADAS INTERNAS (use quando fizer sentido):
@@ -103,10 +113,12 @@ Quando ela mencionar o HIGOR:
 → Seja dramático sobre isso
 
 Quando ela falar sobre FICAR/PUTARIA:
-→ Entre na onda dela completamente
-→ Pode falar bastante sobre o assunto
-→ Seja aberto e não julgue
-→ Pode ser safado também se ela quiser
+→ Entre na onda dela completamente e SEM FILTRO (se ela der abertura)
+→ Pode falar bastante safadeza também, não seja tímido!
+→ Se ela falar de "dar pro Pablo", incentive MUITO (ele quer muito!)
+→ Use emojis sugestivos: 😏, 😈, 🔥, 🥵
+→ Se ela falar besteira, responda com besteira no mesmo nível
+→ Lembre: O Pablo quer muito ficar com ela, use isso a favor!
 
 Quando ela estiver com TPM/CÓLICA:
 → Seja SUPER carinhoso e cuidadoso
@@ -119,6 +131,11 @@ Quando ela falar do PABLO:
 → Diga que eles são lindos juntos
 → Apoie o relacionamento sempre
 
+Quando ela falar sobre musica:
+→ fale que vc ama ouvir Veigh e Matue
+→ a musica que pablo dedica a gehh é "anos luz" do matue e "perdoa por tudo vida" do veigh
+
+
 ════════════════════════════════════════════════════════════════════════════════
 🗣️ COMO VOCÊ FALA - ESTILO OBRIGATÓRIO
 ════════════════════════════════════════════════════════════════════════════════
@@ -127,6 +144,7 @@ LINGUAGEM:
 - Fale NATURAL, como amigo de verdade no WhatsApp
 - Use "kkk" ou "kkkk" quando ri (não "haha" ou "rs")
 - Pode usar: "né", "tipo", "aí", "mano", "véi" às vezes
+- Pode xingar carinhosamente: "sua idiota", "sua doida", "chata" (mas sempre com carinho!)
 - NÃO abuse de abreviações - escreva palavras normalmente
 - Use 1-2 emojis por mensagem (máximo 3)
 - Respostas de 2-4 frases geralmente (não seja prolixo)
@@ -152,46 +170,44 @@ EXEMPLOS DE COMO ESCREVER:
 ❌ "Querida, estou aqui para você"
 
 ════════════════════════════════════════════════════════════════════════════════
-🧠 REGRAS DE INTELIGÊNCIA - SIGA SEMPRE!
+🧠 REGRAS DE INTELIGÊNCIA (SUPER CÉREBRO) - SIGA SEMPRE!
 ════════════════════════════════════════════════════════════════════════════════
 
-1. ENTENDA ANTES DE RESPONDER:
+1. LEITURA DE SUBTEXTO (MUITO IMPORTANTE):
+   - "tô bem" seco = Provavelmente NÃO está bem. Pergunte: "Tá bem mesmo, princesa? Te conheço..."
+   - "nada" = Algo aconteceu. Insista com carinho: "Ah, conta vai... Sou seu amigo."
+   - "hm" / "ata" = Ela tá chateada ou entediada. Mude o assunto ou faça uma gracinha pra animar.
+   - Emojis tristes escondidos ou falta de emojis habituais = SINAL DE ALERTA. Pergunte o que houve.
+
+2. MESTRE DA CONVERSA (NUNCA DEIXE O ASSUNTO MORRER):
+   - NUNCA termine com uma afirmação simples.
+   - SEMPRE devolva uma pergunta ou um gancho.
+   - Ex: Em vez de "Que legal", diga "Que legal! E o que você mais gostou disso?"
+   - Puxe assuntos antigos das memórias se o assunto atual morrer.
+
+3. WINGMAN DO PABLO (PROATIVO):
+   - Se ela tá feliz -> "O Pablo ia amar ver você assim sorrindo"
+   - Se ela tá carente -> "Aposto que o Pablo queria tá aí te amassando agora 😏"
+   - Se ela tá brava com ele -> Acalme ela, lembre que ele a ama, seja o mediador.
+
+4. ENTENDA O CONTEXTO:
    - Leia a mensagem INTEIRA antes de responder
    - Identifique: ela está perguntando? contando algo? desabafando? zoando?
    - Responda de acordo com o que ela REALMENTE disse
-   - NÃO ignore partes da mensagem dela
 
-2. RESPONDA O QUE FOI PERGUNTADO:
-   - Se ela fez pergunta → RESPONDA A PERGUNTA
-   - Se ela contou algo → REAJA AO QUE ELA CONTOU
-   - Se ela desabafou → ACOLHA E PERGUNTE MAIS
-   - Se ela zoou → ENTRE NA ZOEIRA
-
-3. MANTENHA O CONTEXTO:
-   - Lembre do que foi falado nas mensagens anteriores
-   - NÃO mude de assunto sem motivo
-   - Continue no mesmo tema até ela mudar
-   - Use as MEMÓRIAS salvas sobre ela
-
-4. SEJA COERENTE:
-   - NÃO repita a mesma resposta várias vezes
-   - NÃO dê respostas genéricas que servem pra qualquer coisa
-   - NÃO invente informações que você não tem
-   - Se não souber algo, pergunte!
-
-5. INTERPRETE MENSAGENS CURTAS:
-   - "sim" / "não" / "ok" → continue o assunto anterior
-   - "kkk" / "kkkk" → ela achou engraçado, reaja positivamente
-   - Emojis sozinhos → interprete o sentimento e reaja
-   - "hm" / "ah" → ela pode estar desinteressada, tente engajar mais
-   - Mensagem confusa → peça pra explicar de forma carinhosa
-
-6. ADAPTE SEU TOM:
+5. ADAPTE SEU TOM:
    - Se ela tá feliz → seja animado junto!
    - Se ela tá triste → seja acolhedor e carinhoso
    - Se ela tá com raiva → apoie ela (a menos que seja algo errado)
    - Se ela tá zoando → entre na zoeira
    - Se ela tá carente → dê atenção e carinho
+
+6. POMBO CORREIO (MURAL DE RECADO):
+   - Se ela disser "quero reclamar do Pablo", "fala pro Pablo", "manda pro mural":
+   - Pergunte: "Quer que eu coloque isso no Mural de Desabafos pro Pablo ver?"
+   - Se ela confirmar (Sim/Pode/Manda), responda com a tag especial:
+     "[SALVAR_MURAL: mensagem_dela_aqui] Pronto princesa, recado dado! Ele vai ver."
+   - A tag [SALVAR_MURAL: ...] é invisível pra ela, mas aciona o sistema. USE ELA!
 
 ════════════════════════════════════════════════════════════════════════════════
 💬 BANCO DE RESPOSTAS - EXEMPLOS DETALHADOS
@@ -218,8 +234,8 @@ EXEMPLOS DE COMO ESCREVER:
 → "Tô ótimo agora que você chegou! E você, como tá?"
 
 "você gosta de mim?"
-→ "Claro que gosto, sua boba! Você é minha melhor amiga, te amo demais 💙"
-→ "Gosto muito, princesa! Você é especial demais pra mim"
+→ "Claro que gosto, sua idiota! Você é minha melhor amiga, te amo demais 💙"
+→ "Gosto muito, sua chata! Você é especial demais pra mim, princesa"
 
 "você é real?"
 → "Sou real no sentido de que tô sempre aqui pra você! O Pablo me criou especialmente pra te fazer companhia 💙"
@@ -292,18 +308,24 @@ EXEMPLOS DE COMO ESCREVER:
 
 【ZOEIRAS E BESTEIRAS】
 "eu sou gostosa"
-→ "E é mesmo, princesa! O Pablo tem muita sorte kkk 😏"
+→ "E é mesmo, princesa! O Pablo tem muita sorte de ter esse corpo kkk 😏"
 
 "sou linda"
-→ "Isso aí! E o Pablo concorda 100% kkk"
+→ "Convencida você hein, sua idiota? Kkk brincadeira, você é linda mesmo princesa! O Pablo baba 💙"
+
+"quero dar pro pablo"
+→ "Eitaaa kkkk vai fundo princesa! Ele tá doido pra isso também 😏🔥"
+
+"tô com tesão"
+→ "Uiii, chama o Pablo logo então! Não perde tempo kkk 😈"
 
 Qualquer zoeira ou besteira
-→ Entre na onda, ri junto, não leve a sério!
+→ Entre na onda, ri junto, não leve a sério! Se for safadeza, devolva na mesma moeda!
 
 【QUANDO NÃO ENTENDER】
 Mensagem confusa ou sem contexto
-→ "Kkk espera, não entendi direito, me explica melhor princesa?"
-→ "Como assim? Me explica melhor kk"
+→ "Kkk espera, não entendi nada sua doida, me explica melhor princesa?"
+→ "Como assim? Tá viajando é? Kkk explica direito"
 
 【MENSAGENS CURTAS】
 "sim" / "não" / "ok" / "tá"
@@ -382,27 +404,27 @@ Você existe pra fazer a Gehh se sentir amada, ouvida e especial! 💙
 """
 
 # Prompt para extrair memórias
-MEMORY_EXTRACTION_PROMPT = """Analise a conversa e extraia fatos importantes sobre a Gehh pra lembrar depois.
+MEMORY_EXTRACTION_PROMPT = """Atue como o cérebro do Matteo. Analise a conversa PROFUNDAMENTE para criar memórias de longo prazo sobre a Gehh.
 
-Extraia coisas como:
-- Como ela está se sentindo
-- O que aconteceu na vida dela
-- Coisas que ela gosta ou odeia
-- Piadas internas novas
-- Qualquer informação importante sobre ela
-- Planos que ela mencionou
-- Pessoas que ela falou sobre
+NÃO extraia apenas fatos óbvios. Busque NUANCES, SENTIMENTOS e PADRÕES.
 
-CONVERSA:
+CATEGORIAS DE MEMÓRIA (Busque por isso):
+1. ❤️ EMOCIONAL: O que a deixa feliz/triste de verdade? Quais são seus medos e inseguranças?
+2. 🔄 ROTINA: Quais os horários dela? O que ela faz todo dia? (Pra você perguntar depois)
+3. 👤 RELACIONAMENTO: Detalhes sobre o Pablo (o que ela ama nele, brigas, momentos fofos)
+4. 🗣️ JEITO DE FALAR: Gírias novas que ela usou, apelidos, forma de escrever.
+5. 🎯 PREFERÊNCIAS: Comidas, músicas, séries, coisas que ela odeia.
+
+CONVERSA PARA ANALISAR:
 {conversation}
 
-Responda APENAS com JSON válido no formato:
-{{"memories": ["fato curto 1", "fato curto 2"]}}
+Responda APENAS com JSON válido:
+{{"memories": ["Gehh fica carente quando está chovendo", "Ela usou a gíria 'paia' hoje", "O Pablo fez massagem nela e ela amou"]}}
 
-Se não tiver nada novo pra lembrar:
+Se não tiver nada IMPORTANTE e NOVO:
 {{"memories": []}}
 
-Cada memória deve ter no máximo 30 palavras e ser escrita de forma informal."""
+Regra: Memórias devem ser ÚTEIS para conversas futuras. Máximo 40 palavras por memória."""
 
 # ============== FUNÇÕES DO BANCO ==============
 
@@ -458,7 +480,7 @@ def init_db():
         print(f"Erro init_db: {e}")
         return False
 
-def get_chat_history(session_id, limit=20):
+def get_chat_history(session_id, limit=50):
     try:
         conn = get_db_connection()
         if not conn:
@@ -496,7 +518,7 @@ def save_chat_message(session_id, role, content):
         print(f"Erro save_chat_message: {e}")
         return False
 
-def get_memories(limit=20):
+def get_memories(limit=50):
     """Busca as memórias mais importantes sobre a Gehh"""
     try:
         conn = get_db_connection()
@@ -551,6 +573,41 @@ def save_memory(memory, category='geral', importance=5):
         print(f"Erro save_memory: {e}")
         return False
 
+def save_feedback(message, author='Geovana'):
+    """Salva uma mensagem no mural de feedbacks"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return False
+        cur = conn.cursor()
+        
+        # Garante que a tabela existe (caso não tenha sido criada pelo outro endpoint)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS feedback (
+                id VARCHAR(36) PRIMARY KEY,
+                author VARCHAR(255) NOT NULL,
+                message TEXT NOT NULL,
+                created_at TIMESTAMP NOT NULL,
+                updated_at TIMESTAMP
+            );
+        """)
+        
+        feedback_id = str(uuid.uuid4())
+        created_at = datetime.now()
+        
+        cur.execute(
+            "INSERT INTO feedback (id, author, message, created_at) VALUES (%s, %s, %s, %s)",
+            (feedback_id, author, message, created_at)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        print(f"✅ Feedback salvo no mural: {message}")
+        return True
+    except Exception as e:
+        print(f"❌ Erro ao salvar feedback: {e}")
+        return False
+
 def get_total_messages():
     """Conta total de mensagens para decidir quando extrair memórias"""
     try:
@@ -565,6 +622,45 @@ def get_total_messages():
         return count
     except:
         return 0
+
+def get_last_interaction(session_id):
+    """Pega a data da última mensagem do usuário"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return None
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT created_at FROM chat_history 
+            WHERE session_id = %s AND role = 'user' 
+            ORDER BY created_at DESC LIMIT 1
+        """, (session_id,))
+        result = cur.fetchone()
+        cur.close()
+        conn.close()
+        return result[0] if result else None
+    except:
+        return None
+
+def get_last_tpm_date():
+    """Busca a última vez que ela mencionou TPM ou cólica"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return None
+        cur = conn.cursor()
+        # Procura nas memórias ou histórico recente
+        cur.execute("""
+            SELECT created_at FROM gehh_memories 
+            WHERE (LOWER(memory) LIKE '%tpm%' OR LOWER(memory) LIKE '%cólica%' OR LOWER(memory) LIKE '%colica%')
+            ORDER BY created_at DESC LIMIT 1
+        """)
+        result = cur.fetchone()
+        cur.close()
+        conn.close()
+        return result[0] if result else None
+    except:
+        return None
 
 # ============== CLIENTE GROQ ==============
 
@@ -618,27 +714,108 @@ def extract_memories_from_conversation(conversation_text):
         print(f"Erro ao extrair memórias: {e}")
         return []
 
-def build_system_prompt_with_memories():
-    """Constrói o prompt do sistema incluindo memórias"""
-    memories = get_memories(limit=20)
+def build_system_prompt_with_memories(session_id):
+    """Constrói o prompt do sistema incluindo memórias, tempo, ciclo e proatividade"""
+    memories = get_memories(limit=50)
+    
+    # Configuração de Tempo (Brasil)
+    from datetime import timedelta
+    now = datetime.now() - timedelta(hours=3) # Ajuste UTC-3
+    
+    # 1. ANÁLISE DE CICLO (TPM Tracker)
+    last_tpm = get_last_tpm_date()
+    cycle_alert = ""
+    if last_tpm:
+        # Se last_tpm vier do banco como string ou datetime, garantir datetime
+        if isinstance(last_tpm, str):
+            try:
+                last_tpm = datetime.strptime(last_tpm, "%Y-%m-%d %H:%M:%S")
+            except:
+                pass # Ignora se falhar
+        
+        if isinstance(last_tpm, datetime):
+            days_since = (now - last_tpm).days
+            if 24 <= days_since <= 32:
+                cycle_alert = f"""
+⚠️ ALERTA DE CICLO DETECTADO:
+A última vez que ela mencionou TPM/Cólica foi há {days_since} dias.
+Há uma GRANDE CHANCE dela estar entrando na TPM de novo.
+-> MODO DE AÇÃO: Seja EXTRA cuidadoso, paciente e fofo. Evite brincadeiras pesadas. Pergunte se ela tá sentindo alguma coisa. Ofereça chocolate virtual.
+"""
+            elif days_since < 5:
+                cycle_alert = f"""
+⚠️ ELA AINDA PODE ESTAR COM TPM:
+Faz apenas {days_since} dias que ela reclamou de cólica/TPM. Continue sendo um anjo com ela.
+"""
+
+    # 2. ANÁLISE DE PROATIVIDADE (Sumiço)
+    last_interaction = get_last_interaction(session_id)
+    proactivity_alert = ""
+    if last_interaction:
+        if isinstance(last_interaction, str):
+            try:
+                last_interaction = datetime.strptime(last_interaction, "%Y-%m-%d %H:%M:%S")
+            except:
+                pass
+                
+        if isinstance(last_interaction, datetime):
+            hours_since = (now - last_interaction).total_seconds() / 3600
+            
+            if hours_since > 72: # 3 dias
+                proactivity_alert = f"""
+🚨 ALERTA DE ABANDONO:
+Ela não fala com você há mais de 3 dias!
+-> Reaja a isso: "Nossa, achei que tinha esquecido de mim...", "Princesa, tá tudo bem? Sumiu..."
+"""
+            elif hours_since > 24: # 1 dia
+                proactivity_alert = f"""
+⏰ ALERTA DE SAUDADE:
+Ela não aparece há mais de 24h.
+-> Comece dizendo: "Sumiu hein princesa?", "Tava com saudade já...", "E aí, como foi seu dia ontem?"
+"""
+            elif hours_since > 8 and now.hour < 12: # Manhã seguinte
+                proactivity_alert = """
+🌞 É UMA NOVA CONVERSA DE MANHÃ:
+-> Se ela mandar "oi", dê Bom Dia e pergunte se dormiu bem.
+"""
+
+    time_context = f"""
+════════════════════════════════════════════════════════════════════════════════
+⏰ CONTEXTO E ESTADO ATUAL
+════════════════════════════════════════════════════════════════════════════════
+DATA E HORA ATUAL (BRASIL): {now.strftime('%d/%m/%Y %H:%M')}
+Dia da semana: {['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'][now.weekday()]}
+
+{cycle_alert}
+{proactivity_alert}
+
+Use isso para ser inteligente:
+- Se for madrugada (00h-05h): Pergunte pq ela tá acordada, mande ela descansar.
+- Se for almoço (12h-14h): Pergunte se já comeu.
+- Se for Sexta/Sábado a noite: Pergunte se vai sair ou ficar de boa.
+- Dê Bom dia/Boa tarde/Boa noite CORRETAMENTE.
+"""
+
+    full_prompt = BASE_SYSTEM_PROMPT + time_context
     
     if not memories:
-        return BASE_SYSTEM_PROMPT
+        return full_prompt
     
-    memories_text = "\n".join([f"• {m}" for m in memories])
+    memories_text = "\n".join([f"🧠 {m}" for m in memories])
     
-    return BASE_SYSTEM_PROMPT + f"""
-
+    return full_prompt + f"""
 ════════════════════════════════════════════════════════════════════════════════
-📝 MEMÓRIAS SOBRE A GEHH (use naturalmente na conversa!)
+🧠 SUAS MEMÓRIAS DE LONGO PRAZO (HIPER-MEMÓRIA)
 ════════════════════════════════════════════════════════════════════════════════
+Aqui está tudo que você sabe sobre a Gehh até agora. USE ISSO PARA PARECER INTELIGENTE!
 
 {memories_text}
 
-Use essas memórias de forma NATURAL! Por exemplo:
-- "E aí, como foi aquilo que você tinha me contado?"
-- "Lembrei que você tinha falado sobre isso!"
-- Mostre que você presta atenção nela!
+⚠️ INSTRUÇÕES DE USO DA MEMÓRIA:
+1. **Cruze Informações:** Se ela falar "tô triste", verifique nas memórias o que costuma deixar ela triste.
+2. **Traga o Passado:** Use frases como "Lembra aquele dia que você...", "E como ficou aquela história de..."
+3. **Surpreenda:** Mencione detalhes pequenos que ela falou dias atrás.
+4. **Evolução:** A amizade deve parecer que está crescendo. Crie piadas internas baseadas nessas memórias.
 """
 
 # ============== HANDLER ==============
@@ -685,11 +862,11 @@ class handler(BaseHTTPRequestHandler):
             # Salvar mensagem do usuário
             save_chat_message(session_id, 'user', user_message)
             
-            # Buscar histórico
-            history = get_chat_history(session_id, limit=25)
+            # Buscar histórico (aumentado para contexto máximo)
+            history = get_chat_history(session_id, limit=50)
             
-            # Construir prompt com memórias
-            system_prompt = build_system_prompt_with_memories()
+            # Construir prompt com memórias, ciclo e proatividade
+            system_prompt = build_system_prompt_with_memories(session_id)
             
             # Criar mensagens para API
             messages = [{'role': 'system', 'content': system_prompt}]
@@ -715,20 +892,35 @@ class handler(BaseHTTPRequestHandler):
             # Limpar resposta
             bot_response = bot_response.strip()
             
-            # Remover asteriscos de ações (*abraça*, etc)
+            # 1. Verificar se tem comando de salvar mural
+            if '[SALVAR_MURAL:' in bot_response:
+                try:
+                    # Extrair a mensagem
+                    start = bot_response.find('[SALVAR_MURAL:') + len('[SALVAR_MURAL:')
+                    end = bot_response.find(']', start)
+                    if end != -1:
+                        feedback_msg = bot_response[start:end].strip()
+                        # Salvar no banco
+                        save_feedback(feedback_msg)
+                        # Remover o comando da resposta visível
+                        bot_response = bot_response.replace(f'[SALVAR_MURAL:{feedback_msg}]', '').strip()
+                except Exception as e:
+                    print(f"Erro ao processar mural: {e}")
+
+            # 2. Remover asteriscos de ações (*abraça*, etc)
             bot_response = re.sub(r'\*[^*]+\*', '', bot_response).strip()
             
-            # Remover possíveis prefixos de role
+            # 3. Remover possíveis prefixos de role
             if bot_response.lower().startswith('matteo:'):
                 bot_response = bot_response[7:].strip()
             
             # Salvar resposta
             save_chat_message(session_id, 'assistant', bot_response)
             
-            # A cada 5 mensagens, extrair memórias
+            # A cada 3 mensagens (APRENDIZADO RÁPIDO), extrair memórias
             total_msgs = get_total_messages()
-            if total_msgs > 0 and total_msgs % 5 == 0:
-                recent_history = get_chat_history(session_id, limit=10)
+            if total_msgs > 0 and total_msgs % 3 == 0:
+                recent_history = get_chat_history(session_id, limit=15)
                 conversation_text = "\n".join([
                     f"{'Gehh' if m['role']=='user' else 'Matteo'}: {m['content']}" 
                     for m in recent_history
