@@ -7,8 +7,6 @@ import os
 import uuid
 from datetime import datetime
 from urllib.parse import urlparse
-import smtplib
-from email.mime.text import MIMEText
 
 # Tentar importar psycopg2
 try:
@@ -53,26 +51,28 @@ def init_db():
         print(f"Erro init_db: {e}")
         return False
 
-# ============== FUNÇÃO DE E-MAIL ==============
+# ============== FUNÇÃO DE E-MAIL (RESEND) ==============
 
 def send_email_notification(author, message):
-    SENDER_EMAIL = os.environ.get('SENDER_EMAIL')
-    SENDER_PASSWORD = os.environ.get('SENDER_PASSWORD')
+    import urllib.request
+    import urllib.error
+    
+    RESEND_API_KEY = os.environ.get('RESEND_API_KEY')
     RECEIVER_EMAIL = os.environ.get('RECEIVER_EMAIL')
-    SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
-    SMTP_PORT = int(os.environ.get('SMTP_PORT', 587))
 
-    print(f"[EMAIL] Tentando enviar e-mail...")
-    print(f"[EMAIL] SENDER_EMAIL configurado: {bool(SENDER_EMAIL)}")
-    print(f"[EMAIL] SENDER_PASSWORD configurado: {bool(SENDER_PASSWORD)}")
+    print(f"[EMAIL] Tentando enviar e-mail via Resend...")
+    print(f"[EMAIL] RESEND_API_KEY configurado: {bool(RESEND_API_KEY)}")
     print(f"[EMAIL] RECEIVER_EMAIL configurado: {bool(RECEIVER_EMAIL)}")
 
-    if not all([SENDER_EMAIL, SENDER_PASSWORD, RECEIVER_EMAIL]):
-        print("[EMAIL] Credenciais de e-mail não configuradas!")
+    if not RESEND_API_KEY:
+        print("[EMAIL] RESEND_API_KEY não configurada!")
+        return False
+    
+    if not RECEIVER_EMAIL:
+        print("[EMAIL] RECEIVER_EMAIL não configurado!")
         return False
 
     # Pegar a hora atual formatada
-    from datetime import datetime
     hora_atual = datetime.now().strftime("%d/%m/%Y às %H:%M")
 
     # Criar e-mail em HTML bonito
@@ -102,46 +102,35 @@ def send_email_notification(author, message):
     </html>
     """
 
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText as MimeTextPart
-
-    msg = MIMEMultipart('alternative')
-    msg['Subject'] = f"💌 Nova mensagem da Gehh no Mural! - {hora_atual}"
-    msg['From'] = SENDER_EMAIL
-    msg['To'] = RECEIVER_EMAIL
-
-    # Versão texto simples
-    text_content = f"""
-Nova mensagem no Mural de Desabafos!
-
-Mensagem: {message}
-
-Enviado por: {author}
-Data: {hora_atual}
-
----
-Site de Aniversário da Gehh 💙
-    """
-
-    part1 = MimeTextPart(text_content, 'plain', 'utf-8')
-    part2 = MimeTextPart(html_content, 'html', 'utf-8')
-
-    msg.attach(part1)
-    msg.attach(part2)
+    # Dados para a API do Resend
+    email_data = {
+        "from": "Mural da Gehh <onboarding@resend.dev>",
+        "to": [RECEIVER_EMAIL],
+        "subject": f"💌 Nova mensagem da Gehh no Mural! - {hora_atual}",
+        "html": html_content
+    }
 
     try:
-        print(f"[EMAIL] Conectando ao servidor {SMTP_SERVER}:{SMTP_PORT}...")
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
-            print(f"[EMAIL] Fazendo login...")
-            server.login(SENDER_EMAIL, SENDER_PASSWORD)
-            print(f"[EMAIL] Enviando e-mail para {RECEIVER_EMAIL}...")
-            server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, msg.as_string())
-        print(f"[EMAIL] E-mail enviado com sucesso!")
-        return True
-    except smtplib.SMTPAuthenticationError as e:
-        print(f"[EMAIL] Erro de autenticação: {e}")
-        print("[EMAIL] Verifique se está usando uma Senha de App do Gmail!")
+        print(f"[EMAIL] Enviando via Resend para {RECEIVER_EMAIL}...")
+        
+        req = urllib.request.Request(
+            "https://api.resend.com/emails",
+            data=json.dumps(email_data).encode('utf-8'),
+            headers={
+                "Authorization": f"Bearer {RESEND_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            method="POST"
+        )
+        
+        with urllib.request.urlopen(req) as response:
+            result = json.loads(response.read().decode('utf-8'))
+            print(f"[EMAIL] E-mail enviado com sucesso! ID: {result.get('id')}")
+            return True
+            
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode('utf-8')
+        print(f"[EMAIL] Erro HTTP {e.code}: {error_body}")
         return False
     except Exception as e:
         print(f"[EMAIL] Erro ao enviar e-mail: {e}")
