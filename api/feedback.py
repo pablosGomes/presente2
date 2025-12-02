@@ -9,6 +9,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 import smtplib
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # Tentar importar psycopg2
 try:
@@ -53,31 +54,63 @@ def init_db():
         print(f"Erro init_db: {e}")
         return False
 
-# ============== FUNÇÃO DE E-MAIL ==============
+# ============== FUNÇÃO DE E-MAIL (GMAIL SMTP) ==============
 
 def send_email_notification(author, message):
     SENDER_EMAIL = os.environ.get('SENDER_EMAIL')
     SENDER_PASSWORD = os.environ.get('SENDER_PASSWORD')
     RECEIVER_EMAIL = os.environ.get('RECEIVER_EMAIL')
-    SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
-    SMTP_PORT = int(os.environ.get('SMTP_PORT', 587))
+
+    print(f"[EMAIL] Tentando enviar e-mail...")
+    print(f"[EMAIL] SENDER configurado: {bool(SENDER_EMAIL)}")
+    print(f"[EMAIL] PASSWORD configurado: {bool(SENDER_PASSWORD)}")
+    print(f"[EMAIL] RECEIVER configurado: {bool(RECEIVER_EMAIL)}")
 
     if not all([SENDER_EMAIL, SENDER_PASSWORD, RECEIVER_EMAIL]):
+        print("[EMAIL] Credenciais não configuradas!")
         return False
 
-    msg = MIMEText(f"Nova mensagem no Mural de Desabafos:\n\nAutor: {author}\n\nMensagem:\n{message}")
-    msg['Subject'] = "🚨 Novo Desabafo da Geovana no Site de Aniversário! 🚨"
-    msg['From'] = SENDER_EMAIL
-    msg['To'] = RECEIVER_EMAIL
+    hora_atual = datetime.now().strftime("%d/%m/%Y às %H:%M")
+
+    # E-mail em HTML
+    html_content = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px;">
+            <h1 style="color: #e74c3c; text-align: center;">💌 Nova Mensagem da Gehh!</h1>
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3498db;">
+                <p style="margin: 0; font-size: 16px; color: #333;">{message}</p>
+            </div>
+            <p style="text-align: center; color: #666;"><strong>Enviado por:</strong> {author}</p>
+            <p style="text-align: center; color: #666;"><strong>Data:</strong> {hora_atual}</p>
+        </div>
+    </body>
+    </html>
+    """
 
     try:
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f"💌 Mensagem da Gehh - {hora_atual}"
+        msg['From'] = SENDER_EMAIL
+        msg['To'] = RECEIVER_EMAIL
+        
+        msg.attach(MIMEText(f"Nova mensagem da Gehh:\n\n{message}\n\nEnviado por: {author}\nData: {hora_atual}", 'plain', 'utf-8'))
+        msg.attach(MIMEText(html_content, 'html', 'utf-8'))
+
+        print(f"[EMAIL] Conectando ao Gmail...")
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
             server.starttls()
             server.login(SENDER_EMAIL, SENDER_PASSWORD)
             server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, msg.as_string())
+        
+        print(f"[EMAIL] Enviado com sucesso para {RECEIVER_EMAIL}!")
         return True
+        
+    except smtplib.SMTPAuthenticationError:
+        print("[EMAIL] ERRO: Falha na autenticação! Use uma Senha de App do Gmail.")
+        return False
     except Exception as e:
-        print(f"Erro ao enviar e-mail: {e}")
+        print(f"[EMAIL] ERRO: {e}")
         return False
 
 # ============== HANDLER ==============
