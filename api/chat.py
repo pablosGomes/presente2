@@ -652,7 +652,7 @@ def save_feedback(message, author='Geovana'):
         cur = conn.cursor()
         
         # Garante que a tabela existe (caso não tenha sido criada pelo outro endpoint)
-        cur.execute("""
+            cur.execute("""
             CREATE TABLE IF NOT EXISTS feedback (
                 id VARCHAR(36) PRIMARY KEY,
                 author VARCHAR(255) NOT NULL,
@@ -853,11 +853,11 @@ LLM_MODEL = "llama-3.3-70b-versatile"  # Modelo mais novo e inteligente do Groq!
 
 if OPENAI_AVAILABLE and GROQ_API_KEY:
     try:
-        client = OpenAI(
-            api_key=GROQ_API_KEY,
-            base_url="https://api.groq.com/openai/v1"
-        )
-        LLM_ENABLED = True
+            client = OpenAI(
+                api_key=GROQ_API_KEY,
+                base_url="https://api.groq.com/openai/v1"
+            )
+            LLM_ENABLED = True
         print("✅ Usando Groq API com LLaMA 3.1 70B")
     except Exception as e:
         print(f"❌ Erro ao configurar Groq: {e}")

@@ -221,19 +221,19 @@ const MatteoChatbot = () => {
                 ))}
               </div>
 
-              <div className="flex items-center gap-2 bg-white p-2 pr-2 rounded-[24px] shadow-sm border border-gray-200 focus-within:border-rose-300 focus-within:ring-4 focus-within:ring-rose-100 transition-all duration-300">
+              <div className="flex items-center gap-2 bg-white p-1.5 pr-1.5 rounded-[24px] shadow-sm border border-gray-200 focus-within:border-rose-300 focus-within:ring-4 focus-within:ring-rose-100 transition-all duration-300">
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                   placeholder="Digite uma mensagem..."
-                  className="flex-1 px-4 py-2 bg-transparent outline-none text-gray-700 placeholder-gray-400 text-sm font-medium"
+                  className="flex-1 min-w-0 px-3 py-2 bg-transparent outline-none text-gray-700 placeholder-gray-400 text-sm font-medium"
                 />
                 <button
                   onClick={handleSend}
                   disabled={!input.trim()}
-                  className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                  className={`w-10 h-10 min-w-[40px] flex-shrink-0 rounded-2xl flex items-center justify-center transition-all duration-300 ${
                     input.trim() 
                       ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/30 scale-100' 
                       : 'bg-gray-100 text-gray-400 scale-95'
