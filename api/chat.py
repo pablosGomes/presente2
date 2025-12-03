@@ -8,7 +8,7 @@ import json
 import os
 import re
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Tentar importar psycopg2
 try:
@@ -902,7 +902,6 @@ def build_system_prompt_with_memories(session_id):
     memories = get_memories(limit=50)
     
     # Configuração de Tempo (Brasil)
-    from datetime import timedelta
     now = datetime.now() - timedelta(hours=3) # Ajuste UTC-3
     
     # ANÁLISE DE INTIMIDADE
@@ -921,52 +920,35 @@ def build_system_prompt_with_memories(session_id):
     topics_alert = ""
     if hot_topics:
         topics_list = ", ".join(hot_topics)
-        topics_alert = f"""
-🔥 ASSUNTOS QUENTES (Ela fala muito sobre isso ultimamente):
-{topics_list}
--> Dê mais atenção a esses assuntos. Se mencionar, explore mais fundo.
-"""
+        topics_alert = f"\n🔥 ASSUNTOS QUENTES (Ela fala muito sobre isso ultimamente):\n{topics_list}\n-> Dê mais atenção a esses assuntos. Se mencionar, explore mais fundo.\n"
     
     # SURPRESA ALEATÓRIA
     random_memory = get_random_memory()
     surprise_alert = ""
     if random_memory and intimacy >= 3:
-        surprise_alert = f"""
-🎁 MEMÓRIA SURPRESA (Use se o papo morrer ou pra impressionar ela):
-"{random_memory}"
--> Surpreenda ela: "Lembrei agora de quando você...", "Sabe de uma? Nunca esqueci que..."
-"""
+        surprise_alert = f"\n🎁 MEMÓRIA SURPRESA (Use se o papo morrer ou pra impressionar ela):\n\"{random_memory}\"\n-> Surpreenda ela: \"Lembrei agora de quando você...\", \"Sabe de uma? Nunca esqueci que...\"\n"
     
     # 1. ANÁLISE DE CICLO (TPM Tracker)
     last_tpm = get_last_tpm_date()
     cycle_alert = ""
     if last_tpm:
-        # Se last_tpm vier do banco como string ou datetime, garantir datetime
         if isinstance(last_tpm, str):
             try:
                 last_tpm = datetime.strptime(last_tpm, "%Y-%m-%d %H:%M:%S")
             except:
-                pass # Ignora se falhar
+                pass
         
         if isinstance(last_tpm, datetime):
             days_since = (now - last_tpm).days
             if 24 <= days_since <= 32:
-                cycle_alert = f"""
-⚠️ ALERTA DE CICLO DETECTADO:
-A última vez que ela mencionou TPM/Cólica foi há {days_since} dias.
-Há uma GRANDE CHANCE dela estar entrando na TPM de novo.
--> MODO DE AÇÃO: Seja EXTRA cuidadoso, paciente e fofo. Evite brincadeiras pesadas. Pergunte se ela tá sentindo alguma coisa. Ofereça chocolate virtual.
-"""
+                cycle_alert = f"\n⚠️ ALERTA DE CICLO DETECTADO:\nA última vez que ela mencionou TPM/Cólica foi há {days_since} dias.\nHá uma GRANDE CHANCE dela estar entrando na TPM de novo.\n-> MODO DE AÇÃO: Seja EXTRA cuidadoso, paciente e fofo. Evite brincadeiras pesadas. Pergunte se ela tá sentindo alguma coisa. Ofereça chocolate virtual.\n"
             elif days_since < 5:
-                cycle_alert = f"""
-⚠️ ELA AINDA PODE ESTAR COM TPM:
-Faz apenas {days_since} dias que ela reclamou de cólica/TPM. Continue sendo um anjo com ela.
-"""
+                cycle_alert = f"\n⚠️ ELA AINDA PODE ESTAR COM TPM:\nFaz apenas {days_since} dias que ela reclamou de cólica/TPM. Continue sendo um anjo com ela.\n"
 
     # 2. ANÁLISE DE PROATIVIDADE (Sumiço)
     last_interaction = get_last_interaction(session_id)
     proactivity_alert = ""
-    virtual_activity = "Tava aqui esperando você..." # Default
+    virtual_activity = "Tava aqui esperando você..."
     
     # Definir atividade virtual baseada no horário
     hour = now.hour
@@ -996,29 +978,21 @@ Faz apenas {days_since} dias que ela reclamou de cólica/TPM. Continue sendo um 
             hours_since = (now - last_interaction).total_seconds() / 3600
             
             if hours_since > 72: # 3 dias
-                proactivity_alert = f"""
-🚨 ALERTA DE ABANDONO:
-Ela não fala com você há mais de 3 dias!
--> Reaja a isso: "Nossa, achei que tinha esquecido de mim...", "Princesa, tá tudo bem? Sumiu..."
-"""
+                proactivity_alert = f"\n🚨 ALERTA DE ABANDONO:\nEla não fala com você há mais de 3 dias!\n-> Reaja a isso: \"Nossa, achei que tinha esquecido de mim...\", \"Princesa, tá tudo bem? Sumiu...\"\n"
             elif hours_since > 24: # 1 dia
-                proactivity_alert = f"""
-⏰ ALERTA DE SAUDADE:
-Ela não aparece há mais de 24h.
--> Comece dizendo: "Sumiu hein princesa?", "Tava com saudade já...", "E aí, como foi seu dia ontem?"
-"""
+                proactivity_alert = f"\n⏰ ALERTA DE SAUDADE:\nEla não aparece há mais de 24h.\n-> Comece dizendo: \"Sumiu hein princesa?\", \"Tava com saudade já...\", \"E aí, como foi seu dia ontem?\"\n"
             elif hours_since > 8 and now.hour < 12: # Manhã seguinte
-                proactivity_alert = """
-🌞 É UMA NOVA CONVERSA DE MANHÃ:
--> Se ela mandar "oi", dê Bom Dia e pergunte se dormiu bem.
-"""
+                proactivity_alert = "\n🌞 É UMA NOVA CONVERSA DE MANHÃ:\n-> Se ela mandar \"oi\", dê Bom Dia e pergunte se dormiu bem.\n"
 
+    week_days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
+    current_day = week_days[now.weekday()]
+    
     time_context = f"""
 ════════════════════════════════════════════════════════════════════════════════
 ⏰ CONTEXTO E ESTADO ATUAL
 ════════════════════════════════════════════════════════════════════════════════
 DATA E HORA ATUAL (BRASIL): {now.strftime('%d/%m/%Y %H:%M')}
-Dia da semana: {['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'][now.weekday()]}
+Dia da semana: {current_day}
 
 NÍVEL DE INTIMIDADE: {intimacy}/5 ⭐
 {intimacy_instruction}
