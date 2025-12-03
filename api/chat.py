@@ -652,7 +652,7 @@ def save_feedback(message, author='Geovana'):
         cur = conn.cursor()
         
         # Garante que a tabela existe (caso não tenha sido criada pelo outro endpoint)
-            cur.execute("""
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS feedback (
                 id VARCHAR(36) PRIMARY KEY,
                 author VARCHAR(255) NOT NULL,
