@@ -851,18 +851,18 @@ client = None
 LLM_ENABLED = False
 LLM_MODEL = "llama-3.3-70b-versatile"  # Modelo mais novo e inteligente do Groq!
 
-# if OPENAI_AVAILABLE and GROQ_API_KEY:
-#     try:
-#         client = OpenAI(
-#             api_key=GROQ_API_KEY,
-#             base_url="https://api.groq.com/openai/v1"
-#         )
-#         LLM_ENABLED = True
-#         print("✅ Usando Groq API com LLaMA 3.1 70B")
-#     except Exception as e:
-#         print(f"❌ Erro ao configurar Groq: {e}")
-# else:
-#     print("⚠️ Groq API Key não configurada ou biblioteca não disponível")
+if OPENAI_AVAILABLE and GROQ_API_KEY:
+    try:
+        client = OpenAI(
+            api_key=GROQ_API_KEY,
+            base_url="https://api.groq.com/openai/v1"
+        )
+        LLM_ENABLED = True
+        print("✅ Usando Groq API com LLaMA 3.1 70B")
+    except Exception as e:
+        print(f"❌ Erro ao configurar Groq: {e}")
+else:
+    print("⚠️ Groq API Key não configurada ou biblioteca não disponível")
 
 # ============== FUNÇÕES DE APRENDIZADO ==============
 
