@@ -235,11 +235,11 @@ const MatteoChatbot = () => {
                   disabled={!input.trim()}
                   className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-300 ${
                     input.trim() 
-                      ? 'bg-rose-600 text-white shadow-lg shadow-rose-500/30 rotate-0 hover:scale-105' 
-                      : 'bg-gray-100 text-gray-300 rotate-90 cursor-not-allowed'
+                      ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/30 scale-100' 
+                      : 'bg-gray-100 text-gray-400 scale-95'
                   }`}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={input.trim() ? 'translate-x-0.5 translate-y-0.5' : ''}>
                     <line x1="22" y1="2" x2="11" y2="13"></line>
                     <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                   </svg>
