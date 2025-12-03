@@ -48,7 +48,26 @@ ACHIEVEMENTS = {
     "first_reply": {"name": "Respondida", "emoji": "💕", "description": "Pablo respondeu seu desabafo"},
     "love_letter": {"name": "Romântica", "emoji": "💌", "description": "Enviou uma carta de amor"},
     "all_moods": {"name": "Emocional", "emoji": "🎭", "description": "Usou todos os humores"},
+    "first_poke": {"name": "Cutucadora", "emoji": "👉", "description": "Cutucou o Pablo pela primeira vez"},
 }
+
+# ============== MENSAGENS DE CUTUCADA ==============
+import random
+
+POKE_MESSAGES = [
+    "🔔 PABLO! Responde a mensagem logo, idiota! 😤",
+    "👉 Ei Pablo! A Gehh tá esperando sua resposta, mané!",
+    "⚠️ ALERTA: Gehh irritada! Responde logo! 🚨",
+    "😤 Pablo seu lerdo! Responde a mensagem!",
+    "🗣️ PABLOOOOO! Acorda e responde! 💢",
+    "👀 Gehh tá de olho esperando sua resposta...",
+    "💬 Ô Pablo! Tem mensagem não respondida! Mexe-se!",
+    "🔥 Gehh cutucou você! Melhor responder logo...",
+    "😠 Responde logo Pablo! Não me ignora não!",
+    "📢 CUTUCADA OFICIAL: Responde a Gehh AGORA!",
+    "💀 Pablo... responde antes que seja tarde demais...",
+    "🎯 Gehh mandou avisar: RESPONDE! 👊",
+]
 
 # ============== FUNÇÕES DO BANCO ==============
 
@@ -239,6 +258,74 @@ def get_all_achievements(conn, user_id='gehh'):
             "unlocked_at": unlocked.get(key).isoformat() if key in unlocked else None
         })
     return result
+
+# ============== FUNÇÃO DE CUTUCADA ==============
+
+def send_poke_notification(feedback_id, feedback_message):
+    """Envia uma cutucada (poke) para o Pablo"""
+    poke_message = random.choice(POKE_MESSAGES)
+    
+    # Adiciona um trecho da mensagem original
+    preview = feedback_message[:50] + "..." if len(feedback_message) > 50 else feedback_message
+    full_message = f"{poke_message}\n\n📝 \"{preview}\""
+    
+    # Enviar push notification
+    push_sent = send_push_to_pablo(full_message)
+    
+    # Enviar email também
+    email_sent = send_poke_email(feedback_message, poke_message)
+    
+    return push_sent or email_sent
+
+def send_poke_email(original_message, poke_message):
+    """Envia email de cutucada"""
+    SENDER_EMAIL = os.environ.get('SENDER_EMAIL')
+    SENDER_PASSWORD = os.environ.get('SENDER_PASSWORD')
+    RECEIVER_EMAIL = os.environ.get('RECEIVER_EMAIL')
+
+    if not all([SENDER_EMAIL, SENDER_PASSWORD, RECEIVER_EMAIL]):
+        return False
+
+    hora_atual = datetime.now().strftime("%d/%m/%Y às %H:%M")
+
+    html_content = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #fee2e2;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; border: 3px solid #ef4444;">
+            <h1 style="color: #ef4444; text-align: center;">👉 CUTUCADA DA GEHH! 👈</h1>
+            <p style="text-align: center; font-size: 24px; color: #333;">{poke_message}</p>
+            <div style="background-color: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;">
+                <p style="margin: 0; font-size: 14px; color: #666;"><strong>Mensagem original:</strong></p>
+                <p style="margin: 10px 0 0 0; font-size: 16px; color: #333;">{original_message}</p>
+            </div>
+            <p style="text-align: center; color: #666;"><strong>Cutucada em:</strong> {hora_atual}</p>
+            <p style="text-align: center; margin-top: 20px;">
+                <a href="https://presente2.vercel.app/mural?admin=pablo" style="background-color: #ef4444; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold;">RESPONDER AGORA! 🏃</a>
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f"👉 CUTUCADA! Gehh quer resposta AGORA! 😤"
+        msg['From'] = SENDER_EMAIL
+        msg['To'] = RECEIVER_EMAIL
+        
+        msg.attach(MIMEText(f"CUTUCADA DA GEHH!\n\n{poke_message}\n\nMensagem original: {original_message}\n\nCutucada em: {hora_atual}", 'plain', 'utf-8'))
+        msg.attach(MIMEText(html_content, 'html', 'utf-8'))
+
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(SENDER_EMAIL, SENDER_PASSWORD)
+            server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, msg.as_string())
+        
+        return True
+        
+    except Exception as e:
+        print(f"[EMAIL POKE] ERRO: {e}")
+        return False
 
 # ============== FUNÇÕES DE ESTATÍSTICAS ==============
 
@@ -642,7 +729,7 @@ class handler(BaseHTTPRequestHandler):
             self._send_json(500, {'error': 'Erro interno ao atualizar feedback'})
 
     def do_PATCH(self):
-        """PATCH para ações específicas: pin, read, etc."""
+        """PATCH para ações específicas: pin, read, poke, etc."""
         try:
             path_parts, _ = self._get_path_parts()
             
@@ -659,7 +746,7 @@ class handler(BaseHTTPRequestHandler):
                 self._send_json(500, {'error': 'Banco de dados não configurado'})
                 return
             
-            cur = conn.cursor()
+            cur = conn.cursor(cursor_factory=RealDictCursor)
             
             if action == 'pin':
                 # Toggle pin
@@ -670,6 +757,39 @@ class handler(BaseHTTPRequestHandler):
             elif action == 'unread':
                 # Marcar como não lido
                 cur.execute("UPDATE feedback SET is_read = FALSE, read_at = NULL WHERE id = %s", (feedback_id,))
+            elif action == 'poke':
+                # CUTUCADA! 👉
+                # Buscar a mensagem original
+                cur.execute("SELECT message FROM feedback WHERE id = %s", (feedback_id,))
+                result = cur.fetchone()
+                
+                if not result:
+                    self._send_json(404, {'error': 'Feedback não encontrado'})
+                    return
+                
+                original_message = result['message']
+                
+                # Enviar cutucada
+                poke_sent = send_poke_notification(feedback_id, original_message)
+                
+                # Desbloquear conquista de cutucada
+                unlock_achievement(conn, 'gehh', 'first_poke')
+                
+                conn.commit()
+                cur.close()
+                conn.close()
+                
+                if poke_sent:
+                    self._send_json(200, {
+                        'message': 'Cutucada enviada! 👉 Pablo vai receber a notificação!',
+                        'poke_sent': True
+                    })
+                else:
+                    self._send_json(200, {
+                        'message': 'Cutucada registrada! (notificação pode ter falhado)',
+                        'poke_sent': False
+                    })
+                return
             else:
                 self._send_json(400, {'error': 'Ação inválida'})
                 return

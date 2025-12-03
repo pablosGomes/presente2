@@ -10,6 +10,8 @@
     { "source": "/api/feedback/:id/reply", "destination": "/api/feedback.py" },
     { "source": "/api/feedback/:id/pin", "destination": "/api/feedback.py" },
     { "source": "/api/feedback/:id/read", "destination": "/api/feedback.py" },
+    { "source": "/api/feedback/:id/unread", "destination": "/api/feedback.py" },
+    { "source": "/api/feedback/:id/poke", "destination": "/api/feedback.py" },
     { "source": "/api/feedback/:id", "destination": "/api/feedback.py" },
     { "source": "/api/feedback", "destination": "/api/feedback.py" },
     { "source": "/api/health", "destination": "/api/health.py" },

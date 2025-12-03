@@ -4,6 +4,61 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:5000')
 
+// ============ CONFIGURAÇÕES DE ANIMAÇÃO ============
+const springConfig = { type: "spring", stiffness: 300, damping: 30 }
+const smoothSpring = { type: "spring", stiffness: 200, damping: 25 }
+const gentleSpring = { type: "spring", stiffness: 120, damping: 20 }
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -10 },
+  transition: smoothSpring
+}
+
+const fadeIn = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+  transition: { duration: 0.2 }
+}
+
+const scaleIn = {
+  initial: { opacity: 0, scale: 0.9 },
+  animate: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0.9 },
+  transition: springConfig
+}
+
+const slideInRight = {
+  initial: { opacity: 0, x: 30 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -30 },
+  transition: smoothSpring
+}
+
+const slideInLeft = {
+  initial: { opacity: 0, x: -30 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: 30 },
+  transition: smoothSpring
+}
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.05,
+      delayChildren: 0.1
+    }
+  }
+}
+
+const staggerItem = {
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0 },
+  transition: gentleSpring
+}
+
 // Configuração de Moods
 const MOODS = {
   happy: { emoji: '😊', label: 'Feliz', color: 'from-yellow-400 to-amber-500', bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700' },
@@ -16,8 +71,11 @@ const MOODS = {
 // Componente de Conquista
 const AchievementBadge = ({ achievement, small = false }) => (
   <motion.div
-    initial={{ scale: 0 }}
-    animate={{ scale: 1 }}
+    initial={{ scale: 0, rotate: -10 }}
+    animate={{ scale: 1, rotate: 0 }}
+    transition={springConfig}
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
     className={`flex items-center gap-2 ${small ? 'px-2 py-1' : 'px-3 py-2'} rounded-full ${
       achievement.unlocked 
         ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-lg' 
@@ -35,47 +93,77 @@ const StatsCard = ({ stats, onClose }) => (
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
+    transition={{ duration: 0.2 }}
     className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
     onClick={onClose}
   >
     <motion.div
-      initial={{ scale: 0.9, y: 20 }}
-      animate={{ scale: 1, y: 0 }}
-      exit={{ scale: 0.9, y: 20 }}
+      initial={{ scale: 0.85, y: 30, opacity: 0 }}
+      animate={{ scale: 1, y: 0, opacity: 1 }}
+      exit={{ scale: 0.85, y: 30, opacity: 0 }}
+      transition={smoothSpring}
       className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl"
       onClick={e => e.stopPropagation()}
     >
-      <div className="flex items-center justify-between mb-6">
+      <motion.div 
+        className="flex items-center justify-between mb-6"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
         <h2 className="text-xl font-bold text-gray-800">📊 Estatísticas</h2>
-        <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500">✕</button>
-      </div>
+        <motion.button 
+          onClick={onClose} 
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500"
+          whileHover={{ scale: 1.1, backgroundColor: '#fee2e2' }}
+          whileTap={{ scale: 0.9 }}
+        >
+          ✕
+        </motion.button>
+      </motion.div>
       
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-gradient-to-br from-pink-50 to-rose-100 rounded-2xl p-4 text-center">
-          <p className="text-3xl font-bold text-rose-600">{stats.total_posts}</p>
-          <p className="text-xs text-rose-500 mt-1">Total de Desabafos</p>
-        </div>
-        <div className="bg-gradient-to-br from-purple-50 to-violet-100 rounded-2xl p-4 text-center">
-          <p className="text-3xl font-bold text-violet-600">{stats.posts_this_month}</p>
-          <p className="text-xs text-violet-500 mt-1">Este Mês</p>
-        </div>
-        <div className="bg-gradient-to-br from-amber-50 to-yellow-100 rounded-2xl p-4 text-center">
-          <p className="text-3xl font-bold text-amber-600">{stats.current_streak}🔥</p>
-          <p className="text-xs text-amber-500 mt-1">Dias Seguidos</p>
-        </div>
-        <div className="bg-gradient-to-br from-emerald-50 to-green-100 rounded-2xl p-4 text-center">
-          <p className="text-3xl font-bold text-emerald-600">{stats.total_replies}</p>
-          <p className="text-xs text-emerald-500 mt-1">Respostas do Pablo</p>
-        </div>
-      </div>
+      <motion.div 
+        className="grid grid-cols-2 gap-4 mb-6"
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+      >
+        {[
+          { value: stats.total_posts, label: 'Total de Desabafos', colors: 'from-pink-50 to-rose-100', textColor: 'text-rose-600', subColor: 'text-rose-500' },
+          { value: stats.posts_this_month, label: 'Este Mês', colors: 'from-purple-50 to-violet-100', textColor: 'text-violet-600', subColor: 'text-violet-500' },
+          { value: `${stats.current_streak}🔥`, label: 'Dias Seguidos', colors: 'from-amber-50 to-yellow-100', textColor: 'text-amber-600', subColor: 'text-amber-500' },
+          { value: stats.total_replies, label: 'Respostas do Pablo', colors: 'from-emerald-50 to-green-100', textColor: 'text-emerald-600', subColor: 'text-emerald-500' },
+        ].map((stat, i) => (
+          <motion.div 
+            key={i}
+            variants={staggerItem}
+            whileHover={{ scale: 1.02, y: -2 }}
+            className={`bg-gradient-to-br ${stat.colors} rounded-2xl p-4 text-center cursor-default`}
+          >
+            <p className={`text-3xl font-bold ${stat.textColor}`}>{stat.value}</p>
+            <p className={`text-xs ${stat.subColor} mt-1`}>{stat.label}</p>
+          </motion.div>
+        ))}
+      </motion.div>
       
-      <div className="bg-gray-50 rounded-2xl p-4">
+      <motion.div 
+        className="bg-gray-50 rounded-2xl p-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
         <p className="text-sm text-gray-500 mb-2">Humor mais frequente:</p>
         <div className="flex items-center gap-2">
-          <span className="text-2xl">{MOODS[stats.most_common_mood]?.emoji || '😐'}</span>
+          <motion.span 
+            className="text-2xl"
+            animate={{ rotate: [0, -10, 10, 0] }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            {MOODS[stats.most_common_mood]?.emoji || '😐'}
+          </motion.span>
           <span className="font-medium text-gray-700">{MOODS[stats.most_common_mood]?.label || 'Normal'}</span>
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   </motion.div>
 )
@@ -86,49 +174,87 @@ const AchievementsModal = ({ achievements, onClose }) => (
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
+    transition={{ duration: 0.2 }}
     className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
     onClick={onClose}
   >
     <motion.div
-      initial={{ scale: 0.9, y: 20 }}
-      animate={{ scale: 1, y: 0 }}
-      exit={{ scale: 0.9, y: 20 }}
+      initial={{ scale: 0.85, y: 30, opacity: 0 }}
+      animate={{ scale: 1, y: 0, opacity: 1 }}
+      exit={{ scale: 0.85, y: 30, opacity: 0 }}
+      transition={smoothSpring}
       className="bg-white rounded-3xl p-6 w-full max-w-sm max-h-[80vh] overflow-y-auto shadow-2xl"
       onClick={e => e.stopPropagation()}
     >
-      <div className="flex items-center justify-between mb-6">
+      <motion.div 
+        className="flex items-center justify-between mb-6"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
         <h2 className="text-xl font-bold text-gray-800">🏆 Conquistas</h2>
-        <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500">✕</button>
-      </div>
+        <motion.button 
+          onClick={onClose} 
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500"
+          whileHover={{ scale: 1.1, backgroundColor: '#fee2e2' }}
+          whileTap={{ scale: 0.9 }}
+        >
+          ✕
+        </motion.button>
+      </motion.div>
       
-      <div className="space-y-3">
-        {achievements.map((ach) => (
-          <div
+      <motion.div 
+        className="space-y-3"
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+      >
+        {achievements.map((ach, index) => (
+          <motion.div
             key={ach.key}
-            className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+            variants={staggerItem}
+            whileHover={{ scale: 1.02, x: 5 }}
+            className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${
               ach.unlocked 
                 ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200' 
                 : 'bg-gray-50 opacity-50'
             }`}
           >
-            <span className="text-2xl">{ach.emoji}</span>
+            <motion.span 
+              className="text-2xl"
+              animate={ach.unlocked ? { rotate: [0, -10, 10, 0] } : {}}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+            >
+              {ach.emoji}
+            </motion.span>
             <div className="flex-1">
               <p className={`font-medium ${ach.unlocked ? 'text-amber-700' : 'text-gray-400'}`}>{ach.name}</p>
               <p className="text-xs text-gray-500">{ach.description}</p>
             </div>
-            {ach.unlocked && <span className="text-green-500 text-lg">✓</span>}
-          </div>
+            {ach.unlocked && (
+              <motion.span 
+                className="text-green-500 text-lg"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", delay: index * 0.05 }}
+              >
+                ✓
+              </motion.span>
+            )}
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </motion.div>
   </motion.div>
 )
 
 // Componente de Card do Feedback
-const FeedbackCard = ({ feedback, onEdit, onDelete, onPin, onReply, isAdmin }) => {
+const FeedbackCard = ({ feedback, onEdit, onDelete, onPin, onReply, onMarkRead, onPoke, isAdmin }) => {
   const [showReplies, setShowReplies] = useState(false)
   const [replyText, setReplyText] = useState('')
   const [isReplying, setIsReplying] = useState(false)
+  const [isPoking, setIsPoking] = useState(false)
+  const [pokeSent, setPokeSent] = useState(false)
   
   const mood = MOODS[feedback.mood] || MOODS.neutral
   
@@ -155,13 +281,26 @@ const FeedbackCard = ({ feedback, onEdit, onDelete, onPin, onReply, isAdmin }) =
     setIsReplying(false)
   }
   
+  const handlePoke = async () => {
+    setIsPoking(true)
+    const success = await onPoke(feedback.id)
+    setIsPoking(false)
+    if (success) {
+      setPokeSent(true)
+      setTimeout(() => setPokeSent(false), 3000)
+    }
+  }
+  
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -100 }}
-      className={`rounded-2xl overflow-hidden shadow-sm border transition-all ${
+      layoutId={feedback.id}
+      initial={{ opacity: 0, y: 30, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9, x: -50 }}
+      transition={smoothSpring}
+      whileHover={{ y: -2, boxShadow: "0 8px 30px rgba(0,0,0,0.08)" }}
+      className={`rounded-2xl overflow-hidden shadow-sm border ${
         feedback.is_letter 
           ? 'bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 border-pink-200 shadow-pink-100' 
           : `${mood.bg} ${mood.border}`
@@ -170,48 +309,79 @@ const FeedbackCard = ({ feedback, onEdit, onDelete, onPin, onReply, isAdmin }) =
       {/* Header */}
       <div className="px-4 pt-4 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {feedback.is_pinned && <span className="text-amber-500">📌</span>}
-          {feedback.is_letter && <span className="text-pink-500">💌</span>}
+          {feedback.is_pinned && (
+            <motion.span 
+              className="text-amber-500"
+              animate={{ rotate: [0, -15, 15, 0] }}
+              transition={{ duration: 0.5 }}
+            >
+              📌
+            </motion.span>
+          )}
+          {feedback.is_letter && (
+            <motion.span 
+              className="text-pink-500"
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 0.5 }}
+            >
+              💌
+            </motion.span>
+          )}
           <span className="text-lg">{mood.emoji}</span>
           <span className={`text-xs font-medium ${mood.text}`}>{mood.label}</span>
         </div>
         <div className="flex items-center gap-2">
           {feedback.is_read && (
-            <span className="text-xs text-emerald-500 flex items-center gap-1">
+            <motion.span 
+              className="text-xs text-emerald-500 flex items-center gap-1"
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={springConfig}
+            >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20 6L9 17l-5-5"/>
                 <path d="M20 6L9 17" strokeOpacity="0.5"/>
               </svg>
               Visto
-            </span>
+            </motion.span>
           )}
           <span className="text-xs text-gray-400">{formatDate(feedback.created_at)}</span>
         </div>
       </div>
       
       {/* Conteúdo */}
-      <div className={`px-4 pb-3 ${feedback.is_letter ? 'font-serif italic' : ''}`}>
+      <motion.div 
+        className={`px-4 pb-3 ${feedback.is_letter ? 'font-serif italic' : ''}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1 }}
+      >
         <p className={`text-gray-800 leading-relaxed whitespace-pre-wrap ${feedback.is_letter ? 'text-lg' : ''}`}>
           {feedback.message}
         </p>
         {feedback.updated_at && (
           <p className="text-xs text-gray-400 mt-2 italic">(editado)</p>
         )}
-      </div>
+      </motion.div>
       
       {/* Respostas */}
       {feedback.replies && feedback.replies.length > 0 && (
         <div className="px-4 pb-3">
-          <button
+          <motion.button
             onClick={() => setShowReplies(!showReplies)}
             className="text-xs text-blue-500 font-medium flex items-center gap-1"
+            whileHover={{ x: 3 }}
+            whileTap={{ scale: 0.98 }}
           >
             💬 {feedback.replies.length} resposta{feedback.replies.length > 1 ? 's' : ''} do Pablo
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-              className={`transition-transform ${showReplies ? 'rotate-180' : ''}`}>
+            <motion.svg 
+              width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              animate={{ rotate: showReplies ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
               <path d="M6 9l6 6 6-6"/>
-            </svg>
-          </button>
+            </motion.svg>
+          </motion.button>
           
           <AnimatePresence>
             {showReplies && (
@@ -219,13 +389,20 @@ const FeedbackCard = ({ feedback, onEdit, onDelete, onPin, onReply, isAdmin }) =
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
                 className="mt-3 space-y-2 overflow-hidden"
               >
-                {feedback.replies.map((reply) => (
-                  <div key={reply.id} className="bg-white/80 rounded-xl p-3 border border-blue-100">
+                {feedback.replies.map((reply, index) => (
+                  <motion.div 
+                    key={reply.id} 
+                    className="bg-white/80 rounded-xl p-3 border border-blue-100"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1, ...smoothSpring }}
+                  >
                     <p className="text-sm text-gray-700">{reply.message}</p>
                     <p className="text-xs text-blue-400 mt-1">Pablo • {formatDate(reply.created_at)}</p>
-                  </div>
+                  </motion.div>
                 ))}
               </motion.div>
             )}
@@ -236,57 +413,104 @@ const FeedbackCard = ({ feedback, onEdit, onDelete, onPin, onReply, isAdmin }) =
       {/* Ações */}
       <div className="px-4 pb-4 flex items-center justify-between border-t border-black/5 pt-3">
         <div className="flex items-center gap-2">
-          <button
+          <motion.button
             onClick={() => onEdit(feedback)}
-            className="px-3 py-1.5 text-xs font-medium text-gray-500 bg-white/50 rounded-lg hover:bg-white transition-colors"
+            className="px-3 py-1.5 text-xs font-medium text-gray-500 bg-white/50 rounded-lg hover:bg-white"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             ✏️ Editar
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             onClick={() => onDelete(feedback.id)}
-            className="px-3 py-1.5 text-xs font-medium text-red-500 bg-white/50 rounded-lg hover:bg-red-50 transition-colors"
+            className="px-3 py-1.5 text-xs font-medium text-red-500 bg-white/50 rounded-lg hover:bg-red-50"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             🗑️
-          </button>
+          </motion.button>
+          
+          {/* Botão Cutucar - só aparece se não tem resposta */}
+          {!isAdmin && (!feedback.replies || feedback.replies.length === 0) && (
+            <motion.button
+              onClick={handlePoke}
+              disabled={isPoking || pokeSent}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                pokeSent 
+                  ? 'bg-green-100 text-green-600' 
+                  : 'bg-orange-50 text-orange-600 hover:bg-orange-100'
+              }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              animate={isPoking ? { rotate: [0, -10, 10, -10, 10, 0] } : {}}
+              transition={{ duration: 0.5 }}
+              title="Cutucar Pablo para responder!"
+            >
+              {isPoking ? '...' : pokeSent ? '✓ Enviado!' : '👉 Cutucar'}
+            </motion.button>
+          )}
         </div>
         
         {isAdmin && (
           <div className="flex items-center gap-2">
-            <button
+            <motion.button
+              onClick={() => onMarkRead(feedback.id, !feedback.is_read)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg ${
+                feedback.is_read 
+                  ? 'bg-emerald-100 text-emerald-600' 
+                  : 'bg-white/50 text-gray-500 hover:bg-emerald-50'
+              }`}
+              title={feedback.is_read ? 'Marcar como não lido' : 'Marcar como lido'}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {feedback.is_read ? '✓✓' : '✓'}
+            </motion.button>
+            <motion.button
               onClick={() => onPin(feedback.id)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg ${
                 feedback.is_pinned 
                   ? 'bg-amber-100 text-amber-600' 
                   : 'bg-white/50 text-gray-500 hover:bg-amber-50'
               }`}
+              title={feedback.is_pinned ? 'Desafixar' : 'Fixar no topo'}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               📌
-            </button>
+            </motion.button>
           </div>
         )}
       </div>
       
       {/* Campo de resposta (admin) */}
       {isAdmin && (
-        <div className="px-4 pb-4 border-t border-black/5 pt-3">
+        <motion.div 
+          className="px-4 pb-4 border-t border-black/5 pt-3"
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          transition={{ duration: 0.2 }}
+        >
           <div className="flex gap-2">
             <input
               type="text"
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               placeholder="Responder como Pablo..."
-              className="flex-1 px-3 py-2 text-sm bg-white rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="flex-1 px-3 py-2 text-sm bg-white rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-shadow"
               style={{ fontSize: '16px' }}
             />
-            <button
+            <motion.button
               onClick={handleReply}
               disabled={!replyText.trim() || isReplying}
               className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-xl disabled:opacity-50"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               {isReplying ? '...' : '💬'}
-            </button>
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
       )}
     </motion.div>
   )
@@ -466,12 +690,32 @@ const MuralDesabafosPage = () => {
     }
   }
 
-  const handleMarkRead = async (id) => {
+  const handleMarkRead = async (id, markAsRead = true) => {
     try {
-      await fetch(`${API_URL}/api/feedback/${id}/read`, { method: 'PATCH' })
+      const endpoint = markAsRead 
+        ? `${API_URL}/api/feedback/${id}/read`
+        : `${API_URL}/api/feedback/${id}/unread`
+      await fetch(endpoint, { method: 'PATCH' })
       fetchFeedbacks()
     } catch (err) {
       console.error(err)
+    }
+  }
+
+  const handlePoke = async (id) => {
+    try {
+      const response = await fetch(`${API_URL}/api/feedback/${id}/poke`, { method: 'PATCH' })
+      const data = await response.json()
+      
+      if (response.ok) {
+        // Atualizar conquistas (pode ter desbloqueado "Cutucadora")
+        fetchAchievements()
+        return true
+      }
+      return false
+    } catch (err) {
+      console.error(err)
+      return false
     }
   }
 
@@ -480,64 +724,84 @@ const MuralDesabafosPage = () => {
       {/* Header */}
       <motion.header 
         className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-pink-100 px-4 py-3"
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={smoothSpring}
       >
         <div className="flex items-center justify-between max-w-lg mx-auto">
-          <button
+          <motion.button
             onClick={() => navigate('/presente')}
             className="w-10 h-10 flex items-center justify-center rounded-full bg-pink-100 text-pink-600"
+            whileHover={{ scale: 1.1, backgroundColor: '#fecdd3' }}
+            whileTap={{ scale: 0.9 }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
-          </button>
+          </motion.button>
           
-          <div className="text-center">
+          <motion.div 
+            className="text-center"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
             <h1 className="font-bold text-lg text-gray-800">Mural da Gehh</h1>
             <p className="text-xs text-pink-500">💕 {isAdmin ? 'Modo Pablo' : 'Só você e o Pablo veem'}</p>
-          </div>
+          </motion.div>
           
           <div className="flex items-center gap-2">
-            <button 
+            <motion.button 
               onClick={() => { fetchStats(); setShowStats(true) }}
               className="w-10 h-10 flex items-center justify-center rounded-full bg-purple-100 text-purple-600"
+              whileHover={{ scale: 1.1, rotate: 10 }}
+              whileTap={{ scale: 0.9 }}
             >
               📊
-            </button>
-            <button 
+            </motion.button>
+            <motion.button 
               onClick={() => { fetchAchievements(); setShowAchievements(true) }}
               className="w-10 h-10 flex items-center justify-center rounded-full bg-amber-100 text-amber-600"
+              whileHover={{ scale: 1.1, rotate: -10 }}
+              whileTap={{ scale: 0.9 }}
             >
               🏆
-            </button>
+            </motion.button>
           </div>
         </div>
       </motion.header>
 
       {/* Tabs */}
       <div className="sticky top-[73px] z-30 bg-white/80 backdrop-blur-xl border-b border-pink-100">
-        <div className="max-w-lg mx-auto flex">
-          <button
+        <div className="max-w-lg mx-auto flex relative">
+          {/* Indicador animado */}
+          <motion.div
+            className="absolute bottom-0 h-0.5 bg-pink-500"
+            initial={false}
+            animate={{
+              left: activeTab === 'new' ? '0%' : '50%',
+              width: '50%'
+            }}
+            transition={smoothSpring}
+          />
+          <motion.button
             onClick={() => setActiveTab('new')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
-              activeTab === 'new' 
-                ? 'text-pink-600 border-b-2 border-pink-500' 
-                : 'text-gray-500'
+            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
+              activeTab === 'new' ? 'text-pink-600' : 'text-gray-500'
             }`}
+            whileTap={{ scale: 0.98 }}
           >
             ✍️ Novo Desabafo
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             onClick={() => setActiveTab('history')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
-              activeTab === 'history' 
-                ? 'text-pink-600 border-b-2 border-pink-500' 
-                : 'text-gray-500'
+            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
+              activeTab === 'history' ? 'text-pink-600' : 'text-gray-500'
             }`}
+            whileTap={{ scale: 0.98 }}
           >
             📜 Histórico ({feedbacks.length})
-          </button>
+          </motion.button>
         </div>
       </div>
 
@@ -548,132 +812,221 @@ const MuralDesabafosPage = () => {
         <AnimatePresence>
           {newAchievements.length > 0 && (
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: -30, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -30, scale: 0.9 }}
+              transition={springConfig}
               className="mb-6 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-2xl p-4 text-white shadow-lg"
             >
-              <p className="font-bold mb-2">🎉 Nova Conquista!</p>
+              <motion.p 
+                className="font-bold mb-2"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 0.5, repeat: 2 }}
+              >
+                🎉 Nova Conquista!
+              </motion.p>
               {newAchievements.map((ach, i) => (
-                <p key={i} className="text-sm">{ach.emoji} {ach.name} - {ach.description}</p>
+                <motion.p 
+                  key={i} 
+                  className="text-sm"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                >
+                  {ach.emoji} {ach.name} - {ach.description}
+                </motion.p>
               ))}
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Tab: Novo Desabafo */}
+        <AnimatePresence mode="wait">
         {activeTab === 'new' && (
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            key="new-tab"
+            initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
+            transition={smoothSpring}
             className="space-y-6"
           >
             {/* Seletor de Humor */}
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-pink-100">
+            <motion.div 
+              className="bg-white rounded-2xl p-4 shadow-sm border border-pink-100"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
               <p className="text-sm font-medium text-gray-600 mb-3">Como você está se sentindo?</p>
               <div className="flex justify-between">
-                {Object.entries(MOODS).map(([key, mood]) => (
-                  <button
+                {Object.entries(MOODS).map(([key, mood], index) => (
+                  <motion.button
                     key={key}
                     onClick={() => setSelectedMood(key)}
-                    className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
+                    className={`flex flex-col items-center gap-1 p-2 rounded-xl ${
                       selectedMood === key 
-                        ? `bg-gradient-to-br ${mood.color} text-white scale-110 shadow-lg` 
+                        ? `bg-gradient-to-br ${mood.color} text-white shadow-lg` 
                         : 'hover:bg-gray-100'
                     }`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ 
+                      opacity: 1, 
+                      y: 0,
+                      scale: selectedMood === key ? 1.1 : 1
+                    }}
+                    transition={{ delay: index * 0.05, ...smoothSpring }}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
                   >
                     <span className="text-2xl">{mood.emoji}</span>
                     <span className="text-[10px] font-medium">{mood.label}</span>
-                  </button>
+                  </motion.button>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
             {/* Toggle Carta */}
-            <div className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm border border-pink-100 gap-3">
+            <motion.div 
+              className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm border border-pink-100 gap-3"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <span className="text-2xl flex-shrink-0">💌</span>
+                <motion.span 
+                  className="text-2xl flex-shrink-0"
+                  animate={{ rotate: isLetter ? [0, -10, 10, 0] : 0 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  💌
+                </motion.span>
                 <div className="min-w-0">
                   <p className="font-medium text-gray-800 text-sm">Modo Carta</p>
                   <p className="text-xs text-gray-500 truncate">Escreva como uma carta romântica</p>
                 </div>
               </div>
-              <button
+              <motion.button
                 onClick={() => setIsLetter(!isLetter)}
-                className={`w-12 h-7 rounded-full transition-colors relative flex-shrink-0 ${
+                className={`w-12 h-7 rounded-full relative flex-shrink-0 ${
                   isLetter ? 'bg-pink-500' : 'bg-gray-200'
                 }`}
+                whileTap={{ scale: 0.95 }}
               >
-                <span className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                  isLetter ? 'left-6' : 'left-1'
-                }`}/>
-              </button>
-            </div>
+                <motion.span 
+                  className="absolute top-1 w-5 h-5 bg-white rounded-full shadow"
+                  animate={{ left: isLetter ? 24 : 4 }}
+                  transition={springConfig}
+                />
+              </motion.button>
+            </motion.div>
 
             {/* Campo de Texto */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className={`bg-white rounded-2xl shadow-sm border overflow-hidden ${
-                isLetter ? 'border-pink-200 bg-gradient-to-br from-rose-50 to-pink-50' : 'border-gray-100'
-              }`}>
+            <motion.form 
+              onSubmit={handleSubmit} 
+              className="space-y-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <motion.div 
+                className={`bg-white rounded-2xl shadow-sm border overflow-hidden ${
+                  isLetter ? 'border-pink-200 bg-gradient-to-br from-rose-50 to-pink-50' : 'border-gray-100'
+                }`}
+                animate={{ 
+                  borderColor: isLetter ? '#fbcfe8' : '#f3f4f6',
+                  backgroundColor: isLetter ? '#fff1f2' : '#ffffff'
+                }}
+                transition={{ duration: 0.3 }}
+              >
                 <textarea
                   rows="6"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder={isLetter ? "Querido Pablo,\n\nEscreva sua cartinha aqui..." : "Desabafa aqui, princesa... 💭"}
-                  className={`w-full p-4 bg-transparent text-gray-700 placeholder-gray-400 resize-none focus:outline-none ${
+                  className={`w-full p-4 bg-transparent text-gray-700 placeholder-gray-400 resize-none focus:outline-none transition-all ${
                     isLetter ? 'font-serif italic text-lg' : ''
                   }`}
                   style={{ fontSize: '16px' }}
                   required
                 />
-              </div>
+              </motion.div>
               
               <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-400">
-                  {newMessage.length > 0 ? `${newMessage.length} caracteres` : ''}
-                </p>
-                <button
+                <motion.p 
+                  className="text-xs text-gray-400"
+                  animate={{ opacity: newMessage.length > 0 ? 1 : 0 }}
+                >
+                  {newMessage.length} caracteres
+                </motion.p>
+                <motion.button
                   type="submit"
                   disabled={!newMessage.trim()}
-                  className={`px-6 py-3 text-white rounded-full font-semibold text-sm shadow-lg disabled:opacity-50 transition-all bg-gradient-to-r ${
+                  className={`px-6 py-3 text-white rounded-full font-semibold text-sm shadow-lg disabled:opacity-50 bg-gradient-to-r ${
                     MOODS[selectedMood].color
                   }`}
+                  whileHover={{ scale: 1.05, boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   {isLetter ? 'Enviar Carta 💌' : 'Enviar 💬'}
-                </button>
+                </motion.button>
               </div>
-            </form>
+            </motion.form>
           </motion.div>
         )}
 
         {/* Tab: Histórico */}
         {activeTab === 'history' && (
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
+            key="history-tab"
+            initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 30 }}
+            transition={smoothSpring}
             className="space-y-4"
           >
             {loading && (
-              <div className="flex flex-col items-center justify-center py-12">
+              <motion.div 
+                className="flex flex-col items-center justify-center py-12"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
                 <motion.div 
                   className="w-12 h-12 border-4 border-pink-200 border-t-pink-500 rounded-full"
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
                 />
-              </div>
+                <motion.p 
+                  className="mt-4 text-gray-400 text-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  Carregando...
+                </motion.p>
+              </motion.div>
             )}
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-center">
+              <motion.div 
+                className="bg-red-50 border border-red-200 rounded-2xl p-4 text-center"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+              >
                 <p className="text-red-500 text-sm">{error}</p>
-                <button onClick={fetchFeedbacks} className="mt-2 text-red-600 font-medium text-sm underline">
+                <motion.button 
+                  onClick={fetchFeedbacks} 
+                  className="mt-2 text-red-600 font-medium text-sm underline"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
                   Tentar novamente
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
             )}
 
-            <AnimatePresence>
-              {feedbacks.map((feedback) => (
+            <AnimatePresence mode="popLayout">
+              {feedbacks.map((feedback, index) => (
                 <FeedbackCard
                   key={feedback.id}
                   feedback={feedback}
@@ -681,22 +1034,34 @@ const MuralDesabafosPage = () => {
                   onDelete={(id) => setShowDeleteConfirm(id)}
                   onPin={handlePin}
                   onReply={handleReply}
+                  onMarkRead={handleMarkRead}
+                  onPoke={handlePoke}
                   isAdmin={isAdmin}
                 />
               ))}
             </AnimatePresence>
 
             {feedbacks.length === 0 && !loading && !error && (
-              <div className="text-center py-12">
-                <div className="w-20 h-20 mx-auto mb-4 bg-pink-100 rounded-full flex items-center justify-center">
+              <motion.div 
+                className="text-center py-12"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <motion.div 
+                  className="w-20 h-20 mx-auto mb-4 bg-pink-100 rounded-full flex items-center justify-center"
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
                   <span className="text-4xl">💭</span>
-                </div>
+                </motion.div>
                 <p className="text-gray-600 font-medium">Nenhum desabafo ainda</p>
                 <p className="text-gray-400 text-sm mt-1">Comece a escrever!</p>
-              </div>
+              </motion.div>
             )}
           </motion.div>
         )}
+        </AnimatePresence>
       </main>
 
       {/* Modais */}
@@ -832,7 +1197,7 @@ const MuralDesabafosPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="fixed bottom-4 right-4 w-10 h-10 bg-slate-800/20 hover:bg-slate-800/40 backdrop-blur-sm rounded-full flex items-center justify-center text-slate-500 hover:text-slate-700 transition-all shadow-sm hover:shadow-md"
+          className="fixed bottom-4 left-4 w-10 h-10 bg-slate-800/20 hover:bg-slate-800/40 backdrop-blur-sm rounded-full flex items-center justify-center text-slate-500 hover:text-slate-700 transition-all shadow-sm hover:shadow-md"
           title="Admin"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
