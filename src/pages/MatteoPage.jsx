@@ -4,33 +4,49 @@ import { useNavigate } from 'react-router-dom'
 import Flower from '../components/Flower'
 import Petal from '../components/Petal'
 
-// 🤖 Logo do Matteo
-const MatteoLogo = ({ className, size = 'md' }) => {
+// 🤖 Logo do Matteo (versão refinada)
+const MatteoLogo = ({ className = '', size = 'md' }) => {
   const sizes = {
     sm: 'w-8 h-8',
     md: 'w-12 h-12',
     lg: 'w-16 h-16',
     xl: 'w-24 h-24'
   }
-  
+
   return (
     <div className={`${sizes[size]} ${className} relative`}>
-      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-md">
         <defs>
-          <linearGradient id="matteoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#8B5CF6" />
-            <stop offset="50%" stopColor="#A855F7" />
-            <stop offset="100%" stopColor="#D946EF" />
+          <linearGradient id="matteoGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#7C3AED" />
+            <stop offset="50%" stopColor="#8B5CF6" />
+            <stop offset="100%" stopColor="#C084FC" />
+          </linearGradient>
+          <linearGradient id="matteoFace" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#7C3AED" />
+            <stop offset="100%" stopColor="#A855F7" />
           </linearGradient>
         </defs>
-        <rect x="20" y="25" width="60" height="50" rx="15" fill="url(#matteoGradient)" />
-        <circle cx="38" cy="45" r="6" fill="white" />
-        <circle cx="62" cy="45" r="6" fill="white" />
-        <circle cx="40" cy="45" r="2" fill="#1a1a2e" />
-        <circle cx="64" cy="45" r="2" fill="#1a1a2e" />
-        <path d="M40 60C40 60 45 65 50 65C55 65 60 60 60 60" stroke="white" strokeWidth="4" strokeLinecap="round" />
-        <path d="M50 25V15" stroke="url(#matteoGradient)" strokeWidth="6" strokeLinecap="round" />
-        <circle cx="50" cy="12" r="5" fill="#10B981" />
+
+        {/* Aura */}
+        <circle cx="60" cy="60" r="46" fill="url(#matteoGlow)" opacity="0.18" />
+        <circle cx="60" cy="60" r="38" fill="#ffffff" opacity="0.25" />
+
+        {/* Face */}
+        <rect x="30" y="32" width="60" height="56" rx="18" fill="url(#matteoFace)" stroke="#E9D5FF" strokeWidth="2.5" />
+
+        {/* Eyes */}
+        <circle cx="46" cy="56" r="8" fill="#fff" />
+        <circle cx="74" cy="56" r="8" fill="#fff" />
+        <circle cx="48" cy="56" r="3" fill="#111827" />
+        <circle cx="72" cy="56" r="3" fill="#111827" />
+
+        {/* Smile */}
+        <path d="M46 70C48.5 76 52.5 79 60 79C67.5 79 71.5 76 74 70" stroke="#F8FAFC" strokeWidth="4" strokeLinecap="round" />
+
+        {/* Antenna */}
+        <path d="M60 32V22" stroke="url(#matteoGlow)" strokeWidth="6" strokeLinecap="round" />
+        <circle cx="60" cy="18" r="6" fill="#22C55E" stroke="#ffffff" strokeWidth="2" />
       </svg>
     </div>
   )
@@ -1038,7 +1054,7 @@ const MatteoPage = () => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-full">
+      <div className="flex-1 flex flex-col h-full min-h-0">
         
         {/* Header */}
         <motion.header 
@@ -1118,7 +1134,10 @@ const MatteoPage = () => {
         </motion.header>
 
         {/* Messages Area */}
-        <main className="flex-1 overflow-y-auto">
+        <main
+          className="flex-1 overflow-y-auto overscroll-contain"
+          style={{ scrollPaddingBottom: '140px' }}
+        >
           {messages.length === 0 ? (
             // Tela inicial - estilo ChatGPT/Gemini
             <div className="h-full flex flex-col items-center justify-center px-4 py-8">
@@ -1221,7 +1240,7 @@ const MatteoPage = () => {
             </div>
           ) : (
             // Lista de mensagens
-            <div className="max-w-3xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+            <div className="max-w-3xl w-full mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 pb-32 sm:pb-36 lg:pb-40">
               {messages.map((msg, index) => (
                 <motion.div
                   key={msg.id}
@@ -1374,12 +1393,12 @@ const MatteoPage = () => {
         </main>
 
         {/* Input Area */}
-        <footer className={`px-4 py-4 border-t backdrop-blur-xl transition-all duration-500 ${
+        <footer className={`px-4 py-4 border-t backdrop-blur-xl transition-all duration-500 sticky bottom-0 z-40 ${
           tpmMode 
             ? 'bg-gradient-to-r from-pink-200/80 via-rose-100/80 to-pink-200/80 border-pink-300/50' 
             : 'bg-gradient-to-r from-violet-200/80 via-purple-100/80 to-indigo-200/80 border-violet-300/50'
         }`}>
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-3xl w-full mx-auto pb-[env(safe-area-inset-bottom)]">
             <div className={`flex items-end gap-3 p-3 rounded-2xl border-2 transition-all backdrop-blur-sm ${
               tpmMode 
             ? 'bg-white/90 border-pink-300 focus-within:border-pink-500 focus-within:ring-4 focus-within:ring-pink-200/60' 
