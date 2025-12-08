@@ -5,6 +5,8 @@
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/api/chat", "destination": "/api/chat.py" },
+    { "source": "/api/conversations/:id", "destination": "/api/conversations.py" },
+    { "source": "/api/conversations", "destination": "/api/conversations.py" },
     { "source": "/api/feedback/stats", "destination": "/api/feedback.py" },
     { "source": "/api/feedback/achievements", "destination": "/api/feedback.py" },
     { "source": "/api/feedback/:id/reply", "destination": "/api/feedback.py" },

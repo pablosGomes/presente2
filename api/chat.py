@@ -559,6 +559,22 @@ def init_db():
             );
         """)
         
+        # Tabela de conversas (metadados)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS conversations (
+                id VARCHAR(255) PRIMARY KEY,
+                session_id VARCHAR(255) NOT NULL UNIQUE,
+                title VARCHAR(255) NOT NULL,
+                last_message TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_conversations_updated 
+            ON conversations(updated_at DESC);
+        """)
+        
         conn.commit()
         cur.close()
         conn.close()
@@ -912,6 +928,182 @@ def summarize_conversation(conversation_text):
         print(f"Erro ao resumir conversa: {e}")
         return None
 
+# ============== FUNÇÕES DE CONVERSAS ==============
+
+def create_conversation(conversation_id, session_id, title='Nova conversa'):
+    """Cria uma nova conversa no banco"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return False
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO conversations (id, session_id, title, last_message, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            ON CONFLICT (id) DO NOTHING
+        """, (conversation_id, session_id, title, 'Nova conversa'))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Erro create_conversation: {e}")
+        return False
+
+def get_all_conversations(limit=50):
+    """Busca todas as conversas ordenadas por data de atualização"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return []
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("""
+            SELECT id, session_id, title, last_message, created_at, updated_at
+            FROM conversations
+            ORDER BY updated_at DESC
+            LIMIT %s
+        """, (limit,))
+        conversations = cur.fetchall()
+        cur.close()
+        conn.close()
+        return [
+            {
+                'id': c['id'],
+                'sessionId': c['session_id'],
+                'title': c['title'],
+                'lastMessage': c['last_message'] or 'Nova conversa',
+                'createdAt': c['created_at'].isoformat() if hasattr(c['created_at'], 'isoformat') else str(c['created_at']),
+                'updatedAt': c['updated_at'].isoformat() if hasattr(c['updated_at'], 'isoformat') else str(c['updated_at'])
+            }
+            for c in conversations
+        ]
+    except Exception as e:
+        print(f"Erro get_all_conversations: {e}")
+        return []
+
+def get_conversation_by_id(conversation_id):
+    """Busca uma conversa específica"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return None
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("""
+            SELECT id, session_id, title, last_message, created_at, updated_at
+            FROM conversations
+            WHERE id = %s
+        """, (conversation_id,))
+        result = cur.fetchone()
+        cur.close()
+        conn.close()
+        if result:
+            return {
+                'id': result['id'],
+                'sessionId': result['session_id'],
+                'title': result['title'],
+                'lastMessage': result['last_message'] or 'Nova conversa',
+                'createdAt': result['created_at'].isoformat() if hasattr(result['created_at'], 'isoformat') else str(result['created_at']),
+                'updatedAt': result['updated_at'].isoformat() if hasattr(result['updated_at'], 'isoformat') else str(result['updated_at'])
+            }
+        return None
+    except Exception as e:
+        print(f"Erro get_conversation_by_id: {e}")
+        return None
+
+def update_conversation(conversation_id, title=None, last_message=None):
+    """Atualiza uma conversa"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return False
+        cur = conn.cursor()
+        
+        updates = []
+        params = []
+        
+        if title:
+            updates.append("title = %s")
+            params.append(title)
+        if last_message:
+            updates.append("last_message = %s")
+            params.append(last_message)
+        
+        if not updates:
+            return True
+        
+        updates.append("updated_at = CURRENT_TIMESTAMP")
+        params.append(conversation_id)
+        
+        cur.execute(f"""
+            UPDATE conversations
+            SET {', '.join(updates)}
+            WHERE id = %s
+        """, params)
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Erro update_conversation: {e}")
+        return False
+
+def delete_conversation(conversation_id):
+    """Deleta uma conversa e todo seu histórico"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return False
+        cur = conn.cursor()
+        
+        # Buscar session_id antes de deletar
+        cur.execute("SELECT session_id FROM conversations WHERE id = %s", (conversation_id,))
+        result = cur.fetchone()
+        session_id = result[0] if result else None
+        
+        # Deletar conversa
+        cur.execute("DELETE FROM conversations WHERE id = %s", (conversation_id,))
+        
+        # Deletar histórico de mensagens
+        if session_id:
+            cur.execute("DELETE FROM chat_history WHERE session_id = %s", (session_id,))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Erro delete_conversation: {e}")
+        return False
+
+def get_conversation_messages(session_id):
+    """Busca todas as mensagens de uma conversa"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return []
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("""
+            SELECT role, content, created_at
+            FROM chat_history
+            WHERE session_id = %s
+            ORDER BY created_at ASC
+        """, (session_id,))
+        messages = cur.fetchall()
+        cur.close()
+        conn.close()
+        return [
+            {
+                'id': idx,
+                'text': m['content'],
+                'sender': 'user' if m['role'] == 'user' else 'bot',
+                'timestamp': m['created_at'].isoformat() if hasattr(m['created_at'], 'isoformat') else str(m['created_at'])
+            }
+            for idx, m in enumerate(messages, 1)
+        ]
+    except Exception as e:
+        print(f"Erro get_conversation_messages: {e}")
+        return []
+
 def build_system_prompt_with_context(session_id, tpm_mode=False):
     """Constrói o prompt do sistema com todo o contexto"""
     memories = get_memories(limit=30)
@@ -987,7 +1179,18 @@ class handler(BaseHTTPRequestHandler):
             
             user_message = data.get('message', '')
             session_id = data.get('session_id', 'default')
+            conversation_id = data.get('conversation_id', None)
             tpm_mode = data.get('tpm_mode', False)
+            
+            # Criar conversa se não existir
+            if conversation_id:
+                conv = get_conversation_by_id(conversation_id)
+                if not conv:
+                    create_conversation(conversation_id, session_id, user_message[:30] + ('...' if len(user_message) > 30 else ''))
+            elif not conversation_id:
+                # Criar ID de conversa se não fornecido
+                conversation_id = f"conv_{session_id}"
+                create_conversation(conversation_id, session_id, user_message[:30] + ('...' if len(user_message) > 30 else ''))
             
             if not user_message:
                 self.send_response(400)
@@ -1100,6 +1303,10 @@ class handler(BaseHTTPRequestHandler):
             # Salvar resposta
             save_chat_message(session_id, 'assistant', bot_response)
             
+            # Atualizar conversa
+            if conversation_id:
+                update_conversation(conversation_id, last_message=bot_response[:50] + ('...' if len(bot_response) > 50 else ''))
+            
             # Extração de memórias (a cada 5 mensagens)
             total_msgs = get_total_messages()
             if total_msgs > 0 and total_msgs % 5 == 0:
@@ -1137,6 +1344,7 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({
                 'response': bot_response,
                 'session_id': session_id,
+                'conversation_id': conversation_id,
                 'tools_used': [tc.function.name for tc in response_message.tool_calls] if response_message.tool_calls else []
             }).encode())
             

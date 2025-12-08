@@ -178,31 +178,48 @@ const MatteoPage = () => {
     })), [tpmMode]
   )
 
-  // Carregar conversas do localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('matteo_conversations')
-    if (saved) {
-      const parsed = JSON.parse(saved)
-      setConversations(parsed)
+  // Carregar conversas do banco de dados
+  const loadConversations = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/conversations`)
+      if (response.ok) {
+        const data = await response.json()
+        setConversations(data)
+      }
+    } catch (error) {
+      console.error('Erro ao carregar conversas:', error)
+      // Fallback para localStorage se API falhar
+      const saved = localStorage.getItem('matteo_conversations')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        setConversations(parsed)
+      }
     }
-  }, [])
+  }
 
-  // Salvar conversas no localStorage
   useEffect(() => {
-    if (conversations.length > 0) {
-      localStorage.setItem('matteo_conversations', JSON.stringify(conversations))
-    }
-  }, [conversations])
+    loadConversations()
+  }, [])
 
   // Atualizar conversa atual quando mensagens mudam
   useEffect(() => {
     if (currentConversationId && messages.length > 0) {
+      const lastMessage = messages[messages.length - 1]?.text?.substring(0, 50) + '...'
+      
+      // Atualizar no banco
+      fetch(`${API_URL}/api/conversations/${currentConversationId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ last_message: lastMessage })
+      }).catch(console.error)
+      
+      // Atualizar estado local
       setConversations(prev => prev.map(conv => 
         conv.id === currentConversationId 
           ? { 
               ...conv, 
               messages, 
-              lastMessage: messages[messages.length - 1]?.text?.substring(0, 50) + '...',
+              lastMessage,
               updatedAt: new Date().toISOString()
             }
           : conv
@@ -216,39 +233,120 @@ const MatteoPage = () => {
 
   useEffect(() => scrollToBottom(), [messages])
 
-  const createNewConversation = () => {
+  const createNewConversation = async () => {
     const newId = `conv_${Date.now()}`
     const newSessionId = `session_${Date.now()}`
-    const newConv = {
-      id: newId,
-      sessionId: newSessionId,
-      title: 'Nova conversa',
-      messages: [],
-      lastMessage: 'Nova conversa',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
     
-    setConversations(prev => [newConv, ...prev])
-    setCurrentConversationId(newId)
-    setSessionId(newSessionId)
-    setMessages([])
-    setSidebarOpen(false)
-  }
-
-  const loadConversation = (conv) => {
-    setCurrentConversationId(conv.id)
-    setSessionId(conv.sessionId)
-    setMessages(conv.messages || [])
-    setSidebarOpen(false)
-  }
-
-  const deleteConversation = (convId, e) => {
-    e.stopPropagation()
-    setConversations(prev => prev.filter(c => c.id !== convId))
-    if (currentConversationId === convId) {
-      setCurrentConversationId(null)
+    try {
+      const response = await fetch(`${API_URL}/api/conversations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: newId,
+          session_id: newSessionId,
+          title: 'Nova conversa'
+        })
+      })
+      
+      if (response.ok) {
+        const newConv = await response.json()
+        setConversations(prev => [newConv, ...prev])
+        setCurrentConversationId(newId)
+        setSessionId(newSessionId)
+        setMessages([])
+        setSidebarOpen(false)
+      } else {
+        // Fallback local se API falhar
+        const newConv = {
+          id: newId,
+          sessionId: newSessionId,
+          title: 'Nova conversa',
+          messages: [],
+          lastMessage: 'Nova conversa',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+        setConversations(prev => [newConv, ...prev])
+        setCurrentConversationId(newId)
+        setSessionId(newSessionId)
+        setMessages([])
+        setSidebarOpen(false)
+      }
+    } catch (error) {
+      console.error('Erro ao criar conversa:', error)
+      // Fallback local
+      const newConv = {
+        id: newId,
+        sessionId: newSessionId,
+        title: 'Nova conversa',
+        messages: [],
+        lastMessage: 'Nova conversa',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      setConversations(prev => [newConv, ...prev])
+      setCurrentConversationId(newId)
+      setSessionId(newSessionId)
       setMessages([])
+      setSidebarOpen(false)
+    }
+  }
+
+  const loadConversation = async (conv) => {
+    try {
+      // Buscar conversa completa com mensagens do banco
+      const response = await fetch(`${API_URL}/api/conversations/${conv.id}`)
+      if (response.ok) {
+        const fullConv = await response.json()
+        setCurrentConversationId(fullConv.id)
+        setSessionId(fullConv.sessionId)
+        setMessages(fullConv.messages || [])
+      } else {
+        // Fallback para dados locais
+        setCurrentConversationId(conv.id)
+        setSessionId(conv.sessionId)
+        setMessages(conv.messages || [])
+      }
+    } catch (error) {
+      console.error('Erro ao carregar conversa:', error)
+      // Fallback para dados locais
+      setCurrentConversationId(conv.id)
+      setSessionId(conv.sessionId)
+      setMessages(conv.messages || [])
+    }
+    setSidebarOpen(false)
+  }
+
+  const deleteConversation = async (convId, e) => {
+    e.stopPropagation()
+    
+    try {
+      const response = await fetch(`${API_URL}/api/conversations/${convId}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        setConversations(prev => prev.filter(c => c.id !== convId))
+        if (currentConversationId === convId) {
+          setCurrentConversationId(null)
+          setMessages([])
+        }
+      } else {
+        // Fallback local se API falhar
+        setConversations(prev => prev.filter(c => c.id !== convId))
+        if (currentConversationId === convId) {
+          setCurrentConversationId(null)
+          setMessages([])
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao deletar conversa:', error)
+      // Fallback local
+      setConversations(prev => prev.filter(c => c.id !== convId))
+      if (currentConversationId === convId) {
+        setCurrentConversationId(null)
+        setMessages([])
+      }
     }
   }
 
@@ -259,11 +357,21 @@ const MatteoPage = () => {
       const response = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, session_id: sessionId, tpm_mode: tpmMode })
+        body: JSON.stringify({ 
+          message, 
+          session_id: sessionId, 
+          conversation_id: currentConversationId,
+          tpm_mode: tpmMode 
+        })
       })
       
       if (!response.ok) throw new Error()
       const data = await response.json()
+      
+      // Atualizar conversation_id se foi criado
+      if (data.conversation_id && !currentConversationId) {
+        setCurrentConversationId(data.conversation_id)
+      }
       
       // Mostrar ferramentas usadas
       if (data.tools_used && data.tools_used.length > 0) {
@@ -297,18 +405,55 @@ const MatteoPage = () => {
     if (!currentConversationId) {
       const newId = `conv_${Date.now()}`
       const newSessionId = `session_${Date.now()}`
-      const newConv = {
-        id: newId,
-        sessionId: newSessionId,
-        title: input.substring(0, 30) + (input.length > 30 ? '...' : ''),
-        messages: [],
-        lastMessage: input.substring(0, 50),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+      const title = input.substring(0, 30) + (input.length > 30 ? '...' : '')
+      
+      try {
+        const response = await fetch(`${API_URL}/api/conversations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: newId,
+            session_id: newSessionId,
+            title: title
+          })
+        })
+        
+        if (response.ok) {
+          const newConv = await response.json()
+          setConversations(prev => [newConv, ...prev])
+          setCurrentConversationId(newId)
+          setSessionId(newSessionId)
+        } else {
+          // Fallback local
+          const newConv = {
+            id: newId,
+            sessionId: newSessionId,
+            title: title,
+            messages: [],
+            lastMessage: input.substring(0, 50),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+          setConversations(prev => [newConv, ...prev])
+          setCurrentConversationId(newId)
+          setSessionId(newSessionId)
+        }
+      } catch (error) {
+        console.error('Erro ao criar conversa:', error)
+        // Fallback local
+        const newConv = {
+          id: newId,
+          sessionId: newSessionId,
+          title: title,
+          messages: [],
+          lastMessage: input.substring(0, 50),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+        setConversations(prev => [newConv, ...prev])
+        setCurrentConversationId(newId)
+        setSessionId(newSessionId)
       }
-      setConversations(prev => [newConv, ...prev])
-      setCurrentConversationId(newId)
-      setSessionId(newSessionId)
     }
     
     const currentInput = input
@@ -336,9 +481,18 @@ const MatteoPage = () => {
     setIsTyping(false)
     setMessages(prev => [...prev, botMessage])
 
-    // Atualizar título da conversa
-    if (messages.length === 0) {
+    // Atualizar título da conversa se for a primeira mensagem
+    if (messages.length === 0 && currentConversationId) {
       const title = currentInput.substring(0, 30) + (currentInput.length > 30 ? '...' : '')
+      
+      // Atualizar no banco
+      fetch(`${API_URL}/api/conversations/${currentConversationId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title })
+      }).catch(console.error)
+      
+      // Atualizar estado local
       setConversations(prev => prev.map(conv =>
         conv.id === currentConversationId ? { ...conv, title } : conv
       ))
