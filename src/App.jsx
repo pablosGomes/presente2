@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import PresentPage from './pages/PresentPage'
 import FinalPage from './pages/FinalPage'
@@ -6,15 +6,6 @@ import FotosPage from './pages/FotosPage'
 import MuralDesabafosPage from './pages/MuralDesabafosPage'
 import AdminLoginPage from './pages/AdminLoginPage'
 import MatteoPage from './pages/MatteoPage'
-import MatteoChatbot from './components/MatteoChatbot'
-
-// Componente para mostrar o chatbot apenas fora da página do Matteo
-const ConditionalChatbot = () => {
-  const location = useLocation()
-  // Não mostrar o chatbot flutuante na página dedicada do Matteo
-  if (location.pathname === '/matteo') return null
-  return <MatteoChatbot />
-}
 
 function App() {
   return (
@@ -30,7 +21,6 @@ function App() {
           <Route path="/admin" element={<AdminLoginPage />} />
           <Route path="/matteo" element={<MatteoPage />} />
         </Routes>
-        <ConditionalChatbot />
       </div>
     </Router>
   )
