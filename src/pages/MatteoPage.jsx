@@ -1136,7 +1136,7 @@ const MatteoPage = () => {
         {/* Messages Area */}
         <main
           className="flex-1 overflow-y-auto overscroll-contain"
-          style={{ scrollPaddingBottom: '140px' }}
+          style={{ scrollPaddingBottom: '260px' }}
         >
           {messages.length === 0 ? (
             // Tela inicial - estilo ChatGPT/Gemini
@@ -1240,7 +1240,7 @@ const MatteoPage = () => {
             </div>
           ) : (
             // Lista de mensagens
-            <div className="max-w-3xl w-full mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 pb-32 sm:pb-36 lg:pb-40">
+            <div className="max-w-3xl w-full mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 pb-40 sm:pb-44 lg:pb-48">
               {messages.map((msg, index) => (
                 <motion.div
                   key={msg.id}
