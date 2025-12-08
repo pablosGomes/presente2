@@ -502,7 +502,7 @@ const MatteoPage = () => {
             }`}
           >
             <Icons.Heart />
-            {tpmMode ? 'Modo Carinho Ativo' : 'Modo Carinho'}
+            {tpmMode ? 'Modo TPM Ativo' : 'Modo TPM'}
           </button>
           
           <button
@@ -763,7 +763,7 @@ const MatteoPage = () => {
             <p className={`text-center text-xs mt-3 ${
               tpmMode ? 'text-rose-500' : 'text-violet-500'
             }`}>
-              Matteo pode cometer erros. Criado com 💙 pelo Pablo.
+              Matteo pode cometer erros, igual a mim. Criado com 💙 pelo Pablo.
             </p>
           </div>
         </footer>
