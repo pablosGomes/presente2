@@ -261,6 +261,32 @@ const PresentPage = () => {
           </motion.button>
         </motion.div>
 
+        {/* Botão para o Matteo IA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+          className="text-center mt-6 sm:mt-8"
+        >
+          <motion.button
+            onClick={() => navigate('/matteo')}
+            className="relative px-6 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 text-white rounded-full font-poppins font-semibold text-base sm:text-lg md:text-xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {/* Efeito de brilho animado */}
+            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+            {/* Borda brilhante */}
+            <span className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500" />
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              <span className="text-xl">🤖</span>
+              <span>Falar com Matteo</span>
+              <span className="text-xl">✨</span>
+            </span>
+          </motion.button>
+          <p className="text-xs text-gray-500 mt-2 font-poppins">Sua IA pessoal - Pesquisa, clima, cálculos e mais!</p>
+        </motion.div>
+
         {/* Botão para página final */}
         <motion.div
           initial={{ opacity: 0 }}

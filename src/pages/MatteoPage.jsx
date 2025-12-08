@@ -3,31 +3,42 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 
 // 🤖 Logo do Matteo
-const MatteoFace = ({ className, mood = 'happy' }) => (
-  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    <rect x="20" y="25" width="60" height="50" rx="15" fill="currentColor" />
-    <circle cx="38" cy="45" r="6" fill="white" />
-    <circle cx="62" cy="45" r="6" fill="white" />
-    {mood === 'happy' && (
-      <path d="M40 60C40 60 45 65 50 65C55 65 60 60 60 60" stroke="white" strokeWidth="4" strokeLinecap="round" />
-    )}
-    {mood === 'thinking' && (
-      <path d="M38 62H62" stroke="white" strokeWidth="4" strokeLinecap="round" />
-    )}
-    {mood === 'love' && (
-      <path d="M40 58C40 58 45 68 50 68C55 68 60 58 60 58" stroke="white" strokeWidth="4" strokeLinecap="round" />
-    )}
-    <path d="M50 25V15" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
-    <circle cx="50" cy="12" r="5" fill={mood === 'thinking' ? '#FBBF24' : '#10B981'} className={mood === 'thinking' ? 'animate-pulse' : ''} />
-  </svg>
-)
+const MatteoLogo = ({ className, size = 'md' }) => {
+  const sizes = {
+    sm: 'w-8 h-8',
+    md: 'w-12 h-12',
+    lg: 'w-16 h-16',
+    xl: 'w-24 h-24'
+  }
+  
+  return (
+    <div className={`${sizes[size]} ${className} relative`}>
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        <defs>
+          <linearGradient id="matteoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#8B5CF6" />
+            <stop offset="50%" stopColor="#A855F7" />
+            <stop offset="100%" stopColor="#D946EF" />
+          </linearGradient>
+        </defs>
+        <rect x="20" y="25" width="60" height="50" rx="15" fill="url(#matteoGradient)" />
+        <circle cx="38" cy="45" r="6" fill="white" />
+        <circle cx="62" cy="45" r="6" fill="white" />
+        <circle cx="40" cy="45" r="2" fill="#1a1a2e" />
+        <circle cx="64" cy="45" r="2" fill="#1a1a2e" />
+        <path d="M40 60C40 60 45 65 50 65C55 65 60 60 60 60" stroke="white" strokeWidth="4" strokeLinecap="round" />
+        <path d="M50 25V15" stroke="url(#matteoGradient)" strokeWidth="6" strokeLinecap="round" />
+        <circle cx="50" cy="12" r="5" fill="#10B981" />
+      </svg>
+    </div>
+  )
+}
 
 // Ícones
 const Icons = {
   Send: () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="22" y1="2" x2="11" y2="13"></line>
-      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
     </svg>
   ),
   Menu: () => (
@@ -57,7 +68,7 @@ const Icons = {
   ),
   Weather: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+      <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
     </svg>
   ),
   Calendar: () => (
@@ -70,17 +81,7 @@ const Icons = {
   ),
   Calculator: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4" y="2" width="16" height="20" rx="2"></rect>
-      <line x1="8" y1="6" x2="16" y2="6"></line>
-      <line x1="8" y1="10" x2="8" y2="10"></line>
-      <line x1="12" y1="10" x2="12" y2="10"></line>
-      <line x1="16" y1="10" x2="16" y2="10"></line>
-      <line x1="8" y1="14" x2="8" y2="14"></line>
-      <line x1="12" y1="14" x2="12" y2="14"></line>
-      <line x1="16" y1="14" x2="16" y2="14"></line>
-      <line x1="8" y1="18" x2="8" y2="18"></line>
-      <line x1="12" y1="18" x2="12" y2="18"></line>
-      <line x1="16" y1="18" x2="16" y2="18"></line>
+      <rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10.01"/><line x1="12" y1="10" x2="12" y2="10.01"/><line x1="16" y1="10" x2="16" y2="10.01"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="12" y1="14" x2="12" y2="14.01"/><line x1="16" y1="14" x2="16" y2="14.01"/><line x1="8" y1="18" x2="8" y2="18.01"/><line x1="12" y1="18" x2="12" y2="18.01"/><line x1="16" y1="18" x2="16" y2="18.01"/>
     </svg>
   ),
   Brain: () => (
@@ -90,7 +91,7 @@ const Icons = {
     </svg>
   ),
   Heart: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
     </svg>
   ),
@@ -116,24 +117,27 @@ const Icons = {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
     </svg>
+  ),
+  Sparkles: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+      <path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/>
+    </svg>
+  ),
+  Globe: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+    </svg>
   )
 }
 
 const MatteoPage = () => {
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [messages, setMessages] = useState([
-    { 
-      id: 1,
-      text: "Oi Gehh! 🤖💙\n\nSou o Matteo, sua IA pessoal! Fui criado pelo Pablo especialmente pra você.\n\nPosso fazer várias coisas:\n🔍 Pesquisar na internet\n🌤️ Ver o clima\n📅 Te contar a data/hora\n🧠 Lembrar das nossas conversas\n📝 Salvar recados no mural\n🔢 Fazer cálculos\n\nComo você tá hoje, princesa?", 
-      sender: 'bot',
-      timestamp: new Date()
-    }
-  ])
+  const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [typingStatus, setTypingStatus] = useState('')
-  const [mood, setMood] = useState('happy')
   const [tpmMode, setTpmMode] = useState(false)
   const [conversations, setConversations] = useState([])
   const [currentConversationId, setCurrentConversationId] = useState(null)
@@ -149,12 +153,6 @@ const MatteoPage = () => {
     if (saved) {
       const parsed = JSON.parse(saved)
       setConversations(parsed)
-      if (parsed.length > 0 && !currentConversationId) {
-        // Criar nova conversa por padrão
-        createNewConversation()
-      }
-    } else {
-      createNewConversation()
     }
   }, [])
 
@@ -167,7 +165,7 @@ const MatteoPage = () => {
 
   // Atualizar conversa atual quando mensagens mudam
   useEffect(() => {
-    if (currentConversationId && messages.length > 1) {
+    if (currentConversationId && messages.length > 0) {
       setConversations(prev => prev.map(conv => 
         conv.id === currentConversationId 
           ? { 
@@ -194,13 +192,8 @@ const MatteoPage = () => {
       id: newId,
       sessionId: newSessionId,
       title: 'Nova conversa',
-      messages: [{
-        id: 1,
-        text: "Oi Gehh! 🤖💙 Como posso te ajudar hoje, princesa?",
-        sender: 'bot',
-        timestamp: new Date().toISOString()
-      }],
-      lastMessage: 'Nova conversa iniciada',
+      messages: [],
+      lastMessage: 'Nova conversa',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
@@ -208,7 +201,7 @@ const MatteoPage = () => {
     setConversations(prev => [newConv, ...prev])
     setCurrentConversationId(newId)
     setSessionId(newSessionId)
-    setMessages(newConv.messages)
+    setMessages([])
     setSidebarOpen(false)
   }
 
@@ -223,13 +216,13 @@ const MatteoPage = () => {
     e.stopPropagation()
     setConversations(prev => prev.filter(c => c.id !== convId))
     if (currentConversationId === convId) {
-      createNewConversation()
+      setCurrentConversationId(null)
+      setMessages([])
     }
   }
 
   const sendMessageToAPI = async (message) => {
     try {
-      setMood('thinking')
       setTypingStatus('Pensando...')
       
       const response = await fetch(`${API_URL}/api/chat`, {
@@ -258,10 +251,8 @@ const MatteoPage = () => {
         }
       }
       
-      setMood(tpmMode ? 'love' : 'happy')
       return data.response
     } catch {
-      setMood('happy')
       return "Minha conexão caiu rapidinho! Tenta de novo? ❤️"
     } finally {
       setTypingStatus('')
@@ -270,6 +261,24 @@ const MatteoPage = () => {
 
   const handleSend = async () => {
     if (!input.trim()) return
+    
+    // Criar conversa se não existir
+    if (!currentConversationId) {
+      const newId = `conv_${Date.now()}`
+      const newSessionId = `session_${Date.now()}`
+      const newConv = {
+        id: newId,
+        sessionId: newSessionId,
+        title: input.substring(0, 30) + (input.length > 30 ? '...' : ''),
+        messages: [],
+        lastMessage: input.substring(0, 50),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      setConversations(prev => [newConv, ...prev])
+      setCurrentConversationId(newId)
+      setSessionId(newSessionId)
+    }
     
     const currentInput = input
     setInput('')
@@ -296,8 +305,8 @@ const MatteoPage = () => {
     setIsTyping(false)
     setMessages(prev => [...prev, botMessage])
 
-    // Atualizar título da conversa com a primeira mensagem
-    if (messages.length <= 2) {
+    // Atualizar título da conversa
+    if (messages.length === 0) {
       const title = currentInput.substring(0, 30) + (currentInput.length > 30 ? '...' : '')
       setConversations(prev => prev.map(conv =>
         conv.id === currentConversationId ? { ...conv, title } : conv
@@ -305,32 +314,23 @@ const MatteoPage = () => {
     }
   }
 
-  const handleQuickAction = (action) => {
-    const actions = {
-      'search': 'Pesquisa sobre ',
-      'weather': 'Como tá o clima em São Paulo?',
-      'date': 'Que dia é hoje?',
-      'calculate': 'Quanto é ',
-      'memories': 'O que você lembra sobre mim?',
-      'mural': 'O que tem no mural?'
-    }
-    setInput(actions[action] || '')
+  const handleSuggestion = (text) => {
+    setInput(text)
     inputRef.current?.focus()
   }
 
   const toggleTpmMode = () => {
     setTpmMode(!tpmMode)
-    setMood(tpmMode ? 'happy' : 'love')
     
-    const modeMessage = {
-      id: Date.now(),
-      text: tpmMode 
-        ? "Modo normal ativado! Mas continuo aqui pra você, princesa 💙"
-        : "🆘 MODO CARINHO ATIVADO! 🆘\n\nPrincesa, tô aqui pra você agora! Vou te dar todo carinho do mundo. Quer desabafar? Tô ouvindo... 💙🫂",
-      sender: 'bot',
-      timestamp: new Date().toISOString()
+    if (!tpmMode) {
+      const modeMessage = {
+        id: Date.now(),
+        text: "🆘 MODO CARINHO ATIVADO! 🆘\n\nPrincesa, tô aqui pra você agora! Vou te dar todo carinho do mundo. Quer desabafar? Tô ouvindo... 💙🫂",
+        sender: 'bot',
+        timestamp: new Date().toISOString()
+      }
+      setMessages(prev => [...prev, modeMessage])
     }
-    setMessages(prev => [...prev, modeMessage])
   }
 
   const formatTime = (timestamp) => {
@@ -349,248 +349,253 @@ const MatteoPage = () => {
     return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
   }
 
+  // Sugestões iniciais
+  const suggestions = [
+    { icon: <Icons.Globe />, text: "Pesquisa sobre Taylor Swift", color: "from-blue-500 to-cyan-500" },
+    { icon: <Icons.Weather />, text: "Como tá o clima em São Paulo?", color: "from-amber-500 to-orange-500" },
+    { icon: <Icons.Brain />, text: "O que você lembra sobre mim?", color: "from-purple-500 to-pink-500" },
+    { icon: <Icons.Calculator />, text: "Quanto é 15% de 350?", color: "from-emerald-500 to-teal-500" },
+  ]
+
   return (
-    <div className={`h-screen w-screen flex overflow-hidden transition-colors duration-500 ${tpmMode ? 'bg-gradient-to-br from-pink-100 via-pink-50 to-white' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-white'}`}>
+    <div className={`h-screen w-screen flex overflow-hidden transition-colors duration-500 ${tpmMode ? 'bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100' : 'bg-[#0f0f0f]'}`}>
       
       {/* Sidebar */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <>
-            {/* Overlay */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSidebarOpen(false)}
-              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
-            />
-            
-            {/* Sidebar Content */}
-            <motion.aside
-              initial={{ x: -320 }}
-              animate={{ x: 0 }}
-              exit={{ x: -320 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed lg:relative left-0 top-0 h-full w-80 bg-white/80 backdrop-blur-xl border-r border-gray-200/50 z-50 flex flex-col shadow-2xl lg:shadow-none"
-            >
-              {/* Sidebar Header */}
-              <div className="p-4 border-b border-gray-200/50">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-poppins font-bold text-gray-800 text-lg">Conversas</h2>
-                  <button
-                    onClick={() => setSidebarOpen(false)}
-                    className="lg:hidden p-2 hover:bg-gray-100 rounded-xl transition-colors"
-                  >
-                    <Icons.Close />
-                  </button>
+      <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:relative left-0 top-0 h-full w-72 bg-[#171717] border-r border-white/10 z-50 flex flex-col transition-transform duration-300 ease-in-out`}>
+        {/* Sidebar Header */}
+        <div className="p-4 border-b border-white/10">
+          <button
+            onClick={createNewConversation}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-medium transition-all border border-white/10 hover:border-white/20"
+          >
+            <Icons.Plus />
+            Nova conversa
+          </button>
+        </div>
+
+        {/* Conversations List */}
+        <div className="flex-1 overflow-y-auto p-2">
+          <div className="space-y-1">
+            {conversations.map(conv => (
+              <motion.div
+                key={conv.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                onClick={() => loadConversation(conv)}
+                className={`group flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
+                  currentConversationId === conv.id 
+                    ? 'bg-white/10' 
+                    : 'hover:bg-white/5'
+                }`}
+              >
+                <Icons.Chat />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white/90 truncate">{conv.title}</p>
+                  <p className="text-xs text-white/40 truncate">{formatDate(conv.updatedAt)}</p>
                 </div>
-                
                 <button
-                  onClick={createNewConversation}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-2xl font-medium shadow-lg shadow-rose-500/25 hover:shadow-xl hover:shadow-rose-500/30 transition-all hover:-translate-y-0.5"
+                  onClick={(e) => deleteConversation(conv.id, e)}
+                  className="p-1.5 text-white/30 hover:text-red-400 hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
                 >
-                  <Icons.Plus />
-                  Nova conversa
+                  <Icons.Trash />
                 </button>
-              </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
 
-              {/* Conversations List */}
-              <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                {conversations.map(conv => (
-                  <motion.div
-                    key={conv.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    onClick={() => loadConversation(conv)}
-                    className={`group p-3 rounded-2xl cursor-pointer transition-all ${
-                      currentConversationId === conv.id 
-                        ? 'bg-rose-50 border-2 border-rose-200' 
-                        : 'hover:bg-gray-50 border-2 border-transparent'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-800 truncate text-sm">{conv.title}</p>
-                        <p className="text-xs text-gray-500 truncate mt-1">{conv.lastMessage}</p>
-                      </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <span className="text-xs text-gray-400">{formatDate(conv.updatedAt)}</span>
-                        <button
-                          onClick={(e) => deleteConversation(conv.id, e)}
-                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
-                        >
-                          <Icons.Trash />
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-                
-                {conversations.length === 0 && (
-                  <div className="text-center py-8 text-gray-400">
-                    <Icons.Chat />
-                    <p className="mt-2 text-sm">Nenhuma conversa ainda</p>
-                  </div>
-                )}
-              </div>
+        {/* Sidebar Footer */}
+        <div className="p-4 border-t border-white/10 space-y-2">
+          <button
+            onClick={toggleTpmMode}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
+              tpmMode 
+                ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30' 
+                : 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10'
+            }`}
+          >
+            <Icons.Heart />
+            {tpmMode ? 'Modo Carinho Ativo' : 'Modo Carinho'}
+          </button>
+          
+          <button
+            onClick={() => navigate('/presente')}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-xl transition-all border border-white/10"
+          >
+            <Icons.Home />
+            Voltar ao início
+          </button>
+        </div>
+      </aside>
 
-              {/* Sidebar Footer */}
-              <div className="p-4 border-t border-gray-200/50">
-                <button
-                  onClick={() => navigate('/')}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-2xl transition-all"
-                >
-                  <Icons.Home />
-                  Voltar ao início
-                </button>
-              </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
+      {/* Overlay mobile */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-full">
         
         {/* Header */}
-        <header className={`px-4 py-3 border-b backdrop-blur-xl transition-colors duration-500 ${tpmMode ? 'bg-pink-50/80 border-pink-200/50' : 'bg-white/80 border-gray-200/50'}`}>
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
-              >
-                <Icons.Menu />
-              </button>
-              
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${tpmMode ? 'bg-pink-200' : 'bg-rose-100'}`}>
-                    <MatteoFace className={`w-8 h-8 ${tpmMode ? 'text-pink-600' : 'text-rose-600'}`} mood={mood} />
-                  </div>
-                  <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 border-[3px] border-white rounded-full transition-colors ${
-                    mood === 'thinking' ? 'bg-yellow-400 animate-pulse' : tpmMode ? 'bg-pink-400' : 'bg-emerald-400'
-                  }`}></span>
-                </div>
-                <div>
-                  <h1 className="font-poppins font-bold text-gray-800 text-lg">Matteo</h1>
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${tpmMode ? 'text-pink-600 bg-pink-100' : 'text-rose-500 bg-rose-50'}`}>
-                    {tpmMode ? '🫂 Modo Carinho' : '🤖 IA Completa'}
-                  </span>
-                </div>
+        <header className={`px-4 py-3 border-b flex items-center gap-4 ${tpmMode ? 'bg-pink-50/80 border-pink-200' : 'bg-[#171717] border-white/10'}`}>
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className={`lg:hidden p-2 rounded-xl transition-colors ${tpmMode ? 'hover:bg-pink-100 text-pink-600' : 'hover:bg-white/10 text-white'}`}
+          >
+            {sidebarOpen ? <Icons.Close /> : <Icons.Menu />}
+          </button>
+          
+          <div className="flex items-center gap-3">
+            <MatteoLogo size="sm" />
+            <div>
+              <h1 className={`font-semibold ${tpmMode ? 'text-pink-800' : 'text-white'}`}>Matteo</h1>
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${tpmMode ? 'bg-pink-400' : 'bg-emerald-400'}`}></span>
+                <span className={`text-xs ${tpmMode ? 'text-pink-600' : 'text-white/50'}`}>
+                  {tpmMode ? 'Modo Carinho' : 'Online'}
+                </span>
               </div>
             </div>
-
-            <button
-              onClick={toggleTpmMode}
-              className={`p-3 rounded-2xl transition-all duration-300 ${
-                tpmMode 
-                  ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/40' 
-                  : 'hover:bg-pink-50 text-pink-400 hover:text-pink-600'
-              }`}
-              title={tpmMode ? "Desativar Modo Carinho" : "🆘 Modo Carinho (TPM)"}
-            >
-              <Icons.Heart />
-            </button>
           </div>
         </header>
 
         {/* Messages Area */}
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-            {messages.map((msg) => (
+          {messages.length === 0 ? (
+            // Tela inicial - estilo ChatGPT/Gemini
+            <div className="h-full flex flex-col items-center justify-center px-4 py-8">
               <motion.div
-                key={msg.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                className="text-center max-w-2xl"
               >
-                <div className={`flex items-end gap-2 max-w-[85%] lg:max-w-[70%] ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}>
-                  {msg.sender === 'bot' && (
-                    <div className={`w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center ${tpmMode ? 'bg-pink-100' : 'bg-rose-100'}`}>
-                      <MatteoFace className={`w-5 h-5 ${tpmMode ? 'text-pink-600' : 'text-rose-600'}`} mood={mood} />
-                    </div>
-                  )}
-                  
-                  <div className="flex flex-col gap-1">
-                    <div
-                      className={`p-4 rounded-3xl text-[15px] leading-relaxed whitespace-pre-wrap ${
-                        msg.sender === 'user'
-                          ? 'bg-gradient-to-br from-rose-500 to-red-600 text-white rounded-br-lg shadow-lg shadow-rose-500/20'
-                          : `${tpmMode ? 'bg-pink-50 border-pink-100' : 'bg-white border-gray-100'} text-gray-700 rounded-bl-lg border shadow-sm`
+                <MatteoLogo size="xl" className="mx-auto mb-6" />
+                
+                <h2 className={`text-3xl font-bold mb-2 ${tpmMode ? 'text-pink-800' : 'text-white'}`}>
+                  Olá, Gehh! 💙
+                </h2>
+                <p className={`text-lg mb-8 ${tpmMode ? 'text-pink-600' : 'text-white/50'}`}>
+                  Sou o Matteo, sua IA pessoal. Como posso te ajudar hoje?
+                </p>
+
+                {/* Sugestões */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto">
+                  {suggestions.map((suggestion, idx) => (
+                    <motion.button
+                      key={idx}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      onClick={() => handleSuggestion(suggestion.text)}
+                      className={`group flex items-center gap-3 p-4 rounded-2xl text-left transition-all ${
+                        tpmMode 
+                          ? 'bg-white/80 hover:bg-white border border-pink-200 hover:border-pink-300' 
+                          : 'bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20'
                       }`}
                     >
-                      {msg.text}
-                    </div>
-                    <span className={`text-xs text-gray-400 ${msg.sender === 'user' ? 'text-right' : ''}`}>
-                      {formatTime(msg.timestamp)}
-                    </span>
-                  </div>
+                      <div className={`p-2 rounded-xl bg-gradient-to-br ${suggestion.color} text-white`}>
+                        {suggestion.icon}
+                      </div>
+                      <span className={`text-sm ${tpmMode ? 'text-gray-700' : 'text-white/80'}`}>
+                        {suggestion.text}
+                      </span>
+                    </motion.button>
+                  ))}
+                </div>
+
+                {/* Capacidades */}
+                <div className={`mt-8 flex flex-wrap justify-center gap-2 ${tpmMode ? 'text-pink-500' : 'text-white/40'}`}>
+                  <span className="flex items-center gap-1 text-xs"><Icons.Globe /> Busca na Web</span>
+                  <span className="text-xs">•</span>
+                  <span className="flex items-center gap-1 text-xs"><Icons.Weather /> Clima</span>
+                  <span className="text-xs">•</span>
+                  <span className="flex items-center gap-1 text-xs"><Icons.Brain /> Memória</span>
+                  <span className="text-xs">•</span>
+                  <span className="flex items-center gap-1 text-xs"><Icons.Calculator /> Cálculos</span>
                 </div>
               </motion.div>
-            ))}
-            
-            {/* Typing Indicator */}
-            {isTyping && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex justify-start"
-              >
-                <div className="flex items-end gap-2">
-                  <div className={`w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center ${tpmMode ? 'bg-pink-100' : 'bg-rose-100'}`}>
-                    <MatteoFace className={`w-5 h-5 ${tpmMode ? 'text-pink-600' : 'text-rose-600'}`} mood="thinking" />
+            </div>
+          ) : (
+            // Lista de mensagens
+            <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+              {messages.map((msg) => (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`flex gap-4 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
+                >
+                  {/* Avatar */}
+                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                    msg.sender === 'user' 
+                      ? 'bg-gradient-to-br from-blue-500 to-blue-600' 
+                      : tpmMode ? 'bg-gradient-to-br from-pink-400 to-rose-500' : 'bg-gradient-to-br from-violet-500 to-purple-600'
+                  }`}>
+                    {msg.sender === 'user' ? (
+                      <span className="text-white text-sm font-medium">G</span>
+                    ) : (
+                      <MatteoLogo size="sm" className="w-5 h-5" />
+                    )}
                   </div>
-                  <div className={`p-4 rounded-3xl rounded-bl-lg border shadow-sm ${tpmMode ? 'bg-pink-50 border-pink-100' : 'bg-white border-gray-100'}`}>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex gap-1.5">
-                        <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce"></span>
-                        <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce" style={{animationDelay: '100ms'}}></span>
-                        <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce" style={{animationDelay: '200ms'}}></span>
+                  
+                  {/* Message */}
+                  <div className={`flex-1 max-w-[80%] ${msg.sender === 'user' ? 'text-right' : ''}`}>
+                    <div className={`inline-block p-4 rounded-2xl text-[15px] leading-relaxed whitespace-pre-wrap ${
+                      msg.sender === 'user'
+                        ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
+                        : tpmMode 
+                          ? 'bg-pink-100 text-gray-800' 
+                          : 'bg-white/10 text-white/90'
+                    }`}>
+                      {msg.text}
+                    </div>
+                    <p className={`text-xs mt-1 ${tpmMode ? 'text-pink-400' : 'text-white/30'}`}>
+                      {formatTime(msg.timestamp)}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+              
+              {/* Typing Indicator */}
+              {isTyping && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex gap-4"
+                >
+                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${tpmMode ? 'bg-gradient-to-br from-pink-400 to-rose-500' : 'bg-gradient-to-br from-violet-500 to-purple-600'}`}>
+                    <MatteoLogo size="sm" className="w-5 h-5" />
+                  </div>
+                  <div className={`p-4 rounded-2xl ${tpmMode ? 'bg-pink-100' : 'bg-white/10'}`}>
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1">
+                        <span className={`w-2 h-2 rounded-full animate-bounce ${tpmMode ? 'bg-pink-400' : 'bg-violet-400'}`}></span>
+                        <span className={`w-2 h-2 rounded-full animate-bounce ${tpmMode ? 'bg-pink-400' : 'bg-violet-400'}`} style={{animationDelay: '150ms'}}></span>
+                        <span className={`w-2 h-2 rounded-full animate-bounce ${tpmMode ? 'bg-pink-400' : 'bg-violet-400'}`} style={{animationDelay: '300ms'}}></span>
                       </div>
                       {typingStatus && (
-                        <span className="text-xs text-gray-500">{typingStatus}</span>
+                        <span className={`text-sm ${tpmMode ? 'text-pink-600' : 'text-white/50'}`}>{typingStatus}</span>
                       )}
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            )}
-            
-            <div ref={messagesEndRef} />
-          </div>
+                </motion.div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
+          )}
         </main>
 
-        {/* Quick Actions */}
-        <div className="px-4 py-2 border-t border-gray-100 bg-white/50 backdrop-blur-sm">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-              {[
-                { id: 'search', icon: <Icons.Search />, label: 'Pesquisar' },
-                { id: 'weather', icon: <Icons.Weather />, label: 'Clima' },
-                { id: 'date', icon: <Icons.Calendar />, label: 'Data/Hora' },
-                { id: 'calculate', icon: <Icons.Calculator />, label: 'Calcular' },
-                { id: 'memories', icon: <Icons.Brain />, label: 'Memórias' },
-                { id: 'mural', icon: <Icons.Clipboard />, label: 'Mural' },
-              ].map(action => (
-                <button
-                  key={action.id}
-                  onClick={() => handleQuickAction(action.id)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-rose-50 text-gray-600 hover:text-rose-600 text-sm font-medium rounded-2xl border border-gray-200 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 whitespace-nowrap"
-                >
-                  {action.icon}
-                  {action.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
         {/* Input Area */}
-        <footer className={`px-4 py-4 border-t backdrop-blur-xl transition-colors duration-500 ${tpmMode ? 'bg-pink-50/80 border-pink-200/50' : 'bg-white/80 border-gray-200/50'}`}>
-          <div className="max-w-4xl mx-auto">
-            <div className={`flex items-end gap-3 p-2 rounded-3xl border shadow-sm transition-all duration-300 ${
-              tpmMode ? 'bg-pink-50 border-pink-200 focus-within:border-pink-400 focus-within:ring-4 focus-within:ring-pink-100' : 'bg-white border-gray-200 focus-within:border-rose-300 focus-within:ring-4 focus-within:ring-rose-100'
+        <footer className={`px-4 py-4 border-t ${tpmMode ? 'bg-pink-50/80 border-pink-200' : 'bg-[#171717] border-white/10'}`}>
+          <div className="max-w-3xl mx-auto">
+            <div className={`flex items-end gap-3 p-3 rounded-2xl border transition-all ${
+              tpmMode 
+                ? 'bg-white border-pink-200 focus-within:border-pink-400 focus-within:ring-2 focus-within:ring-pink-200' 
+                : 'bg-white/5 border-white/10 focus-within:border-violet-500/50 focus-within:ring-2 focus-within:ring-violet-500/20'
             }`}>
               <textarea
                 ref={inputRef}
@@ -602,24 +607,26 @@ const MatteoPage = () => {
                     handleSend()
                   }
                 }}
-                placeholder="Digite uma mensagem..."
+                placeholder="Pergunte qualquer coisa..."
                 rows={1}
-                className="flex-1 px-4 py-3 bg-transparent outline-none text-gray-700 placeholder-gray-400 text-[15px] resize-none max-h-32"
-                style={{ minHeight: '48px' }}
+                className={`flex-1 px-2 py-2 bg-transparent outline-none text-[15px] resize-none max-h-32 ${
+                  tpmMode ? 'text-gray-800 placeholder-gray-400' : 'text-white placeholder-white/40'
+                }`}
+                style={{ minHeight: '44px' }}
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim()}
-                className={`p-3 rounded-2xl transition-all duration-300 flex-shrink-0 ${
+                className={`p-3 rounded-xl transition-all flex-shrink-0 ${
                   input.trim()
-                    ? 'bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-lg shadow-rose-500/30 hover:shadow-xl hover:-translate-y-0.5'
-                    : 'bg-gray-100 text-gray-400'
+                    ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30'
+                    : tpmMode ? 'bg-pink-100 text-pink-300' : 'bg-white/5 text-white/20'
                 }`}
               >
                 <Icons.Send />
               </button>
             </div>
-            <p className="text-center text-xs text-gray-400 mt-3">
+            <p className={`text-center text-xs mt-3 ${tpmMode ? 'text-pink-400' : 'text-white/30'}`}>
               Matteo pode cometer erros. Criado com 💙 pelo Pablo.
             </p>
           </div>
@@ -630,4 +637,3 @@ const MatteoPage = () => {
 }
 
 export default MatteoPage
-
