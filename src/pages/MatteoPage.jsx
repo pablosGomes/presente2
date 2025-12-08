@@ -73,15 +73,9 @@ const Icons = {
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.95 }}
     >
-      <defs>
-        <linearGradient id="menuGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#6366F1" />
-          <stop offset="100%" stopColor="#8B5CF6" />
-        </linearGradient>
-      </defs>
-      <line x1="3" y1="12" x2="21" y2="12" stroke="url(#menuGradient)" strokeWidth="2.5" strokeLinecap="round"/>
-      <line x1="3" y1="6" x2="21" y2="6" stroke="url(#menuGradient)" strokeWidth="2.5" strokeLinecap="round"/>
-      <line x1="3" y1="18" x2="21" y2="18" stroke="url(#menuGradient)" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="3" y1="18" x2="21" y2="18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
     </motion.svg>
   ),
   Close: () => (
@@ -94,14 +88,8 @@ const Icons = {
       whileHover={{ scale: 1.1, rotate: 90 }}
       whileTap={{ scale: 0.95 }}
     >
-      <defs>
-        <linearGradient id="closeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#EF4444" />
-          <stop offset="100%" stopColor="#F87171" />
-        </linearGradient>
-      </defs>
-      <line x1="18" y1="6" x2="6" y2="18" stroke="url(#closeGradient)" strokeWidth="2.5" strokeLinecap="round"/>
-      <line x1="6" y1="6" x2="18" y2="18" stroke="url(#closeGradient)" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
     </motion.svg>
   ),
   Plus: () => (
