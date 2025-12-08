@@ -5,20 +5,98 @@ import { motion, AnimatePresence } from 'framer-motion'
 const AdminDashboard = () => {
   const navigate = useNavigate()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false)
 
   useEffect(() => {
     // Verificar se está autenticado
     const adminStatus = localStorage.getItem('pablo_admin')
     if (adminStatus !== 'true') {
-      navigate('/admin')
+      setShowPasswordPrompt(true)
       return
     }
     setIsAuthenticated(true)
-  }, [navigate])
+  }, [])
+
+  const handlePasswordSubmit = (e) => {
+    e.preventDefault()
+    const SECRET_PASSWORD = 'gehh2024'
+    
+    if (password === SECRET_PASSWORD) {
+      localStorage.setItem('pablo_admin', 'true')
+      setIsAuthenticated(true)
+      setShowPasswordPrompt(false)
+      setError('')
+    } else {
+      setError('Senha incorreta')
+      setPassword('')
+    }
+  }
 
   const handleLogout = () => {
     localStorage.removeItem('pablo_admin')
     navigate('/admin')
+  }
+
+  // Mostrar prompt de senha se não estiver autenticado
+  if (showPasswordPrompt) {
+    return (
+      <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-sm bg-slate-800/80 backdrop-blur-xl rounded-2xl p-6 border-2 border-slate-600/70 shadow-2xl"
+        >
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 mx-auto bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center text-3xl mb-4 shadow-lg">
+              🔐
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">Acesso Restrito</h2>
+            <p className="text-slate-400 text-sm">Digite a senha para continuar</p>
+          </div>
+          
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Senha"
+                className="w-full px-4 py-3 bg-slate-900/50 border-2 border-slate-600/70 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all font-semibold"
+                autoFocus
+              />
+            </div>
+            
+            {error && (
+              <motion.p
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-red-400 text-sm text-center font-medium"
+              >
+                {error}
+              </motion.p>
+            )}
+            
+            <motion.button
+              type="submit"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-xl font-bold shadow-lg ring-2 ring-amber-400/50 transition-all"
+            >
+              Entrar
+            </motion.button>
+          </form>
+          
+          <motion.button
+            onClick={() => navigate('/presente')}
+            className="w-full mt-4 py-2 text-slate-400 hover:text-slate-200 text-sm transition-colors"
+          >
+            ← Voltar
+          </motion.button>
+        </motion.div>
+      </div>
+    )
   }
 
   if (!isAuthenticated) {

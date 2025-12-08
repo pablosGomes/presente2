@@ -437,9 +437,6 @@ const MatteoPage = () => {
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
-  const [showAdminPanel, setShowAdminPanel] = useState(false)
-  const [adminConversations, setAdminConversations] = useState([])
-  const [adminLoading, setAdminLoading] = useState(false)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
@@ -543,29 +540,6 @@ const MatteoPage = () => {
     setTimeout(createInitialConversation, 500)
   }, [])
   
-  // Carregar conversas do admin
-  const loadAdminConversations = async () => {
-    if (!isAdmin) return
-    
-    setAdminLoading(true)
-    try {
-      const response = await fetch(`${API_URL}/api/conversations?admin=true`)
-      if (response.ok) {
-        const data = await response.json()
-        setAdminConversations(data)
-      }
-    } catch (error) {
-      console.error('Erro ao carregar conversas admin:', error)
-    } finally {
-      setAdminLoading(false)
-    }
-  }
-  
-  useEffect(() => {
-    if (showAdminPanel && isAdmin) {
-      loadAdminConversations()
-    }
-  }, [showAdminPanel, isAdmin])
 
   // Atualizar conversa atual quando mensagens mudam (com debounce)
   useEffect(() => {
@@ -1066,8 +1040,11 @@ const MatteoPage = () => {
 
       {/* Overlay mobile */}
       {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -1080,7 +1057,7 @@ const MatteoPage = () => {
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3 }}
-          className={`px-3 sm:px-4 py-2.5 sm:py-3 border-b-2 backdrop-blur-xl flex items-center gap-2 sm:gap-4 ${
+          className={`px-3 sm:px-4 py-2.5 sm:py-3 border-b-2 backdrop-blur-xl flex items-center gap-2 sm:gap-4 relative z-50 ${
             tpmMode 
               ? 'bg-gradient-to-r from-pink-200/98 via-rose-100/98 to-pink-200/98 border-pink-500/80 shadow-lg' 
               : 'bg-gradient-to-r from-violet-200/98 via-purple-100/98 to-indigo-200/98 border-violet-500/80 shadow-lg'
@@ -1088,12 +1065,14 @@ const MatteoPage = () => {
         >
           <motion.button
             onClick={() => setSidebarOpen(!sidebarOpen)}
+            whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            className={`lg:hidden p-2 rounded-xl transition-all ${
+            className={`lg:hidden p-2.5 sm:p-3 rounded-xl transition-all relative z-[60] flex-shrink-0 ${
               tpmMode 
-                ? 'hover:bg-pink-300/70 text-rose-800 ring-2 ring-pink-300/50' 
-                : 'hover:bg-violet-300/70 text-violet-800 ring-2 ring-violet-300/50'
+                ? 'bg-pink-400/95 hover:bg-pink-500/95 text-rose-900 ring-2 ring-pink-500/80 shadow-xl' 
+                : 'bg-violet-400/95 hover:bg-violet-500/95 text-violet-900 ring-2 ring-violet-500/80 shadow-xl'
             }`}
+            title={sidebarOpen ? "Fechar menu" : "Abrir menu"}
           >
             {sidebarOpen ? <Icons.Close /> : <Icons.Menu />}
           </motion.button>
@@ -1116,39 +1095,24 @@ const MatteoPage = () => {
           
           <div className="flex items-center gap-1.5 sm:gap-2">
             {isAdmin && (
-              <>
-                <motion.button
-                  onClick={() => navigate('/admin/dashboard')}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  className={`p-2 rounded-lg transition-all ${
-                    tpmMode 
-                      ? 'bg-blue-300/80 hover:bg-blue-400/90 text-blue-900 ring-2 ring-blue-400/70' 
-                      : 'bg-blue-300/80 hover:bg-blue-400/90 text-blue-900 ring-2 ring-blue-400/70'
-                  }`}
-                  title="Dashboard Admin"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="7" height="7"/>
-                    <rect x="14" y="3" width="7" height="7"/>
-                    <rect x="14" y="14" width="7" height="7"/>
-                    <rect x="3" y="14" width="7" height="7"/>
-                  </svg>
-                </motion.button>
-                <motion.button
-                  onClick={() => setShowAdminPanel(true)}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  className={`p-2 rounded-lg transition-all ${
-                    tpmMode 
-                      ? 'bg-amber-300/80 hover:bg-amber-400/90 text-amber-900 ring-2 ring-amber-400/70' 
-                      : 'bg-amber-300/80 hover:bg-amber-400/90 text-amber-900 ring-2 ring-amber-400/70'
-                  }`}
-                  title="Painel Admin - Histórico"
-                >
-                  <Icons.Admin />
-                </motion.button>
-              </>
+              <motion.button
+                onClick={() => navigate('/admin/dashboard')}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                className={`p-2 rounded-lg transition-all ${
+                  tpmMode 
+                    ? 'bg-blue-300/80 hover:bg-blue-400/90 text-blue-900 ring-2 ring-blue-400/70' 
+                    : 'bg-blue-300/80 hover:bg-blue-400/90 text-blue-900 ring-2 ring-blue-400/70'
+                }`}
+                title="Dashboard Admin"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7"/>
+                  <rect x="14" y="3" width="7" height="7"/>
+                  <rect x="14" y="14" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+              </motion.button>
             )}
             <motion.button
               onClick={() => navigate('/')}
@@ -1475,124 +1439,6 @@ const MatteoPage = () => {
         </footer>
       </div>
 
-      {/* Painel Admin */}
-      <AnimatePresence>
-        {showAdminPanel && isAdmin && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
-            onClick={() => setShowAdminPanel(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden"
-            >
-              {/* Header do Painel Admin */}
-              <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6 flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                    <Icons.Admin />
-                    Painel Admin - Histórico de Conversas
-                  </h2>
-                  <p className="text-amber-100 text-sm mt-1">
-                    {adminConversations.length} conversa{adminConversations.length !== 1 ? 's' : ''} encontrada{adminConversations.length !== 1 ? 's' : ''}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowAdminPanel(false)}
-                  className="p-2 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-all"
-                >
-                  <Icons.Close />
-                </button>
-              </div>
-
-              {/* Lista de Conversas */}
-              <div className="flex-1 overflow-y-auto p-6">
-                {adminLoading ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                      <p className="text-gray-600">Carregando conversas...</p>
-                    </div>
-                  </div>
-                ) : adminConversations.length === 0 ? (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="text-gray-500">Nenhuma conversa encontrada</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {adminConversations.map((conv) => (
-                      <motion.div
-                        key={conv.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200 shadow-sm"
-                      >
-                        {/* Cabeçalho da Conversa */}
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex-1">
-                            <h3 className="font-bold text-lg text-gray-800 mb-1">{conv.title}</h3>
-                            <div className="flex items-center gap-4 text-sm text-gray-600">
-                              <span>📅 {formatDate(conv.createdAt)}</span>
-                              <span>💬 {conv.messageCount || 0} mensagens</span>
-                              <span>🆔 {conv.sessionId}</span>
-                            </div>
-                          </div>
-                          <button
-                            onClick={async (e) => {
-                              e.stopPropagation()
-                              if (confirm('Tem certeza que deseja deletar esta conversa?')) {
-                                await deleteConversation(conv.id, e)
-                                loadAdminConversations()
-                              }
-                            }}
-                            className="p-2 rounded-lg bg-red-100 hover:bg-red-200 text-red-600 transition-all"
-                            title="Deletar conversa"
-                          >
-                            <Icons.Trash />
-                          </button>
-                        </div>
-
-                        {/* Mensagens */}
-                        {conv.messages && conv.messages.length > 0 && (
-                          <div className="space-y-3 max-h-96 overflow-y-auto bg-white rounded-lg p-4 border border-gray-200">
-                            {conv.messages.map((msg, idx) => (
-                              <div
-                                key={idx}
-                                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                              >
-                                <div
-                                  className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                                    msg.sender === 'user'
-                                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white'
-                                      : 'bg-gradient-to-r from-purple-100 to-purple-200 text-gray-800'
-                                  }`}
-                                >
-                                  <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                                  <p className={`text-xs mt-1 ${
-                                    msg.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
-                                  }`}>
-                                    {formatTime(msg.timestamp)}
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   )
 }
