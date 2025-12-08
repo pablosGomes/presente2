@@ -1065,12 +1065,12 @@ const MatteoPage = () => {
         >
           <motion.button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className={`lg:hidden inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl transition-all relative z-[60] flex-shrink-0 ${
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.94 }}
+            className={`lg:hidden inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-2xl transition-all relative z-[60] flex-shrink-0 shadow-xl ring-2 ring-offset-1 ${
               tpmMode 
-                ? 'bg-pink-500/95 hover:bg-pink-600/95 text-rose-50 ring-2 ring-pink-700/80 shadow-2xl' 
-                : 'bg-violet-500/95 hover:bg-violet-600/95 text-indigo-50 ring-2 ring-violet-700/80 shadow-2xl'
+                ? 'bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white ring-pink-200/70 ring-offset-rose-100' 
+                : 'bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white ring-indigo-200/70 ring-offset-indigo-50'
             }`}
             title={sidebarOpen ? "Fechar menu" : "Abrir menu"}
           >
@@ -1116,12 +1116,12 @@ const MatteoPage = () => {
             )}
             <motion.button
               onClick={() => navigate('/')}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className={`p-2 rounded-lg transition-all ${
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.94 }}
+              className={`p-2.5 rounded-xl transition-all shadow-lg ring-2 ring-offset-1 ${
                 tpmMode 
-                  ? 'bg-pink-300/80 hover:bg-pink-400/90 text-rose-900 ring-2 ring-pink-400/70' 
-                  : 'bg-violet-300/80 hover:bg-violet-400/90 text-violet-900 ring-2 ring-violet-400/70'
+                  ? 'bg-gradient-to-r from-pink-100 to-rose-200 hover:from-pink-200 hover:to-rose-300 text-rose-800 ring-pink-200/70 ring-offset-rose-50' 
+                  : 'bg-gradient-to-r from-violet-100 to-indigo-200 hover:from-violet-200 hover:to-indigo-300 text-violet-800 ring-indigo-200/70 ring-offset-indigo-50'
               }`}
             >
               <Icons.Home />
@@ -1186,17 +1186,17 @@ const MatteoPage = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
                       onClick={() => handleSuggestion(suggestion.text)}
-                      className={`group flex items-center gap-3 p-4 rounded-2xl text-left transition-all backdrop-blur-sm border-2 shadow-md hover:shadow-xl ${
+                      className={`group flex items-center gap-3 p-4 rounded-2xl text-left transition-all backdrop-blur-sm border shadow-lg hover:shadow-2xl hover:-translate-y-0.5 ${
                         tpmMode
-                          ? 'bg-gradient-to-br from-pink-50/90 to-rose-50/90 border-pink-200 hover:border-pink-400'
-                          : `bg-gradient-to-br from-white/85 to-white/60 border-white/40 hover:border-indigo-200`
+                          ? 'bg-white/95 border-pink-200 hover:border-pink-400 shadow-pink-200/60'
+                          : 'bg-white/96 border-indigo-100 hover:border-indigo-300 shadow-indigo-200/60'
                       }`}
                     >
-                      <div className={`p-2.5 rounded-xl bg-gradient-to-br ${suggestion.color} text-white shadow-lg ring-2 ring-white/30`}>
+                      <div className={`p-2.5 rounded-xl bg-gradient-to-br ${suggestion.color} text-white shadow-lg ring-2 ring-white/40`}>
                         {suggestion.icon}
                       </div>
                       <span className={`text-sm font-semibold ${
-                        tpmMode ? 'text-rose-800' : 'text-slate-800'
+                        tpmMode ? 'text-rose-900' : 'text-slate-900'
                       }`}>
                         {suggestion.text}
                       </span>
@@ -1206,25 +1206,25 @@ const MatteoPage = () => {
 
                 {/* Capacidades */}
                 <div className={`mt-8 flex flex-wrap justify-center gap-3 ${
-                  tpmMode ? 'text-rose-600' : 'text-indigo-600'
+                  tpmMode ? 'text-rose-700' : 'text-indigo-700'
                 }`}>
-                  <span className={`flex items-center gap-1 text-xs bg-white/85 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/60 shadow-sm ${
-                    tpmMode ? 'text-rose-700' : 'text-indigo-700'
+                  <span className={`flex items-center gap-1 text-xs bg-white/95 px-3 py-1.5 rounded-full backdrop-blur-sm border shadow ${
+                    tpmMode ? 'border-pink-200 shadow-pink-100/60' : 'border-indigo-100 shadow-indigo-100/60'
                   }`}>
                     <Icons.Globe /> Busca na Web
                   </span>
-                  <span className={`flex items-center gap-1 text-xs bg-white/85 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/60 shadow-sm ${
-                    tpmMode ? 'text-rose-700' : 'text-indigo-700'
+                  <span className={`flex items-center gap-1 text-xs bg-white/95 px-3 py-1.5 rounded-full backdrop-blur-sm border shadow ${
+                    tpmMode ? 'border-pink-200 shadow-pink-100/60' : 'border-indigo-100 shadow-indigo-100/60'
                   }`}>
                     <Icons.Weather /> Clima
                   </span>
-                  <span className={`flex items-center gap-1 text-xs bg-white/85 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/60 shadow-sm ${
-                    tpmMode ? 'text-rose-700' : 'text-indigo-700'
+                  <span className={`flex items-center gap-1 text-xs bg-white/95 px-3 py-1.5 rounded-full backdrop-blur-sm border shadow ${
+                    tpmMode ? 'border-pink-200 shadow-pink-100/60' : 'border-indigo-100 shadow-indigo-100/60'
                   }`}>
                     <Icons.Brain /> Memória
                   </span>
-                  <span className={`flex items-center gap-1 text-xs bg-white/85 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/60 shadow-sm ${
-                    tpmMode ? 'text-rose-700' : 'text-indigo-700'
+                  <span className={`flex items-center gap-1 text-xs bg-white/95 px-3 py-1.5 rounded-full backdrop-blur-sm border shadow ${
+                    tpmMode ? 'border-pink-200 shadow-pink-100/60' : 'border-indigo-100 shadow-indigo-100/60'
                   }`}>
                     <Icons.Calculator /> Cálculos
                   </span>
