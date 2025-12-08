@@ -5,6 +5,7 @@ import FinalPage from './pages/FinalPage'
 import FotosPage from './pages/FotosPage'
 import MuralDesabafosPage from './pages/MuralDesabafosPage'
 import AdminLoginPage from './pages/AdminLoginPage'
+import AdminDashboard from './pages/AdminDashboard'
 import MatteoPage from './pages/MatteoPage'
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
           <Route path="/desabafos" element={<MuralDesabafosPage />} />
           <Route path="/mural" element={<MuralDesabafosPage />} />
           <Route path="/admin" element={<AdminLoginPage />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/matteo" element={<MatteoPage />} />
         </Routes>
       </div>

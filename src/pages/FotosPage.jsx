@@ -83,7 +83,7 @@ const FotosPage = () => {
           {/* Botão voltar */}
           <motion.button
             onClick={() => navigate('/presente')}
-            className="mb-6 sm:mb-8 text-blue-600 hover:text-blue-700 font-poppins font-semibold text-sm sm:text-base flex items-center gap-2 transition-colors"
+            className="mb-6 sm:mb-8 text-blue-700 hover:text-blue-800 font-poppins font-bold text-sm sm:text-base flex items-center gap-2 transition-colors px-3 py-2 bg-white/80 rounded-lg shadow-md"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
@@ -99,7 +99,7 @@ const FotosPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <h1 className="font-pacifico text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl text-[#4A90E2] mb-2 sm:mb-3 md:mb-4 leading-tight" style={{ textShadow: '2px 2px 4px rgba(255, 255, 255, 0.8)' }}>
+            <h1 className="font-pacifico text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl text-[#2563EB] mb-2 sm:mb-3 md:mb-4 leading-tight font-bold" style={{ textShadow: '3px 3px 8px rgba(255, 255, 255, 0.9), 1px 1px 2px rgba(0, 0, 0, 0.2)' }}>
               💐 Minhas Fotos Favoritas da Gehh 💙
             </h1>
           </motion.div>
@@ -112,7 +112,7 @@ const FotosPage = () => {
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 + index * 0.1 }}
-                className="bg-white/60 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer group w-full"
+                className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer group w-full border-2 border-gray-200/80"
                 onClick={() => setSelectedPhoto(foto)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
@@ -161,7 +161,7 @@ const FotosPage = () => {
 
                 {/* Legenda */}
                 <div className="p-3 sm:p-4 md:p-5">
-                  <p className="font-poppins text-xs sm:text-sm md:text-base text-[#5F6F80] text-center leading-relaxed">
+                  <p className="font-poppins text-xs sm:text-sm md:text-base text-gray-800 text-center leading-relaxed font-semibold">
                     {foto.legenda}
                   </p>
                 </div>
@@ -185,7 +185,7 @@ const FotosPage = () => {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-white rounded-3xl max-w-4xl w-full max-h-[85vh] sm:max-h-[90vh] overflow-hidden shadow-2xl"
+              className="bg-white rounded-2xl sm:rounded-3xl max-w-4xl w-full max-h-[85vh] sm:max-h-[90vh] overflow-hidden shadow-2xl border-2 border-gray-300/80"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Imagem ampliada */}
@@ -229,7 +229,7 @@ const FotosPage = () => {
 
               {/* Conteúdo do modal */}
               <div className="p-6 sm:p-8 bg-gradient-to-br from-azul-claro/30 to-azul-bebe/30">
-                <p className="font-poppins text-base sm:text-lg md:text-xl text-gray-800 text-center mb-6 leading-relaxed">
+                <p className="font-poppins text-sm sm:text-base md:text-lg text-gray-900 text-center mb-6 leading-relaxed font-bold px-2">
                   {selectedPhoto.mensagem}
                 </p>
 
@@ -237,7 +237,7 @@ const FotosPage = () => {
                 <div className="text-center">
                   <motion.button
                     onClick={() => setSelectedPhoto(null)}
-                    className="px-6 py-3 sm:px-8 sm:py-4 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white rounded-full font-poppins font-bold text-base sm:text-lg shadow-xl hover:shadow-2xl transition-all duration-300 border-2 border-white/30"
+                    className="px-5 py-2.5 sm:px-7 sm:py-3.5 md:px-8 md:py-4 bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-700 hover:to-pink-800 text-white rounded-full font-poppins font-bold text-sm sm:text-base md:text-lg shadow-2xl hover:shadow-3xl transition-all duration-300 ring-2 ring-pink-400/50"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     style={{ textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)' }}
@@ -250,6 +250,26 @@ const FotosPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Botão Admin - Engrenagem no canto inferior esquerdo */}
+      <motion.button
+        onClick={() => {
+          const isAdmin = localStorage.getItem('pablo_admin') === 'true'
+          navigate(isAdmin ? '/admin/dashboard' : '/admin')
+        }}
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 1, type: "spring", stiffness: 200 }}
+        whileHover={{ scale: 1.1, rotate: 90 }}
+        whileTap={{ scale: 0.9 }}
+        className="fixed bottom-4 left-4 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-all shadow-xl hover:shadow-2xl ring-2 ring-amber-400/50 z-50"
+        title="Acesso Admin"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+      </motion.button>
     </div>
   )
 }

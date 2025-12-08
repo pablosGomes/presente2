@@ -17,7 +17,7 @@ const AdminLoginPage = () => {
   useEffect(() => {
     const isAdmin = localStorage.getItem('pablo_admin')
     if (isAdmin === 'true') {
-      navigate('/mural?admin=pablo')
+      navigate('/admin/dashboard')
     }
   }, [navigate])
 
@@ -28,7 +28,7 @@ const AdminLoginPage = () => {
       setSuccess(true)
       localStorage.setItem('pablo_admin', 'true')
       setTimeout(() => {
-        navigate('/mural?admin=pablo')
+        navigate('/admin/dashboard')
       }, 1500)
     } else {
       setError('Senha incorreta')

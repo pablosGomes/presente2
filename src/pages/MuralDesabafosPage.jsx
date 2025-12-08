@@ -538,8 +538,10 @@ const MuralDesabafosPage = () => {
 
   // Verificar se é admin (Pablo)
   useEffect(() => {
+    const adminStatus = localStorage.getItem('pablo_admin') === 'true'
     const urlParams = new URLSearchParams(window.location.search)
-    setIsAdmin(urlParams.get('admin') === 'pablo')
+    const urlAdmin = urlParams.get('admin') === 'pablo'
+    setIsAdmin(adminStatus || urlAdmin)
   }, [])
 
   const fetchFeedbacks = async () => {
@@ -729,16 +731,32 @@ const MuralDesabafosPage = () => {
         transition={smoothSpring}
       >
         <div className="flex items-center justify-between max-w-lg mx-auto">
-          <motion.button
-            onClick={() => navigate('/presente')}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-pink-100 text-pink-600"
-            whileHover={{ scale: 1.1, backgroundColor: '#fecdd3' }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
-          </motion.button>
+          <div className="flex items-center gap-2">
+            <motion.button
+              onClick={() => navigate('/presente')}
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-pink-100 text-pink-600"
+              whileHover={{ scale: 1.1, backgroundColor: '#fecdd3' }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+            </motion.button>
+            {isAdmin && (
+              <motion.button
+                onClick={() => navigate('/admin/dashboard')}
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-amber-100 text-amber-700"
+                whileHover={{ scale: 1.1, backgroundColor: '#fde68a' }}
+                whileTap={{ scale: 0.9 }}
+                title="Voltar ao Dashboard Admin"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+              </motion.button>
+            )}
+          </div>
           
           <motion.div 
             className="text-center"
@@ -1190,22 +1208,25 @@ const MuralDesabafosPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Botão Admin - Discreto mas visível */}
-      {!isAdmin && (
-        <motion.button
-          onClick={() => navigate('/admin')}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="fixed bottom-4 left-4 w-10 h-10 bg-slate-800/20 hover:bg-slate-800/40 backdrop-blur-sm rounded-full flex items-center justify-center text-slate-500 hover:text-slate-700 transition-all shadow-sm hover:shadow-md"
-          title="Admin"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
-          </svg>
-        </motion.button>
-      )}
+      {/* Botão Admin - Engrenagem no canto inferior esquerdo */}
+      <motion.button
+        onClick={() => {
+          const adminStatus = localStorage.getItem('pablo_admin') === 'true'
+          navigate(adminStatus ? '/admin/dashboard' : '/admin')
+        }}
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+        whileHover={{ scale: 1.1, rotate: 90 }}
+        whileTap={{ scale: 0.9 }}
+        className={`fixed bottom-4 left-4 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-all shadow-xl hover:shadow-2xl ring-2 ring-amber-400/50 z-50 ${isAdmin ? 'opacity-70' : ''}`}
+        title={isAdmin ? "Dashboard Admin" : "Acesso Admin"}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+      </motion.button>
     </div>
   )
 }

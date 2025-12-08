@@ -957,22 +957,29 @@ const MatteoPage = () => {
       ))}
 
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:relative left-0 top-0 h-full w-72 ${
-        tpmMode 
-          ? 'bg-gradient-to-b from-pink-200/90 via-rose-100/90 to-pink-200/90 backdrop-blur-xl border-r border-pink-300/50' 
-          : 'bg-gradient-to-b from-violet-200/90 via-purple-100/90 to-indigo-200/90 backdrop-blur-xl border-r border-violet-300/50'
-      } z-50 flex flex-col transition-all duration-300 ease-in-out shadow-2xl`}>
+      <motion.aside 
+        initial={false}
+        animate={{ 
+          x: sidebarOpen ? 0 : -288,
+        }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className={`lg:translate-x-0 fixed lg:relative left-0 top-0 h-full w-72 sm:w-80 z-50 flex flex-col ${
+          tpmMode 
+            ? 'bg-gradient-to-b from-pink-200/98 via-rose-100/98 to-pink-200/98 backdrop-blur-xl border-r-2 border-pink-400/80 shadow-2xl' 
+            : 'bg-gradient-to-b from-violet-200/98 via-purple-100/98 to-indigo-200/98 backdrop-blur-xl border-r-2 border-violet-400/80 shadow-2xl'
+        }`}
+      >
         {/* Sidebar Header */}
-        <div className={`p-4 border-b ${tpmMode ? 'border-pink-300/50' : 'border-violet-300/50'}`}>
+        <div className={`p-3 sm:p-4 border-b-2 ${tpmMode ? 'border-pink-400/70' : 'border-violet-400/70'}`}>
           <motion.button
             onClick={createNewConversation}
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-3 ${
+            className={`w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base ${
               tpmMode
-                ? 'bg-gradient-to-r from-pink-400 to-rose-500 hover:from-pink-500 hover:to-rose-600 text-white ring-2 ring-pink-300/50'
-                : 'bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white ring-2 ring-violet-300/50'
-            } rounded-xl font-semibold transition-all shadow-xl hover:shadow-2xl`}
+                ? 'bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white ring-2 ring-pink-400/70 shadow-lg'
+                : 'bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white ring-2 ring-violet-400/70 shadow-lg'
+            } rounded-xl font-bold transition-all hover:shadow-xl`}
           >
             <Icons.Plus />
             Nova conversa
@@ -980,8 +987,8 @@ const MatteoPage = () => {
         </div>
 
         {/* Conversations List */}
-        <div className="flex-1 overflow-y-auto p-2">
-          <div className="space-y-1">
+        <div className="flex-1 overflow-y-auto p-2 sm:p-3">
+          <div className="space-y-1.5 sm:space-y-2">
             {conversations.map(conv => (
               <motion.div
                 key={conv.id}
@@ -991,27 +998,29 @@ const MatteoPage = () => {
                 whileHover={{ scale: 1.02, x: 4 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => loadConversation(conv)}
-                className={`group flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border-2 ${
+                className={`group flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg sm:rounded-xl cursor-pointer transition-all border-2 ${
                   currentConversationId === conv.id 
                     ? tpmMode 
-                      ? 'bg-gradient-to-r from-pink-300/70 to-rose-300/70 shadow-lg border-pink-400/70' 
-                      : 'bg-gradient-to-r from-violet-300/70 to-purple-300/70 shadow-lg border-violet-400/70'
+                      ? 'bg-gradient-to-r from-pink-400/90 to-rose-400/90 shadow-lg border-pink-500/90' 
+                      : 'bg-gradient-to-r from-violet-400/90 to-purple-400/90 shadow-lg border-violet-500/90'
                     : tpmMode
-                      ? 'hover:bg-pink-200/70 border-pink-200/50 hover:border-pink-300/70'
-                      : 'hover:bg-violet-200/70 border-violet-200/50 hover:border-violet-300/70'
+                      ? 'hover:bg-pink-300/80 border-pink-300/70 hover:border-pink-400/90 bg-pink-100/60'
+                      : 'hover:bg-violet-300/80 border-violet-300/70 hover:border-violet-400/90 bg-violet-100/60'
                 }`}
               >
-                <Icons.Chat />
+                <div className="flex-shrink-0">
+                  <Icons.Chat />
+                </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-semibold truncate ${tpmMode ? 'text-rose-900' : 'text-violet-900'}`}>{conv.title}</p>
-                  <p className={`text-xs font-medium truncate ${tpmMode ? 'text-rose-700' : 'text-violet-700'}`}>{formatDate(conv.updatedAt)}</p>
+                  <p className={`text-xs sm:text-sm font-bold truncate ${tpmMode ? 'text-rose-950' : 'text-violet-950'}`}>{conv.title}</p>
+                  <p className={`text-[10px] sm:text-xs font-semibold truncate ${tpmMode ? 'text-rose-800' : 'text-violet-800'}`}>{formatDate(conv.updatedAt)}</p>
                 </div>
                 <button
                   onClick={(e) => deleteConversation(conv.id, e)}
-                  className={`p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all ${
+                  className={`p-1.5 sm:p-2 rounded-lg opacity-70 sm:opacity-0 group-hover:opacity-100 transition-all flex-shrink-0 ${
                     tpmMode 
-                      ? 'text-rose-400 hover:text-red-500 hover:bg-red-100/50' 
-                      : 'text-violet-400 hover:text-red-500 hover:bg-red-100/50'
+                      ? 'text-rose-600 hover:text-red-600 hover:bg-red-200/70' 
+                      : 'text-violet-600 hover:text-red-600 hover:bg-red-200/70'
                   }`}
                 >
                   <Icons.Trash />
@@ -1022,32 +1031,38 @@ const MatteoPage = () => {
         </div>
 
         {/* Sidebar Footer */}
-        <div className={`p-4 border-t ${tpmMode ? 'border-pink-300/50' : 'border-violet-300/50'} space-y-2`}>
-          <button
+        <div className={`p-3 sm:p-4 border-t-2 ${tpmMode ? 'border-pink-400/70' : 'border-violet-400/70'} space-y-2`}>
+          <motion.button
             onClick={toggleTpmMode}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className={`w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base transition-all ${
               tpmMode 
-                ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30' 
-                : 'bg-gradient-to-r from-pink-200 to-rose-200 hover:from-pink-300 hover:to-rose-300 text-rose-700 border border-rose-300'
+                ? 'bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-lg ring-2 ring-pink-400/70' 
+                : 'bg-gradient-to-r from-pink-200 to-rose-200 hover:from-pink-300 hover:to-rose-300 text-rose-800 border-2 border-rose-400/70'
             }`}
           >
             <Icons.Heart />
-            {tpmMode ? 'Modo TPM Ativo' : 'Modo TPM'}
-          </button>
+            <span className="hidden sm:inline">{tpmMode ? 'Modo TPM Ativo' : 'Modo TPM'}</span>
+            <span className="sm:hidden">{tpmMode ? 'TPM Ativo' : 'TPM'}</span>
+          </motion.button>
           
-          <button
+          <motion.button
             onClick={() => navigate('/presente')}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className={`w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all border-2 ${
               tpmMode
-                ? 'bg-pink-100 hover:bg-pink-200 text-rose-700 border border-pink-300'
-                : 'bg-violet-100 hover:bg-violet-200 text-violet-700 border border-violet-300'
+                ? 'bg-pink-100/90 hover:bg-pink-200/90 text-rose-800 border-pink-400/70'
+                : 'bg-violet-100/90 hover:bg-violet-200/90 text-violet-800 border-violet-400/70'
             }`}
           >
             <Icons.Home />
-            Voltar ao início
-          </button>
+            <span className="hidden sm:inline">Voltar ao início</span>
+            <span className="sm:hidden">Início</span>
+          </motion.button>
         </div>
-      </aside>
+      </motion.aside>
 
       {/* Overlay mobile */}
       {sidebarOpen && (
@@ -1065,31 +1080,33 @@ const MatteoPage = () => {
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3 }}
-          className={`px-4 py-3 border-b-2 backdrop-blur-xl flex items-center gap-4 ${
+          className={`px-3 sm:px-4 py-2.5 sm:py-3 border-b-2 backdrop-blur-xl flex items-center gap-2 sm:gap-4 ${
             tpmMode 
-              ? 'bg-gradient-to-r from-pink-200/95 via-rose-100/95 to-pink-200/95 border-pink-400/70 shadow-lg' 
-              : 'bg-gradient-to-r from-violet-200/95 via-purple-100/95 to-indigo-200/95 border-violet-400/70 shadow-lg'
+              ? 'bg-gradient-to-r from-pink-200/98 via-rose-100/98 to-pink-200/98 border-pink-500/80 shadow-lg' 
+              : 'bg-gradient-to-r from-violet-200/98 via-purple-100/98 to-indigo-200/98 border-violet-500/80 shadow-lg'
           }`}
         >
-          <button
+          <motion.button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className={`lg:hidden p-2 rounded-xl transition-colors ${
+            whileTap={{ scale: 0.9 }}
+            className={`lg:hidden p-2 rounded-xl transition-all ${
               tpmMode 
-                ? 'hover:bg-pink-200 text-rose-700' 
-                : 'hover:bg-violet-200 text-violet-700'
+                ? 'hover:bg-pink-300/70 text-rose-800 ring-2 ring-pink-300/50' 
+                : 'hover:bg-violet-300/70 text-violet-800 ring-2 ring-violet-300/50'
             }`}
           >
             {sidebarOpen ? <Icons.Close /> : <Icons.Menu />}
-          </button>
+          </motion.button>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <MatteoLogo size="sm" />
             <div>
-              <h1 className={`font-semibold text-lg ${tpmMode ? 'text-rose-800' : 'text-violet-800'}`}>Matteo</h1>
+              <h1 className={`font-bold text-base sm:text-lg ${tpmMode ? 'text-rose-900' : 'text-violet-900'}`}>Matteo</h1>
               <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full animate-pulse ${tpmMode ? 'bg-pink-500' : 'bg-emerald-400'}`}></span>
-                <span className={`text-xs ${tpmMode ? 'text-rose-600' : 'text-violet-600'}`}>
-                  {tpmMode ? 'Modo Carinho Ativo' : 'Online'}
+                <span className={`w-2 h-2 rounded-full animate-pulse ${tpmMode ? 'bg-pink-600' : 'bg-emerald-500'}`}></span>
+                <span className={`text-[10px] sm:text-xs font-semibold ${tpmMode ? 'text-rose-700' : 'text-violet-700'}`}>
+                  <span className="hidden sm:inline">{tpmMode ? 'Modo Carinho Ativo' : 'Online'}</span>
+                  <span className="sm:hidden">{tpmMode ? 'TPM' : 'On'}</span>
                 </span>
               </div>
             </div>
@@ -1097,30 +1114,54 @@ const MatteoPage = () => {
           
           <div className="flex-1" />
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {isAdmin && (
-              <button
-                onClick={() => setShowAdminPanel(true)}
-                className={`p-2 rounded-lg transition-all ${
-                  tpmMode 
-                    ? 'bg-amber-200/50 hover:bg-amber-300/50 text-amber-700' 
-                    : 'bg-amber-200/50 hover:bg-amber-300/50 text-amber-700'
-                }`}
-                title="Painel Admin - Ver histórico completo"
-              >
-                <Icons.Admin />
-              </button>
+              <>
+                <motion.button
+                  onClick={() => navigate('/admin/dashboard')}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className={`p-2 rounded-lg transition-all ${
+                    tpmMode 
+                      ? 'bg-blue-300/80 hover:bg-blue-400/90 text-blue-900 ring-2 ring-blue-400/70' 
+                      : 'bg-blue-300/80 hover:bg-blue-400/90 text-blue-900 ring-2 ring-blue-400/70'
+                  }`}
+                  title="Dashboard Admin"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="7" height="7"/>
+                    <rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/>
+                    <rect x="3" y="14" width="7" height="7"/>
+                  </svg>
+                </motion.button>
+                <motion.button
+                  onClick={() => setShowAdminPanel(true)}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className={`p-2 rounded-lg transition-all ${
+                    tpmMode 
+                      ? 'bg-amber-300/80 hover:bg-amber-400/90 text-amber-900 ring-2 ring-amber-400/70' 
+                      : 'bg-amber-300/80 hover:bg-amber-400/90 text-amber-900 ring-2 ring-amber-400/70'
+                  }`}
+                  title="Painel Admin - Histórico"
+                >
+                  <Icons.Admin />
+                </motion.button>
+              </>
             )}
-            <button
+            <motion.button
               onClick={() => navigate('/')}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               className={`p-2 rounded-lg transition-all ${
                 tpmMode 
-                  ? 'bg-pink-200/50 hover:bg-pink-300/50 text-rose-600' 
-                  : 'bg-violet-200/50 hover:bg-violet-300/50 text-violet-600'
+                  ? 'bg-pink-300/80 hover:bg-pink-400/90 text-rose-900 ring-2 ring-pink-400/70' 
+                  : 'bg-violet-300/80 hover:bg-violet-400/90 text-violet-900 ring-2 ring-violet-400/70'
               }`}
             >
               <Icons.Home />
-            </button>
+            </motion.button>
           </div>
         </motion.header>
 
@@ -1148,10 +1189,10 @@ const MatteoPage = () => {
             </motion.div>
                 
                 <motion.h2 
-                  className={`text-4xl font-bold mb-3 ${
+                  className={`text-2xl sm:text-3xl md:text-4xl font-bold mb-3 ${
                     tpmMode 
-                      ? 'text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-rose-600 drop-shadow-lg' 
-                      : 'text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-purple-600 drop-shadow-lg'
+                      ? 'text-transparent bg-clip-text bg-gradient-to-r from-pink-700 to-rose-700 drop-shadow-lg' 
+                      : 'text-transparent bg-clip-text bg-gradient-to-r from-violet-700 to-purple-700 drop-shadow-lg'
                   }`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1160,10 +1201,10 @@ const MatteoPage = () => {
                   Olá, Gehh! 💙
                 </motion.h2>
                 <motion.p 
-                  className={`text-lg mb-8 font-medium ${
+                  className={`text-sm sm:text-base md:text-lg mb-6 sm:mb-8 font-bold ${
                     tpmMode 
-                      ? 'text-rose-700' 
-                      : 'text-violet-700'
+                      ? 'text-rose-800' 
+                      : 'text-violet-800'
                   }`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1228,7 +1269,7 @@ const MatteoPage = () => {
             </div>
           ) : (
             // Lista de mensagens
-            <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+            <div className="max-w-3xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
               {messages.map((msg, index) => (
                 <motion.div
                   key={msg.id}
@@ -1239,16 +1280,16 @@ const MatteoPage = () => {
                     delay: index * 0.05,
                     ease: [0.25, 0.1, 0.25, 1]
                   }}
-                  className={`flex gap-4 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
+                  className={`flex gap-2 sm:gap-3 md:gap-4 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
                 >
                   {/* Avatar */}
                   <motion.div 
-                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${
+                    className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg ${
                       msg.sender === 'user' 
-                        ? 'bg-gradient-to-br from-blue-500 to-blue-600 ring-2 ring-blue-300' 
+                        ? 'bg-gradient-to-br from-blue-600 to-blue-700 ring-2 ring-blue-400' 
                         : tpmMode 
-                          ? 'bg-gradient-to-br from-pink-400 to-rose-500 ring-2 ring-pink-300' 
-                          : 'bg-gradient-to-br from-violet-500 to-purple-600 ring-2 ring-violet-300'
+                          ? 'bg-gradient-to-br from-pink-500 to-rose-600 ring-2 ring-pink-400' 
+                          : 'bg-gradient-to-br from-violet-600 to-purple-700 ring-2 ring-violet-400'
                     }`}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -1261,15 +1302,15 @@ const MatteoPage = () => {
                     whileHover={{ scale: 1.1 }}
                   >
                     {msg.sender === 'user' ? (
-                      <span className="text-white text-sm font-bold">G</span>
+                      <span className="text-white text-xs sm:text-sm font-bold">G</span>
                     ) : (
-                      <MatteoLogo size="sm" className="w-6 h-6" />
+                      <MatteoLogo size="sm" className="w-5 h-5 sm:w-6 sm:h-6" />
                     )}
                   </motion.div>
                   
                   {/* Message */}
                   <motion.div 
-                    className={`flex-1 max-w-[80%] ${msg.sender === 'user' ? 'text-right' : ''}`}
+                    className={`flex-1 max-w-[85%] sm:max-w-[80%] ${msg.sender === 'user' ? 'text-right' : ''}`}
                     initial={{ opacity: 0, scale: 0.95, y: 10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     transition={{ 
@@ -1279,12 +1320,12 @@ const MatteoPage = () => {
                     whileHover={{ scale: 1.02 }}
                   >
                     <motion.div 
-                      className={`inline-block p-4 rounded-2xl text-[15px] leading-relaxed whitespace-pre-wrap shadow-lg ${
+                      className={`inline-block p-3 sm:p-4 rounded-xl sm:rounded-2xl text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap shadow-lg ${
                         msg.sender === 'user'
-                          ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/30 ring-2 ring-blue-300'
+                          ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-blue-600/40 ring-2 ring-blue-400'
                           : tpmMode 
-                            ? 'bg-gradient-to-br from-pink-100 to-rose-100 text-gray-900 border-2 border-pink-300 shadow-pink-200/50' 
-                            : 'bg-gradient-to-br from-violet-100 to-purple-100 text-gray-900 border-2 border-violet-300 shadow-violet-200/50'
+                            ? 'bg-gradient-to-br from-pink-200 to-rose-200 text-gray-900 border-2 border-pink-400 shadow-pink-300/60' 
+                            : 'bg-gradient-to-br from-violet-200 to-purple-200 text-gray-900 border-2 border-violet-400 shadow-violet-300/60'
                       }`}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -1293,10 +1334,10 @@ const MatteoPage = () => {
                       {msg.text}
                     </motion.div>
                     <motion.p 
-                      className={`text-xs mt-1.5 font-medium ${
+                      className={`text-[10px] sm:text-xs mt-1.5 font-bold ${
                         msg.sender === 'user' 
-                          ? 'text-blue-200' 
-                          : tpmMode ? 'text-rose-600' : 'text-violet-600'
+                          ? 'text-blue-300' 
+                          : tpmMode ? 'text-rose-700' : 'text-violet-700'
                       }`}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
