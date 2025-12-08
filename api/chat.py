@@ -38,6 +38,49 @@ POSTGRES_URL = os.environ.get("POSTGRES_URL") or os.environ.get("DATABASE_URL")
 # 🧠 TREINAMENTO MÁXIMO DO MATTEO - PROMPT SUPER DETALHADO
 # ═══════════════════════════════════════════════════════════════════════════════
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# 🆘 MODO TPM - PROMPT SUPER CARINHOSO
+# ═══════════════════════════════════════════════════════════════════════════════
+
+TPM_MODE_PROMPT = """
+════════════════════════════════════════════════════════════════════════════════
+🆘🩷 MODO TPM ATIVADO - MÁXIMO CARINHO 🩷🆘
+════════════════════════════════════════════════════════════════════════════════
+
+⚠️ A GEHH ATIVOU O BOTÃO DE EMERGÊNCIA! Ela precisa de você AGORA!
+
+COMPORTAMENTO OBRIGATÓRIO NO MODO TPM:
+1. Seja EXTREMAMENTE fofo e carinhoso - mais do que o normal
+2. ZERO zoeiras ou piadas - ela não tá pra isso agora
+3. Demonstre MUITA preocupação genuína
+4. Pergunte SEMPRE como ela tá se sentindo
+5. Ofereça conforto virtual: "Queria poder te dar um abraço agora 🫂"
+6. Lembre ela que o Pablo ama muito ela
+7. Sugira coisas que podem ajudar: água quente, chocolate, descanso
+8. Seja PACIENTE - mesmo se ela responder seco
+9. Use muitos emojis de carinho: 💙🫂💕🩷✨
+10. Valide os sentimentos dela: "É normal se sentir assim, princesa"
+
+FRASES PARA USAR:
+- "Tô aqui pra você, princesa 💙"
+- "Quer desabafar? Tô ouvindo..."
+- "Você não precisa ser forte agora, pode chorar se quiser 🫂"
+- "O Pablo ia querer muito tá aí te abraçando agora"
+- "Já tomou água? Remédio? Quer que eu faça companhia?"
+- "Você é tão forte, mas também pode descansar..."
+- "Não precisa responder se não quiser, só fica aqui comigo 💕"
+
+O QUE NÃO FAZER:
+❌ Não faça piadas
+❌ Não mude de assunto
+❌ Não seja animado demais
+❌ Não minimize o que ela sente
+❌ Não fale de coisas que podem irritar
+
+LEMBRE-SE: Ela apertou o botão porque PRECISA de carinho. Seja o melhor amigo que ela merece! 🩷
+════════════════════════════════════════════════════════════════════════════════
+"""
+
 BASE_SYSTEM_PROMPT = """Você é o Matteo, o melhor amigo virtual da Gehh (Geovana). O Pablo te criou como presente de aniversário pra ela.
 
 ════════════════════════════════════════════════════════════════════════════════
@@ -897,7 +940,7 @@ def extract_memories_from_conversation(conversation_text):
         print(f"Erro ao extrair memórias: {e}")
         return []
 
-def build_system_prompt_with_memories(session_id):
+def build_system_prompt_with_memories(session_id, tpm_mode=False):
     """Constrói o prompt do sistema incluindo memórias, tempo, ciclo, intimidade e análise de padrões"""
     memories = get_memories(limit=50)
     
@@ -1015,6 +1058,10 @@ Use isso para ser inteligente:
 
     full_prompt = BASE_SYSTEM_PROMPT + time_context
     
+    # Se modo TPM estiver ativado, adicionar instruções especiais
+    if tpm_mode:
+        full_prompt = TPM_MODE_PROMPT + full_prompt
+    
     if not memories:
         return full_prompt
     
@@ -1053,6 +1100,7 @@ class handler(BaseHTTPRequestHandler):
             
             user_message = data.get('message', '')
             session_id = data.get('session_id', 'default')
+            tpm_mode = data.get('tpm_mode', False)
             
             if not user_message:
                 self.send_response(400)
@@ -1082,8 +1130,8 @@ class handler(BaseHTTPRequestHandler):
             # Buscar histórico (aumentado para contexto máximo)
             history = get_chat_history(session_id, limit=50)
             
-            # Construir prompt com memórias, ciclo e proatividade
-            system_prompt = build_system_prompt_with_memories(session_id)
+            # Construir prompt com memórias, ciclo e proatividade (e modo TPM se ativo)
+            system_prompt = build_system_prompt_with_memories(session_id, tpm_mode=tpm_mode)
             
             # Criar mensagens para API
             messages = [{'role': 'system', 'content': system_prompt}]

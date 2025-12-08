@@ -25,6 +25,7 @@ const MatteoChatbot = () => {
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [sessionId] = useState(() => `session_${Date.now()}`)
+  const [tpmMode, setTpmMode] = useState(false)
   const messagesEndRef = useRef(null)
 
   const PUBLIC_VAPID_KEY = "BNk4aicprxA7dA5JE-_fOb2Cb-T4Wm-0fB4CuU5eYlw8yMuqwkTEjJPrbD-Zs0fU2i9B_Zo76yqvxyQlSl4UV68"
@@ -83,7 +84,7 @@ const MatteoChatbot = () => {
       const response = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, session_id: sessionId })
+        body: JSON.stringify({ message, session_id: sessionId, tpm_mode: tpmMode })
       })
       if (!response.ok) throw new Error()
       const data = await response.json()
@@ -91,6 +92,22 @@ const MatteoChatbot = () => {
     } catch {
       return "Minha conexão caiu rapidinho! Tenta de novo? ❤️"
     }
+  }
+
+  const activateTpmMode = () => {
+    setTpmMode(true)
+    setMessages(prev => [...prev, { 
+      text: "🆘 MODO TPM ATIVADO! 🆘\n\nPrincesa, tô aqui pra você agora! Vou te dar todo carinho do mundo. Quer desabafar? Tô ouvindo... 💙🫂", 
+      sender: 'bot' 
+    }])
+  }
+
+  const deactivateTpmMode = () => {
+    setTpmMode(false)
+    setMessages(prev => [...prev, { 
+      text: "Modo normal ativado! Mas continuo aqui pra você, princesa 💙", 
+      sender: 'bot' 
+    }])
   }
 
   const handleSend = async () => {
@@ -142,32 +159,52 @@ const MatteoChatbot = () => {
             className="fixed bottom-24 right-6 w-[90vw] sm:w-[380px] h-[600px] max-h-[85vh] bg-white/90 backdrop-blur-2xl rounded-[32px] shadow-2xl shadow-black/10 flex flex-col z-50 overflow-hidden border border-white/50 ring-1 ring-black/5"
           >
             {/* Header Glass */}
-            <div className="bg-white/50 backdrop-blur-md p-5 flex items-center justify-between border-b border-white/20">
+            <div className={`backdrop-blur-md p-5 flex items-center justify-between border-b border-white/20 transition-all duration-500 ${tpmMode ? 'bg-pink-100/80' : 'bg-white/50'}`}>
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  <div className="w-12 h-12 bg-rose-100 rounded-2xl flex items-center justify-center">
-                    <MatteoFace className="w-8 h-8 text-rose-600" />
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${tpmMode ? 'bg-pink-200 animate-pulse' : 'bg-rose-100'}`}>
+                    <MatteoFace className={`w-8 h-8 transition-colors duration-500 ${tpmMode ? 'text-pink-600' : 'text-rose-600'}`} />
                   </div>
-                  <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-400 border-[3px] border-white rounded-full"></span>
+                  <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 border-[3px] border-white rounded-full transition-colors duration-500 ${tpmMode ? 'bg-pink-400 animate-pulse' : 'bg-emerald-400'}`}></span>
                 </div>
                 <div>
                   <h3 className="font-poppins font-bold text-gray-800 text-lg tracking-tight">Matteo</h3>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs text-rose-500 font-semibold bg-rose-50 px-2 py-0.5 rounded-full">IA Assistant</span>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full transition-all duration-500 ${tpmMode ? 'text-pink-600 bg-pink-100 animate-pulse' : 'text-rose-500 bg-rose-50'}`}>
+                      {tpmMode ? '🫂 Modo Carinho' : 'IA Assistant'}
+                    </span>
                   </div>
                 </div>
               </div>
               
-              <button 
-                onClick={() => askPermission()}
-                className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-rose-50 transition-colors text-rose-400 hover:text-rose-600"
-                title="Ativar Notificações"
-              >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                </svg>
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Botão de Emergência TPM */}
+                <button 
+                  onClick={() => tpmMode ? deactivateTpmMode() : activateTpmMode()}
+                  className={`w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 ${
+                    tpmMode 
+                      ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/40 animate-pulse hover:bg-pink-600' 
+                      : 'hover:bg-pink-50 text-pink-400 hover:text-pink-600'
+                  }`}
+                  title={tpmMode ? "Desativar Modo TPM" : "🆘 Botão de Emergência - Modo TPM"}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                    {tpmMode && <path d="M12 8v4M12 16h.01"/>}
+                  </svg>
+                </button>
+
+                <button 
+                  onClick={() => askPermission()}
+                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-rose-50 transition-colors text-rose-400 hover:text-rose-600"
+                  title="Ativar Notificações"
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Área de Mensagens */}
