@@ -1,6 +1,8 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import Flower from '../components/Flower'
+import Petal from '../components/Petal'
 
 // 🤖 Logo do Matteo
 const MatteoLogo = ({ className, size = 'md' }) => {
@@ -146,6 +148,35 @@ const MatteoPage = () => {
   const inputRef = useRef(null)
 
   const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:5000')
+
+  // Elementos decorativos
+  const flowers = useMemo(() => [
+    { id: 1, delay: 0.2, size: 35, x: 5, y: 10 },
+    { id: 2, delay: 0.5, size: 40, x: 95, y: 15 },
+    { id: 3, delay: 0.8, size: 30, x: 3, y: 85 },
+    { id: 4, delay: 1.1, size: 38, x: 97, y: 80 },
+  ], [])
+
+  const petals = useMemo(() => 
+    Array.from({ length: tpmMode ? 25 : 15 }, (_, i) => ({
+      id: i,
+      delay: i * 0.3,
+      left: Math.random() * 100,
+    })), [tpmMode]
+  )
+
+  const particles = useMemo(() => 
+    Array.from({ length: tpmMode ? 20 : 12 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      delay: Math.random() * 3,
+      duration: 3 + Math.random() * 2,
+      color: tpmMode 
+        ? ['#FFB6C1', '#FFC0CB', '#FFD1DC', '#FFE4E1', '#FF69B4', '#FF1493'][Math.floor(Math.random() * 6)]
+        : ['#5BA3D0', '#4A9BC8', '#6BA8D4', '#8B5CF6', '#A855F7', '#6366F1'][Math.floor(Math.random() * 6)]
+    })), [tpmMode]
+  )
 
   // Carregar conversas do localStorage
   useEffect(() => {
@@ -358,15 +389,63 @@ const MatteoPage = () => {
   ]
 
   return (
-    <div className={`h-screen w-screen flex overflow-hidden transition-colors duration-500 ${tpmMode ? 'bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100' : 'bg-[#0f0f0f]'}`}>
+    <div className={`h-screen w-screen flex overflow-hidden transition-all duration-700 ${
+      tpmMode 
+        ? 'bg-gradient-to-br from-pink-100 via-rose-50 via-pink-50 to-rose-100' 
+        : 'bg-gradient-to-br from-azul-claro via-violet-100 via-purple-50 to-azul-bebe'
+    }`}>
       
+      {/* Elementos decorativos */}
+      {/* Pétalas caindo */}
+      {petals.map((petal) => (
+        <Petal key={petal.id} delay={petal.delay} left={petal.left} />
+      ))}
+
+      {/* Flores decorativas */}
+      {flowers.map((flower) => (
+        <Flower key={flower.id} delay={flower.delay} size={flower.size} x={flower.x} y={flower.y} />
+      ))}
+
+      {/* Partículas de brilho */}
+      {particles.map((particle) => (
+        <motion.div
+          key={particle.id}
+          className="absolute w-2.5 h-2.5 rounded-full"
+          style={{
+            left: `${particle.x}%`,
+            top: `${particle.y}%`,
+            backgroundColor: particle.color,
+            boxShadow: `0 0 8px ${particle.color}80`,
+          }}
+          animate={{
+            y: [0, -25, 0],
+            opacity: [0.3, 0.8, 0.3],
+            scale: [1, 1.5, 1],
+          }}
+          transition={{
+            duration: particle.duration,
+            repeat: Infinity,
+            delay: particle.delay,
+            ease: 'easeInOut',
+          }}
+        />
+      ))}
+
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:relative left-0 top-0 h-full w-72 bg-[#171717] border-r border-white/10 z-50 flex flex-col transition-transform duration-300 ease-in-out`}>
+      <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:relative left-0 top-0 h-full w-72 ${
+        tpmMode 
+          ? 'bg-gradient-to-b from-pink-200/90 via-rose-100/90 to-pink-200/90 backdrop-blur-xl border-r border-pink-300/50' 
+          : 'bg-gradient-to-b from-violet-200/90 via-purple-100/90 to-indigo-200/90 backdrop-blur-xl border-r border-violet-300/50'
+      } z-50 flex flex-col transition-all duration-300 ease-in-out shadow-2xl`}>
         {/* Sidebar Header */}
-        <div className="p-4 border-b border-white/10">
+        <div className={`p-4 border-b ${tpmMode ? 'border-pink-300/50' : 'border-violet-300/50'}`}>
           <button
             onClick={createNewConversation}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-medium transition-all border border-white/10 hover:border-white/20"
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 ${
+              tpmMode
+                ? 'bg-gradient-to-r from-pink-400 to-rose-500 hover:from-pink-500 hover:to-rose-600 text-white'
+                : 'bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white'
+            } rounded-xl font-medium transition-all shadow-lg hover:shadow-xl`}
           >
             <Icons.Plus />
             Nova conversa
@@ -384,18 +463,26 @@ const MatteoPage = () => {
                 onClick={() => loadConversation(conv)}
                 className={`group flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
                   currentConversationId === conv.id 
-                    ? 'bg-white/10' 
-                    : 'hover:bg-white/5'
+                    ? tpmMode 
+                      ? 'bg-gradient-to-r from-pink-300/50 to-rose-300/50 shadow-md' 
+                      : 'bg-gradient-to-r from-violet-300/50 to-purple-300/50 shadow-md'
+                    : tpmMode
+                      ? 'hover:bg-pink-200/50'
+                      : 'hover:bg-violet-200/50'
                 }`}
               >
                 <Icons.Chat />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white/90 truncate">{conv.title}</p>
-                  <p className="text-xs text-white/40 truncate">{formatDate(conv.updatedAt)}</p>
+                  <p className={`text-sm truncate ${tpmMode ? 'text-rose-900' : 'text-violet-900'}`}>{conv.title}</p>
+                  <p className={`text-xs truncate ${tpmMode ? 'text-rose-600' : 'text-violet-600'}`}>{formatDate(conv.updatedAt)}</p>
                 </div>
                 <button
                   onClick={(e) => deleteConversation(conv.id, e)}
-                  className="p-1.5 text-white/30 hover:text-red-400 hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                  className={`p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all ${
+                    tpmMode 
+                      ? 'text-rose-400 hover:text-red-500 hover:bg-red-100/50' 
+                      : 'text-violet-400 hover:text-red-500 hover:bg-red-100/50'
+                  }`}
                 >
                   <Icons.Trash />
                 </button>
@@ -405,13 +492,13 @@ const MatteoPage = () => {
         </div>
 
         {/* Sidebar Footer */}
-        <div className="p-4 border-t border-white/10 space-y-2">
+        <div className={`p-4 border-t ${tpmMode ? 'border-pink-300/50' : 'border-violet-300/50'} space-y-2`}>
           <button
             onClick={toggleTpmMode}
             className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
               tpmMode 
-                ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30' 
-                : 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10'
+                ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30' 
+                : 'bg-gradient-to-r from-pink-200 to-rose-200 hover:from-pink-300 hover:to-rose-300 text-rose-700 border border-rose-300'
             }`}
           >
             <Icons.Heart />
@@ -420,7 +507,11 @@ const MatteoPage = () => {
           
           <button
             onClick={() => navigate('/presente')}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-xl transition-all border border-white/10"
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${
+              tpmMode
+                ? 'bg-pink-100 hover:bg-pink-200 text-rose-700 border border-pink-300'
+                : 'bg-violet-100 hover:bg-violet-200 text-violet-700 border border-violet-300'
+            }`}
           >
             <Icons.Home />
             Voltar ao início
@@ -440,10 +531,18 @@ const MatteoPage = () => {
       <div className="flex-1 flex flex-col h-full">
         
         {/* Header */}
-        <header className={`px-4 py-3 border-b flex items-center gap-4 ${tpmMode ? 'bg-pink-50/80 border-pink-200' : 'bg-[#171717] border-white/10'}`}>
+        <header className={`px-4 py-3 border-b backdrop-blur-xl flex items-center gap-4 transition-all duration-500 ${
+          tpmMode 
+            ? 'bg-gradient-to-r from-pink-200/80 via-rose-100/80 to-pink-200/80 border-pink-300/50' 
+            : 'bg-gradient-to-r from-violet-200/80 via-purple-100/80 to-indigo-200/80 border-violet-300/50'
+        }`}>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className={`lg:hidden p-2 rounded-xl transition-colors ${tpmMode ? 'hover:bg-pink-100 text-pink-600' : 'hover:bg-white/10 text-white'}`}
+            className={`lg:hidden p-2 rounded-xl transition-colors ${
+              tpmMode 
+                ? 'hover:bg-pink-200 text-rose-700' 
+                : 'hover:bg-violet-200 text-violet-700'
+            }`}
           >
             {sidebarOpen ? <Icons.Close /> : <Icons.Menu />}
           </button>
@@ -451,11 +550,11 @@ const MatteoPage = () => {
           <div className="flex items-center gap-3">
             <MatteoLogo size="sm" />
             <div>
-              <h1 className={`font-semibold ${tpmMode ? 'text-pink-800' : 'text-white'}`}>Matteo</h1>
+              <h1 className={`font-semibold text-lg ${tpmMode ? 'text-rose-800' : 'text-violet-800'}`}>Matteo</h1>
               <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${tpmMode ? 'bg-pink-400' : 'bg-emerald-400'}`}></span>
-                <span className={`text-xs ${tpmMode ? 'text-pink-600' : 'text-white/50'}`}>
-                  {tpmMode ? 'Modo Carinho' : 'Online'}
+                <span className={`w-2 h-2 rounded-full animate-pulse ${tpmMode ? 'bg-pink-500' : 'bg-emerald-400'}`}></span>
+                <span className={`text-xs ${tpmMode ? 'text-rose-600' : 'text-violet-600'}`}>
+                  {tpmMode ? 'Modo Carinho Ativo' : 'Online'}
                 </span>
               </div>
             </div>
@@ -474,10 +573,18 @@ const MatteoPage = () => {
               >
                 <MatteoLogo size="xl" className="mx-auto mb-6" />
                 
-                <h2 className={`text-3xl font-bold mb-2 ${tpmMode ? 'text-pink-800' : 'text-white'}`}>
+                <h2 className={`text-4xl font-bold mb-3 ${
+                  tpmMode 
+                    ? 'text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-rose-600' 
+                    : 'text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-purple-600'
+                }`}>
                   Olá, Gehh! 💙
                 </h2>
-                <p className={`text-lg mb-8 ${tpmMode ? 'text-pink-600' : 'text-white/50'}`}>
+                <p className={`text-lg mb-8 ${
+                  tpmMode 
+                    ? 'text-rose-600' 
+                    : 'text-violet-600'
+                }`}>
                   Sou o Matteo, sua IA pessoal. Como posso te ajudar hoje?
                 </p>
 
@@ -490,16 +597,18 @@ const MatteoPage = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
                       onClick={() => handleSuggestion(suggestion.text)}
-                      className={`group flex items-center gap-3 p-4 rounded-2xl text-left transition-all ${
-                        tpmMode 
-                          ? 'bg-white/80 hover:bg-white border border-pink-200 hover:border-pink-300' 
-                          : 'bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20'
+                      className={`group flex items-center gap-3 p-4 rounded-2xl text-left transition-all backdrop-blur-sm border-2 ${
+                        tpmMode
+                          ? 'bg-gradient-to-br from-pink-50/80 to-rose-50/80 border-pink-200 hover:border-pink-400 hover:shadow-lg'
+                          : `bg-gradient-to-br from-white/60 to-white/40 border-white/30 hover:border-white/50 hover:shadow-lg`
                       }`}
                     >
-                      <div className={`p-2 rounded-xl bg-gradient-to-br ${suggestion.color} text-white`}>
+                      <div className={`p-2 rounded-xl bg-gradient-to-br ${suggestion.color} text-white shadow-md`}>
                         {suggestion.icon}
                       </div>
-                      <span className={`text-sm ${tpmMode ? 'text-gray-700' : 'text-white/80'}`}>
+                      <span className={`text-sm font-medium ${
+                        tpmMode ? 'text-rose-800' : 'text-gray-700'
+                      }`}>
                         {suggestion.text}
                       </span>
                     </motion.button>
@@ -507,14 +616,29 @@ const MatteoPage = () => {
                 </div>
 
                 {/* Capacidades */}
-                <div className={`mt-8 flex flex-wrap justify-center gap-2 ${tpmMode ? 'text-pink-500' : 'text-white/40'}`}>
-                  <span className="flex items-center gap-1 text-xs"><Icons.Globe /> Busca na Web</span>
-                  <span className="text-xs">•</span>
-                  <span className="flex items-center gap-1 text-xs"><Icons.Weather /> Clima</span>
-                  <span className="text-xs">•</span>
-                  <span className="flex items-center gap-1 text-xs"><Icons.Brain /> Memória</span>
-                  <span className="text-xs">•</span>
-                  <span className="flex items-center gap-1 text-xs"><Icons.Calculator /> Cálculos</span>
+                <div className={`mt-8 flex flex-wrap justify-center gap-3 ${
+                  tpmMode ? 'text-rose-500' : 'text-violet-500'
+                }`}>
+                  <span className={`flex items-center gap-1 text-xs bg-white/60 px-3 py-1.5 rounded-full backdrop-blur-sm ${
+                    tpmMode ? 'text-rose-600' : 'text-violet-600'
+                  }`}>
+                    <Icons.Globe /> Busca na Web
+                  </span>
+                  <span className={`flex items-center gap-1 text-xs bg-white/60 px-3 py-1.5 rounded-full backdrop-blur-sm ${
+                    tpmMode ? 'text-rose-600' : 'text-violet-600'
+                  }`}>
+                    <Icons.Weather /> Clima
+                  </span>
+                  <span className={`flex items-center gap-1 text-xs bg-white/60 px-3 py-1.5 rounded-full backdrop-blur-sm ${
+                    tpmMode ? 'text-rose-600' : 'text-violet-600'
+                  }`}>
+                    <Icons.Brain /> Memória
+                  </span>
+                  <span className={`flex items-center gap-1 text-xs bg-white/60 px-3 py-1.5 rounded-full backdrop-blur-sm ${
+                    tpmMode ? 'text-rose-600' : 'text-violet-600'
+                  }`}>
+                    <Icons.Calculator /> Cálculos
+                  </span>
                 </div>
               </motion.div>
             </div>
@@ -543,16 +667,16 @@ const MatteoPage = () => {
                   
                   {/* Message */}
                   <div className={`flex-1 max-w-[80%] ${msg.sender === 'user' ? 'text-right' : ''}`}>
-                    <div className={`inline-block p-4 rounded-2xl text-[15px] leading-relaxed whitespace-pre-wrap ${
+                    <div className={`inline-block p-4 rounded-2xl text-[15px] leading-relaxed whitespace-pre-wrap shadow-md ${
                       msg.sender === 'user'
                         ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
                         : tpmMode 
-                          ? 'bg-pink-100 text-gray-800' 
-                          : 'bg-white/10 text-white/90'
+                          ? 'bg-gradient-to-br from-pink-50 to-rose-50 text-gray-800 border-2 border-pink-200' 
+                          : 'bg-gradient-to-br from-violet-50 to-purple-50 text-gray-800 border-2 border-violet-200'
                     }`}>
                       {msg.text}
                     </div>
-                    <p className={`text-xs mt-1 ${tpmMode ? 'text-pink-400' : 'text-white/30'}`}>
+                    <p className={`text-xs mt-1 ${tpmMode ? 'text-rose-500' : 'text-violet-500'}`}>
                       {formatTime(msg.timestamp)}
                     </p>
                   </div>
@@ -569,7 +693,11 @@ const MatteoPage = () => {
                   <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${tpmMode ? 'bg-gradient-to-br from-pink-400 to-rose-500' : 'bg-gradient-to-br from-violet-500 to-purple-600'}`}>
                     <MatteoLogo size="sm" className="w-5 h-5" />
                   </div>
-                  <div className={`p-4 rounded-2xl ${tpmMode ? 'bg-pink-100' : 'bg-white/10'}`}>
+                  <div className={`p-4 rounded-2xl shadow-md ${
+                    tpmMode 
+                      ? 'bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-200' 
+                      : 'bg-gradient-to-br from-violet-50 to-purple-50 border-2 border-violet-200'
+                  }`}>
                     <div className="flex items-center gap-2">
                       <div className="flex gap-1">
                         <span className={`w-2 h-2 rounded-full animate-bounce ${tpmMode ? 'bg-pink-400' : 'bg-violet-400'}`}></span>
@@ -577,7 +705,7 @@ const MatteoPage = () => {
                         <span className={`w-2 h-2 rounded-full animate-bounce ${tpmMode ? 'bg-pink-400' : 'bg-violet-400'}`} style={{animationDelay: '300ms'}}></span>
                       </div>
                       {typingStatus && (
-                        <span className={`text-sm ${tpmMode ? 'text-pink-600' : 'text-white/50'}`}>{typingStatus}</span>
+                        <span className={`text-sm ${tpmMode ? 'text-rose-600' : 'text-violet-600'}`}>{typingStatus}</span>
                       )}
                     </div>
                   </div>
@@ -590,12 +718,16 @@ const MatteoPage = () => {
         </main>
 
         {/* Input Area */}
-        <footer className={`px-4 py-4 border-t ${tpmMode ? 'bg-pink-50/80 border-pink-200' : 'bg-[#171717] border-white/10'}`}>
+        <footer className={`px-4 py-4 border-t backdrop-blur-xl transition-all duration-500 ${
+          tpmMode 
+            ? 'bg-gradient-to-r from-pink-200/80 via-rose-100/80 to-pink-200/80 border-pink-300/50' 
+            : 'bg-gradient-to-r from-violet-200/80 via-purple-100/80 to-indigo-200/80 border-violet-300/50'
+        }`}>
           <div className="max-w-3xl mx-auto">
-            <div className={`flex items-end gap-3 p-3 rounded-2xl border transition-all ${
+            <div className={`flex items-end gap-3 p-3 rounded-2xl border-2 transition-all backdrop-blur-sm ${
               tpmMode 
-                ? 'bg-white border-pink-200 focus-within:border-pink-400 focus-within:ring-2 focus-within:ring-pink-200' 
-                : 'bg-white/5 border-white/10 focus-within:border-violet-500/50 focus-within:ring-2 focus-within:ring-violet-500/20'
+                ? 'bg-white/80 border-pink-300 focus-within:border-pink-500 focus-within:ring-4 focus-within:ring-pink-200/50' 
+                : 'bg-white/80 border-violet-300 focus-within:border-violet-500 focus-within:ring-4 focus-within:ring-violet-200/50'
             }`}>
               <textarea
                 ref={inputRef}
@@ -619,14 +751,18 @@ const MatteoPage = () => {
                 disabled={!input.trim()}
                 className={`p-3 rounded-xl transition-all flex-shrink-0 ${
                   input.trim()
-                    ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30'
-                    : tpmMode ? 'bg-pink-100 text-pink-300' : 'bg-white/5 text-white/20'
+                    ? tpmMode
+                      ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30 hover:shadow-xl'
+                      : 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30'
+                    : tpmMode ? 'bg-pink-100 text-pink-300' : 'bg-violet-100 text-violet-300'
                 }`}
               >
                 <Icons.Send />
               </button>
             </div>
-            <p className={`text-center text-xs mt-3 ${tpmMode ? 'text-pink-400' : 'text-white/30'}`}>
+            <p className={`text-center text-xs mt-3 ${
+              tpmMode ? 'text-rose-500' : 'text-violet-500'
+            }`}>
               Matteo pode cometer erros. Criado com 💙 pelo Pablo.
             </p>
           </div>
