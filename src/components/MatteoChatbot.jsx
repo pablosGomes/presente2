@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 
 // 🤖 NOVO LOGO: Rosto do Matteo (Robô Minimalista)
 const MatteoFace = ({ className }) => (
@@ -18,12 +19,14 @@ const MatteoFace = ({ className }) => (
 )
 
 const MatteoChatbot = () => {
+  const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState([
-    { text: "Oi Gehh! Sou o Matteo. Como você tá hoje, princesa? ❤️", sender: 'bot' }
+    { text: "Oi Gehh! Sou o Matteo, sua IA pessoal! 🤖💙\n\nPosso pesquisar coisas na internet, ver o clima, fazer cálculos e muito mais! Como você tá hoje, princesa?", sender: 'bot' }
   ])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [typingStatus, setTypingStatus] = useState('')
   const [sessionId] = useState(() => `session_${Date.now()}`)
   const [tpmMode, setTpmMode] = useState(false)
   const messagesEndRef = useRef(null)
@@ -81,6 +84,8 @@ const MatteoChatbot = () => {
 
   const sendMessageToAPI = async (message) => {
     try {
+      setTypingStatus('Pensando...')
+      
       const response = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -88,9 +93,28 @@ const MatteoChatbot = () => {
       })
       if (!response.ok) throw new Error()
       const data = await response.json()
+      
+      // Mostrar ferramentas usadas
+      if (data.tools_used && data.tools_used.length > 0) {
+        const toolNames = {
+          'search_web': '🔍 Pesquisando na web',
+          'get_weather': '🌤️ Verificando clima',
+          'get_current_datetime': '📅 Verificando data/hora',
+          'search_memories': '🧠 Buscando memórias',
+          'save_to_mural': '📝 Salvando no mural',
+          'read_mural': '📋 Lendo mural',
+          'calculate': '🔢 Calculando'
+        }
+        const toolsText = data.tools_used.map(t => toolNames[t] || t).join(', ')
+        setTypingStatus(toolsText)
+        await new Promise(r => setTimeout(r, 500))
+      }
+      
       return data.response
     } catch {
       return "Minha conexão caiu rapidinho! Tenta de novo? ❤️"
+    } finally {
+      setTypingStatus('')
     }
   }
 
@@ -171,7 +195,7 @@ const MatteoChatbot = () => {
                   <h3 className="font-poppins font-bold text-gray-800 text-lg tracking-tight">Matteo</h3>
                   <div className="flex items-center gap-1.5">
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full transition-all duration-500 ${tpmMode ? 'text-pink-600 bg-pink-100 animate-pulse' : 'text-rose-500 bg-rose-50'}`}>
-                      {tpmMode ? '🫂 Modo Carinho' : 'IA Assistant'}
+                      {tpmMode ? '🫂 Modo Carinho' : '🤖 IA Completa'}
                     </span>
                   </div>
                 </div>
@@ -204,6 +228,20 @@ const MatteoChatbot = () => {
                     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                   </svg>
                 </button>
+
+                {/* Botão para abrir tela completa */}
+                <button 
+                  onClick={() => navigate('/matteo')}
+                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-blue-50 transition-colors text-blue-400 hover:text-blue-600"
+                  title="Abrir tela completa"
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <polyline points="9 21 3 21 3 15"></polyline>
+                    <line x1="21" y1="3" x2="14" y2="10"></line>
+                    <line x1="3" y1="21" x2="10" y2="14"></line>
+                  </svg>
+                </button>
               </div>
             </div>
 
@@ -232,10 +270,15 @@ const MatteoChatbot = () => {
               {isTyping && (
                 <div className="flex justify-start">
                   <div className="bg-white p-4 px-5 rounded-[24px] rounded-bl-sm border border-gray-100 shadow-sm">
-                    <div className="flex gap-1.5">
-                      <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce"></span>
-                      <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce delay-75"></span>
-                      <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce delay-150"></span>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-1.5">
+                        <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce"></span>
+                        <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce" style={{animationDelay: '75ms'}}></span>
+                        <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></span>
+                      </div>
+                      {typingStatus && (
+                        <span className="text-xs text-gray-500 animate-pulse">{typingStatus}</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -247,7 +290,13 @@ const MatteoChatbot = () => {
             <div className="p-4 bg-white/80 backdrop-blur-xl border-t border-white/50">
               {/* Chips */}
               <div className="flex gap-2 mb-4 overflow-x-auto scrollbar-hide pb-1 px-1">
-                {['👋 Oi Matteo!', '🎁 Presente', '❤️ Te amo'].map(t => (
+                {[
+                  '👋 Oi Matteo!', 
+                  '🌤️ Como tá o clima?', 
+                  '🔍 Pesquisa algo',
+                  '❤️ Te amo',
+                  '📅 Que dia é hoje?'
+                ].map(t => (
                   <button 
                     key={t} 
                     onClick={() => handleQuickReply(t)}
