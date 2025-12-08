@@ -5,7 +5,7 @@ CRUD completo de conversas integrado com banco de dados
 from http.server import BaseHTTPRequestHandler
 import json
 import os
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 
 # Tentar importar psycopg2
 try:
@@ -54,7 +54,7 @@ def init_db():
         print(f"Erro init_db: {e}")
         return False
 
-def get_all_conversations(limit=50):
+def get_all_conversations(limit=50, include_messages=False):
     """Busca todas as conversas ordenadas por data de atualização"""
     try:
         conn = get_db_connection()
@@ -68,10 +68,10 @@ def get_all_conversations(limit=50):
             LIMIT %s
         """, (limit,))
         conversations = cur.fetchall()
-        cur.close()
-        conn.close()
-        return [
-            {
+        
+        result = []
+        for c in conversations:
+            conv_data = {
                 'id': c['id'],
                 'sessionId': c['session_id'],
                 'title': c['title'],
@@ -79,8 +79,17 @@ def get_all_conversations(limit=50):
                 'createdAt': c['created_at'].isoformat() if hasattr(c['created_at'], 'isoformat') else str(c['created_at']),
                 'updatedAt': c['updated_at'].isoformat() if hasattr(c['updated_at'], 'isoformat') else str(c['updated_at'])
             }
-            for c in conversations
-        ]
+            
+            if include_messages:
+                messages = get_conversation_messages(c['session_id'])
+                conv_data['messages'] = messages
+                conv_data['messageCount'] = len(messages)
+            
+            result.append(conv_data)
+        
+        cur.close()
+        conn.close()
+        return result
     except Exception as e:
         print(f"Erro get_all_conversations: {e}")
         return []
@@ -258,6 +267,11 @@ class handler(BaseHTTPRequestHandler):
             init_db()
             conversation_id = self._get_conversation_id()
             
+            # Verificar se é requisição de admin
+            parsed = urlparse(self.path)
+            query_params = parse_qs(parsed.query)
+            is_admin = query_params.get('admin', [''])[0] == 'true'
+            
             if conversation_id:
                 # Buscar conversa específica
                 conv = get_conversation_by_id(conversation_id)
@@ -272,11 +286,13 @@ class handler(BaseHTTPRequestHandler):
                 self._send_json(200, conv)
             else:
                 # Listar todas as conversas
-                conversations = get_all_conversations()
+                include_messages = is_admin  # Admin vê mensagens, usuário normal não
+                conversations = get_all_conversations(limit=100, include_messages=include_messages)
                 self._send_json(200, conversations)
                 
         except Exception as e:
             import traceback
+            from urllib.parse import parse_qs
             print(f"Erro ao buscar conversas: {traceback.format_exc()}")
             self._send_json(500, {'error': str(e)})
 

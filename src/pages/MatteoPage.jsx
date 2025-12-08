@@ -36,106 +36,410 @@ const MatteoLogo = ({ className, size = 'md' }) => {
   )
 }
 
-// Ícones
+// Ícones melhorados com gradientes, animações e efeitos visuais
 const Icons = {
   Send: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-    </svg>
+    <motion.svg 
+      width="20" 
+      height="20" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className="relative"
+      whileHover={{ scale: 1.1, rotate: 15 }}
+      whileTap={{ scale: 0.95 }}
+    >
+      <defs>
+        <linearGradient id="sendGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#8B5CF6" />
+          <stop offset="100%" stopColor="#D946EF" />
+        </linearGradient>
+      </defs>
+      <path 
+        d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" 
+        stroke="url(#sendGradient)" 
+        strokeWidth="2.5" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+      />
+    </motion.svg>
   ),
   Menu: () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="3" y1="12" x2="21" y2="12"></line>
-      <line x1="3" y1="6" x2="21" y2="6"></line>
-      <line x1="3" y1="18" x2="21" y2="18"></line>
-    </svg>
+    <motion.svg 
+      width="24" 
+      height="24" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className="relative"
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.95 }}
+    >
+      <defs>
+        <linearGradient id="menuGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#6366F1" />
+          <stop offset="100%" stopColor="#8B5CF6" />
+        </linearGradient>
+      </defs>
+      <line x1="3" y1="12" x2="21" y2="12" stroke="url(#menuGradient)" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="3" y1="6" x2="21" y2="6" stroke="url(#menuGradient)" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="3" y1="18" x2="21" y2="18" stroke="url(#menuGradient)" strokeWidth="2.5" strokeLinecap="round"/>
+    </motion.svg>
   ),
   Close: () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18"></line>
-      <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>
+    <motion.svg 
+      width="24" 
+      height="24" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className="relative"
+      whileHover={{ scale: 1.1, rotate: 90 }}
+      whileTap={{ scale: 0.95 }}
+    >
+      <defs>
+        <linearGradient id="closeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#EF4444" />
+          <stop offset="100%" stopColor="#F87171" />
+        </linearGradient>
+      </defs>
+      <line x1="18" y1="6" x2="6" y2="18" stroke="url(#closeGradient)" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="6" y1="6" x2="18" y2="18" stroke="url(#closeGradient)" strokeWidth="2.5" strokeLinecap="round"/>
+    </motion.svg>
   ),
   Plus: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="12" y1="5" x2="12" y2="19"></line>
-      <line x1="5" y1="12" x2="19" y2="12"></line>
-    </svg>
+    <motion.svg 
+      width="20" 
+      height="20" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className="relative"
+      whileHover={{ scale: 1.15, rotate: 90 }}
+      whileTap={{ scale: 0.9 }}
+    >
+      <defs>
+        <linearGradient id="plusGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#10B981" />
+          <stop offset="100%" stopColor="#34D399" />
+        </linearGradient>
+      </defs>
+      <line x1="12" y1="5" x2="12" y2="19" stroke="url(#plusGradient)" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="5" y1="12" x2="19" y2="12" stroke="url(#plusGradient)" strokeWidth="2.5" strokeLinecap="round"/>
+    </motion.svg>
   ),
   Search: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8"></circle>
-      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-    </svg>
+    <motion.svg 
+      width="18" 
+      height="18" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className="relative"
+      whileHover={{ scale: 1.1 }}
+    >
+      <defs>
+        <linearGradient id="searchGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#3B82F6" />
+          <stop offset="100%" stopColor="#60A5FA" />
+        </linearGradient>
+      </defs>
+      <circle cx="11" cy="11" r="8" stroke="url(#searchGradient)" strokeWidth="2.5"/>
+      <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="url(#searchGradient)" strokeWidth="2.5" strokeLinecap="round"/>
+    </motion.svg>
   ),
   Weather: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-    </svg>
+    <motion.svg 
+      width="18" 
+      height="18" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className="relative"
+      animate={{ rotate: [0, 360] }}
+      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+    >
+      <defs>
+        <linearGradient id="weatherGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#F59E0B" />
+          <stop offset="100%" stopColor="#FBBF24" />
+        </linearGradient>
+      </defs>
+      <circle cx="12" cy="12" r="5" fill="url(#weatherGradient)" opacity="0.2"/>
+      <circle cx="12" cy="12" r="5" stroke="url(#weatherGradient)" strokeWidth="2"/>
+      <line x1="12" y1="1" x2="12" y2="3" stroke="url(#weatherGradient)" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="12" y1="21" x2="12" y2="23" stroke="url(#weatherGradient)" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="url(#weatherGradient)" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="url(#weatherGradient)" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="1" y1="12" x2="3" y2="12" stroke="url(#weatherGradient)" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="21" y1="12" x2="23" y2="12" stroke="url(#weatherGradient)" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="url(#weatherGradient)" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="url(#weatherGradient)" strokeWidth="2" strokeLinecap="round"/>
+    </motion.svg>
   ),
   Calendar: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-      <line x1="16" y1="2" x2="16" y2="6"></line>
-      <line x1="8" y1="2" x2="8" y2="6"></line>
-      <line x1="3" y1="10" x2="21" y2="10"></line>
-    </svg>
+    <motion.svg 
+      width="18" 
+      height="18" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className="relative"
+      whileHover={{ scale: 1.1 }}
+    >
+      <defs>
+        <linearGradient id="calendarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#8B5CF6" />
+          <stop offset="100%" stopColor="#A78BFA" />
+        </linearGradient>
+      </defs>
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="url(#calendarGradient)" strokeWidth="2.5"/>
+      <line x1="16" y1="2" x2="16" y2="6" stroke="url(#calendarGradient)" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="8" y1="2" x2="8" y2="6" stroke="url(#calendarGradient)" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="3" y1="10" x2="21" y2="10" stroke="url(#calendarGradient)" strokeWidth="2.5" strokeLinecap="round"/>
+    </motion.svg>
   ),
   Calculator: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10.01"/><line x1="12" y1="10" x2="12" y2="10.01"/><line x1="16" y1="10" x2="16" y2="10.01"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="12" y1="14" x2="12" y2="14.01"/><line x1="16" y1="14" x2="16" y2="14.01"/><line x1="8" y1="18" x2="8" y2="18.01"/><line x1="12" y1="18" x2="12" y2="18.01"/><line x1="16" y1="18" x2="16" y2="18.01"/>
-    </svg>
+    <motion.svg 
+      width="18" 
+      height="18" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className="relative"
+      whileHover={{ scale: 1.1, y: -2 }}
+    >
+      <defs>
+        <linearGradient id="calcGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#10B981" />
+          <stop offset="100%" stopColor="#6EE7B7" />
+        </linearGradient>
+      </defs>
+      <rect x="4" y="2" width="16" height="20" rx="2" stroke="url(#calcGradient)" strokeWidth="2.5"/>
+      <line x1="8" y1="6" x2="16" y2="6" stroke="url(#calcGradient)" strokeWidth="2.5" strokeLinecap="round"/>
+      <circle cx="8" cy="10" r="1" fill="url(#calcGradient)"/>
+      <circle cx="12" cy="10" r="1" fill="url(#calcGradient)"/>
+      <circle cx="16" cy="10" r="1" fill="url(#calcGradient)"/>
+      <circle cx="8" cy="14" r="1" fill="url(#calcGradient)"/>
+      <circle cx="12" cy="14" r="1" fill="url(#calcGradient)"/>
+      <circle cx="16" cy="14" r="1" fill="url(#calcGradient)"/>
+      <circle cx="8" cy="18" r="1" fill="url(#calcGradient)"/>
+      <circle cx="12" cy="18" r="1" fill="url(#calcGradient)"/>
+      <circle cx="16" cy="18" r="1" fill="url(#calcGradient)"/>
+    </motion.svg>
   ),
   Brain: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"></path>
-      <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"></path>
-    </svg>
+    <motion.svg 
+      width="18" 
+      height="18" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className="relative"
+      animate={{ 
+        scale: [1, 1.05, 1],
+        opacity: [0.8, 1, 0.8]
+      }}
+      transition={{ 
+        duration: 2, 
+        repeat: Infinity,
+        ease: "easeInOut"
+      }}
+      whileHover={{ scale: 1.15 }}
+    >
+      <defs>
+        <linearGradient id="brainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#A855F7" />
+          <stop offset="50%" stopColor="#EC4899" />
+          <stop offset="100%" stopColor="#F472B6" />
+        </linearGradient>
+      </defs>
+      <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z" fill="url(#brainGradient)" opacity="0.3"/>
+      <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z" stroke="url(#brainGradient)" strokeWidth="2"/>
+      <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" fill="url(#brainGradient)" opacity="0.3"/>
+      <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" stroke="url(#brainGradient)" strokeWidth="2"/>
+    </motion.svg>
   ),
   Heart: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
-    </svg>
+    <motion.svg 
+      width="18" 
+      height="18" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className="relative"
+      animate={{ 
+        scale: [1, 1.1, 1],
+      }}
+      transition={{ 
+        duration: 1.5, 
+        repeat: Infinity,
+        ease: "easeInOut"
+      }}
+      whileHover={{ scale: 1.2 }}
+    >
+      <defs>
+        <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#EC4899" />
+          <stop offset="50%" stopColor="#F472B6" />
+          <stop offset="100%" stopColor="#FBCFE8" />
+        </linearGradient>
+      </defs>
+      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" fill="url(#heartGradient)" stroke="url(#heartGradient)" strokeWidth="2"/>
+    </motion.svg>
   ),
   Clipboard: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-    </svg>
+    <motion.svg 
+      width="18" 
+      height="18" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className="relative"
+      whileHover={{ scale: 1.1, y: -2 }}
+    >
+      <defs>
+        <linearGradient id="clipboardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#6366F1" />
+          <stop offset="100%" stopColor="#818CF8" />
+        </linearGradient>
+      </defs>
+      <rect x="8" y="2" width="8" height="4" rx="1" ry="1" fill="url(#clipboardGradient)"/>
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" stroke="url(#clipboardGradient)" strokeWidth="2.5"/>
+    </motion.svg>
   ),
   Home: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-      <polyline points="9 22 9 12 15 12 15 22"></polyline>
-    </svg>
+    <motion.svg 
+      width="20" 
+      height="20" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className="relative"
+      whileHover={{ scale: 1.1, y: -2 }}
+    >
+      <defs>
+        <linearGradient id="homeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#3B82F6" />
+          <stop offset="100%" stopColor="#60A5FA" />
+        </linearGradient>
+      </defs>
+      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="url(#homeGradient)" opacity="0.2"/>
+      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="url(#homeGradient)" strokeWidth="2.5"/>
+      <polyline points="9 22 9 12 15 12 15 22" stroke="url(#homeGradient)" strokeWidth="2.5" strokeLinecap="round"/>
+    </motion.svg>
   ),
   Trash: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="3 6 5 6 21 6"></polyline>
-      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-    </svg>
+    <motion.svg 
+      width="16" 
+      height="16" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className="relative"
+      whileHover={{ scale: 1.2, rotate: 15 }}
+      whileTap={{ scale: 0.9 }}
+    >
+      <defs>
+        <linearGradient id="trashGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#EF4444" />
+          <stop offset="100%" stopColor="#F87171" />
+        </linearGradient>
+      </defs>
+      <polyline points="3 6 5 6 21 6" stroke="url(#trashGradient)" strokeWidth="2.5" strokeLinecap="round"/>
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="url(#trashGradient)" strokeWidth="2.5"/>
+    </motion.svg>
   ),
   Chat: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-    </svg>
+    <motion.svg 
+      width="18" 
+      height="18" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className="relative"
+      whileHover={{ scale: 1.1 }}
+    >
+      <defs>
+        <linearGradient id="chatGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#8B5CF6" />
+          <stop offset="100%" stopColor="#A78BFA" />
+        </linearGradient>
+      </defs>
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="url(#chatGradient)" opacity="0.1"/>
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="url(#chatGradient)" strokeWidth="2.5"/>
+    </motion.svg>
   ),
   Sparkles: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
-      <path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/>
-    </svg>
+    <motion.svg 
+      width="18" 
+      height="18" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className="relative"
+      animate={{ 
+        rotate: [0, 180, 360],
+        scale: [1, 1.1, 1]
+      }}
+      transition={{ 
+        duration: 3, 
+        repeat: Infinity,
+        ease: "easeInOut"
+      }}
+      whileHover={{ scale: 1.2 }}
+    >
+      <defs>
+        <linearGradient id="sparklesGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FBBF24" />
+          <stop offset="50%" stopColor="#FCD34D" />
+          <stop offset="100%" stopColor="#FDE68A" />
+        </linearGradient>
+      </defs>
+      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" fill="url(#sparklesGradient)" stroke="url(#sparklesGradient)" strokeWidth="1.5"/>
+      <path d="M5 3v4" stroke="url(#sparklesGradient)" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M19 17v4" stroke="url(#sparklesGradient)" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M3 5h4" stroke="url(#sparklesGradient)" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M17 19h4" stroke="url(#sparklesGradient)" strokeWidth="2" strokeLinecap="round"/>
+    </motion.svg>
   ),
   Globe: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-    </svg>
+    <motion.svg 
+      width="18" 
+      height="18" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className="relative"
+      animate={{ rotate: [0, 360] }}
+      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+      whileHover={{ scale: 1.15 }}
+    >
+      <defs>
+        <linearGradient id="globeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#3B82F6" />
+          <stop offset="50%" stopColor="#60A5FA" />
+          <stop offset="100%" stopColor="#93C5FD" />
+        </linearGradient>
+      </defs>
+      <circle cx="12" cy="12" r="10" stroke="url(#globeGradient)" strokeWidth="2.5"/>
+      <line x1="2" y1="12" x2="22" y2="12" stroke="url(#globeGradient)" strokeWidth="2.5"/>
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="url(#globeGradient)" strokeWidth="2.5"/>
+    </motion.svg>
+  ),
+  Admin: () => (
+    <motion.svg 
+      width="20" 
+      height="20" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      className="relative"
+      whileHover={{ scale: 1.1, rotate: 5 }}
+    >
+      <defs>
+        <linearGradient id="adminGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#F59E0B" />
+          <stop offset="100%" stopColor="#FBBF24" />
+        </linearGradient>
+      </defs>
+      <path d="M12 2L2 7l10 5 10-5-10-5z" fill="url(#adminGradient)" opacity="0.2"/>
+      <path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="url(#adminGradient)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="12" cy="2" r="1.5" fill="url(#adminGradient)"/>
+    </motion.svg>
   )
 }
 
 const MatteoPage = () => {
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [showAdminPanel, setShowAdminPanel] = useState(false)
+  const [adminConversations, setAdminConversations] = useState([])
+  const [adminLoading, setAdminLoading] = useState(false)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
@@ -199,21 +503,86 @@ const MatteoPage = () => {
 
   useEffect(() => {
     loadConversations()
+    
+    // Verificar se é admin
+    const adminStatus = localStorage.getItem('pablo_admin') === 'true'
+    const urlParams = new URLSearchParams(window.location.search)
+    const urlAdmin = urlParams.get('admin') === 'pablo'
+    setIsAdmin(adminStatus || urlAdmin)
+    
+    // Criar conversa automaticamente se não houver nenhuma ativa
+    const createInitialConversation = async () => {
+      if (!currentConversationId) {
+        const newId = `conv_${Date.now()}`
+        const newSessionId = `session_${Date.now()}`
+        
+        try {
+          const response = await fetch(`${API_URL}/api/conversations`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: newId,
+              session_id: newSessionId,
+              title: 'Nova conversa'
+            })
+          })
+          
+          if (response.ok) {
+            const newConv = await response.json()
+            setConversations(prev => [newConv, ...prev])
+            setCurrentConversationId(newId)
+            setSessionId(newSessionId)
+          }
+        } catch (error) {
+          console.error('Erro ao criar conversa inicial:', error)
+        }
+      }
+    }
+    
+    // Aguardar um pouco antes de criar para não conflitar com loadConversations
+    setTimeout(createInitialConversation, 500)
   }, [])
+  
+  // Carregar conversas do admin
+  const loadAdminConversations = async () => {
+    if (!isAdmin) return
+    
+    setAdminLoading(true)
+    try {
+      const response = await fetch(`${API_URL}/api/conversations?admin=true`)
+      if (response.ok) {
+        const data = await response.json()
+        setAdminConversations(data)
+      }
+    } catch (error) {
+      console.error('Erro ao carregar conversas admin:', error)
+    } finally {
+      setAdminLoading(false)
+    }
+  }
+  
+  useEffect(() => {
+    if (showAdminPanel && isAdmin) {
+      loadAdminConversations()
+    }
+  }, [showAdminPanel, isAdmin])
 
-  // Atualizar conversa atual quando mensagens mudam
+  // Atualizar conversa atual quando mensagens mudam (com debounce)
   useEffect(() => {
     if (currentConversationId && messages.length > 0) {
       const lastMessage = messages[messages.length - 1]?.text?.substring(0, 50) + '...'
       
-      // Atualizar no banco
-      fetch(`${API_URL}/api/conversations/${currentConversationId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ last_message: lastMessage })
-      }).catch(console.error)
+      // Debounce para não fazer muitas requisições
+      const timeoutId = setTimeout(() => {
+        // Atualizar no banco
+        fetch(`${API_URL}/api/conversations/${currentConversationId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ last_message: lastMessage })
+        }).catch(console.error)
+      }, 1000)
       
-      // Atualizar estado local
+      // Atualizar estado local imediatamente
       setConversations(prev => prev.map(conv => 
         conv.id === currentConversationId 
           ? { 
@@ -224,6 +593,8 @@ const MatteoPage = () => {
             }
           : conv
       ))
+      
+      return () => clearTimeout(timeoutId)
     }
   }, [messages, currentConversationId])
 
@@ -593,17 +964,19 @@ const MatteoPage = () => {
       } z-50 flex flex-col transition-all duration-300 ease-in-out shadow-2xl`}>
         {/* Sidebar Header */}
         <div className={`p-4 border-b ${tpmMode ? 'border-pink-300/50' : 'border-violet-300/50'}`}>
-          <button
+          <motion.button
             onClick={createNewConversation}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
             className={`w-full flex items-center justify-center gap-2 px-4 py-3 ${
               tpmMode
-                ? 'bg-gradient-to-r from-pink-400 to-rose-500 hover:from-pink-500 hover:to-rose-600 text-white'
-                : 'bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white'
-            } rounded-xl font-medium transition-all shadow-lg hover:shadow-xl`}
+                ? 'bg-gradient-to-r from-pink-400 to-rose-500 hover:from-pink-500 hover:to-rose-600 text-white ring-2 ring-pink-300/50'
+                : 'bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white ring-2 ring-violet-300/50'
+            } rounded-xl font-semibold transition-all shadow-xl hover:shadow-2xl`}
           >
             <Icons.Plus />
             Nova conversa
-          </button>
+          </motion.button>
         </div>
 
         {/* Conversations List */}
@@ -612,23 +985,26 @@ const MatteoPage = () => {
             {conversations.map(conv => (
               <motion.div
                 key={conv.id}
-                initial={{ opacity: 0, x: -10 }}
+                initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: conv.id ? 0 : 0.1 }}
+                whileHover={{ scale: 1.02, x: 4 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => loadConversation(conv)}
-                className={`group flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
+                className={`group flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border-2 ${
                   currentConversationId === conv.id 
                     ? tpmMode 
-                      ? 'bg-gradient-to-r from-pink-300/50 to-rose-300/50 shadow-md' 
-                      : 'bg-gradient-to-r from-violet-300/50 to-purple-300/50 shadow-md'
+                      ? 'bg-gradient-to-r from-pink-300/70 to-rose-300/70 shadow-lg border-pink-400/70' 
+                      : 'bg-gradient-to-r from-violet-300/70 to-purple-300/70 shadow-lg border-violet-400/70'
                     : tpmMode
-                      ? 'hover:bg-pink-200/50'
-                      : 'hover:bg-violet-200/50'
+                      ? 'hover:bg-pink-200/70 border-pink-200/50 hover:border-pink-300/70'
+                      : 'hover:bg-violet-200/70 border-violet-200/50 hover:border-violet-300/70'
                 }`}
               >
                 <Icons.Chat />
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm truncate ${tpmMode ? 'text-rose-900' : 'text-violet-900'}`}>{conv.title}</p>
-                  <p className={`text-xs truncate ${tpmMode ? 'text-rose-600' : 'text-violet-600'}`}>{formatDate(conv.updatedAt)}</p>
+                  <p className={`text-sm font-semibold truncate ${tpmMode ? 'text-rose-900' : 'text-violet-900'}`}>{conv.title}</p>
+                  <p className={`text-xs font-medium truncate ${tpmMode ? 'text-rose-700' : 'text-violet-700'}`}>{formatDate(conv.updatedAt)}</p>
                 </div>
                 <button
                   onClick={(e) => deleteConversation(conv.id, e)}
@@ -685,11 +1061,16 @@ const MatteoPage = () => {
       <div className="flex-1 flex flex-col h-full">
         
         {/* Header */}
-        <header className={`px-4 py-3 border-b backdrop-blur-xl flex items-center gap-4 transition-all duration-500 ${
-          tpmMode 
-            ? 'bg-gradient-to-r from-pink-200/80 via-rose-100/80 to-pink-200/80 border-pink-300/50' 
-            : 'bg-gradient-to-r from-violet-200/80 via-purple-100/80 to-indigo-200/80 border-violet-300/50'
-        }`}>
+        <motion.header 
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className={`px-4 py-3 border-b-2 backdrop-blur-xl flex items-center gap-4 ${
+            tpmMode 
+              ? 'bg-gradient-to-r from-pink-200/95 via-rose-100/95 to-pink-200/95 border-pink-400/70 shadow-lg' 
+              : 'bg-gradient-to-r from-violet-200/95 via-purple-100/95 to-indigo-200/95 border-violet-400/70 shadow-lg'
+          }`}
+        >
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className={`lg:hidden p-2 rounded-xl transition-colors ${
@@ -713,7 +1094,35 @@ const MatteoPage = () => {
               </div>
             </div>
           </div>
-        </header>
+          
+          <div className="flex-1" />
+          
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <button
+                onClick={() => setShowAdminPanel(true)}
+                className={`p-2 rounded-lg transition-all ${
+                  tpmMode 
+                    ? 'bg-amber-200/50 hover:bg-amber-300/50 text-amber-700' 
+                    : 'bg-amber-200/50 hover:bg-amber-300/50 text-amber-700'
+                }`}
+                title="Painel Admin - Ver histórico completo"
+              >
+                <Icons.Admin />
+              </button>
+            )}
+            <button
+              onClick={() => navigate('/')}
+              className={`p-2 rounded-lg transition-all ${
+                tpmMode 
+                  ? 'bg-pink-200/50 hover:bg-pink-300/50 text-rose-600' 
+                  : 'bg-violet-200/50 hover:bg-violet-300/50 text-violet-600'
+              }`}
+            >
+              <Icons.Home />
+            </button>
+          </div>
+        </motion.header>
 
         {/* Messages Area */}
         <main className="flex-1 overflow-y-auto">
@@ -725,22 +1134,43 @@ const MatteoPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center max-w-2xl"
               >
-                <MatteoLogo size="xl" className="mx-auto mb-6" />
+                <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ 
+                type: "spring",
+                stiffness: 200,
+                damping: 15,
+                delay: 0.1
+              }}
+            >
+              <MatteoLogo size="xl" className="mx-auto mb-6" />
+            </motion.div>
                 
-                <h2 className={`text-4xl font-bold mb-3 ${
-                  tpmMode 
-                    ? 'text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-rose-600' 
-                    : 'text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-purple-600'
-                }`}>
+                <motion.h2 
+                  className={`text-4xl font-bold mb-3 ${
+                    tpmMode 
+                      ? 'text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-rose-600 drop-shadow-lg' 
+                      : 'text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-purple-600 drop-shadow-lg'
+                  }`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                >
                   Olá, Gehh! 💙
-                </h2>
-                <p className={`text-lg mb-8 ${
-                  tpmMode 
-                    ? 'text-rose-600' 
-                    : 'text-violet-600'
-                }`}>
+                </motion.h2>
+                <motion.p 
+                  className={`text-lg mb-8 font-medium ${
+                    tpmMode 
+                      ? 'text-rose-700' 
+                      : 'text-violet-700'
+                  }`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.5 }}
+                >
                   Sou o Matteo, sua IA pessoal. Como posso te ajudar hoje?
-                </p>
+                </motion.p>
 
                 {/* Sugestões */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto">
@@ -799,70 +1229,149 @@ const MatteoPage = () => {
           ) : (
             // Lista de mensagens
             <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
-              {messages.map((msg) => (
+              {messages.map((msg, index) => (
                 <motion.div
                   key={msg.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ 
+                    duration: 0.4,
+                    delay: index * 0.05,
+                    ease: [0.25, 0.1, 0.25, 1]
+                  }}
                   className={`flex gap-4 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
                 >
                   {/* Avatar */}
-                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                    msg.sender === 'user' 
-                      ? 'bg-gradient-to-br from-blue-500 to-blue-600' 
-                      : tpmMode ? 'bg-gradient-to-br from-pink-400 to-rose-500' : 'bg-gradient-to-br from-violet-500 to-purple-600'
-                  }`}>
+                  <motion.div 
+                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${
+                      msg.sender === 'user' 
+                        ? 'bg-gradient-to-br from-blue-500 to-blue-600 ring-2 ring-blue-300' 
+                        : tpmMode 
+                          ? 'bg-gradient-to-br from-pink-400 to-rose-500 ring-2 ring-pink-300' 
+                          : 'bg-gradient-to-br from-violet-500 to-purple-600 ring-2 ring-violet-300'
+                    }`}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ 
+                      type: "spring",
+                      stiffness: 200,
+                      damping: 15,
+                      delay: 0.1
+                    }}
+                    whileHover={{ scale: 1.1 }}
+                  >
                     {msg.sender === 'user' ? (
-                      <span className="text-white text-sm font-medium">G</span>
+                      <span className="text-white text-sm font-bold">G</span>
                     ) : (
-                      <MatteoLogo size="sm" className="w-5 h-5" />
+                      <MatteoLogo size="sm" className="w-6 h-6" />
                     )}
-                  </div>
+                  </motion.div>
                   
                   {/* Message */}
-                  <div className={`flex-1 max-w-[80%] ${msg.sender === 'user' ? 'text-right' : ''}`}>
-                    <div className={`inline-block p-4 rounded-2xl text-[15px] leading-relaxed whitespace-pre-wrap shadow-md ${
-                      msg.sender === 'user'
-                        ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
-                        : tpmMode 
-                          ? 'bg-gradient-to-br from-pink-50 to-rose-50 text-gray-800 border-2 border-pink-200' 
-                          : 'bg-gradient-to-br from-violet-50 to-purple-50 text-gray-800 border-2 border-violet-200'
-                    }`}>
+                  <motion.div 
+                    className={`flex-1 max-w-[80%] ${msg.sender === 'user' ? 'text-right' : ''}`}
+                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ 
+                      duration: 0.3,
+                      ease: [0.25, 0.1, 0.25, 1]
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <motion.div 
+                      className={`inline-block p-4 rounded-2xl text-[15px] leading-relaxed whitespace-pre-wrap shadow-lg ${
+                        msg.sender === 'user'
+                          ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/30 ring-2 ring-blue-300'
+                          : tpmMode 
+                            ? 'bg-gradient-to-br from-pink-100 to-rose-100 text-gray-900 border-2 border-pink-300 shadow-pink-200/50' 
+                            : 'bg-gradient-to-br from-violet-100 to-purple-100 text-gray-900 border-2 border-violet-300 shadow-violet-200/50'
+                      }`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.1 }}
+                    >
                       {msg.text}
-                    </div>
-                    <p className={`text-xs mt-1 ${tpmMode ? 'text-rose-500' : 'text-violet-500'}`}>
+                    </motion.div>
+                    <motion.p 
+                      className={`text-xs mt-1.5 font-medium ${
+                        msg.sender === 'user' 
+                          ? 'text-blue-200' 
+                          : tpmMode ? 'text-rose-600' : 'text-violet-600'
+                      }`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                    >
                       {formatTime(msg.timestamp)}
-                    </p>
-                  </div>
+                    </motion.p>
+                  </motion.div>
                 </motion.div>
               ))}
               
               {/* Typing Indicator */}
               {isTyping && (
                 <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.3 }}
                   className="flex gap-4"
                 >
-                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${tpmMode ? 'bg-gradient-to-br from-pink-400 to-rose-500' : 'bg-gradient-to-br from-violet-500 to-purple-600'}`}>
-                    <MatteoLogo size="sm" className="w-5 h-5" />
-                  </div>
-                  <div className={`p-4 rounded-2xl shadow-md ${
-                    tpmMode 
-                      ? 'bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-200' 
-                      : 'bg-gradient-to-br from-violet-50 to-purple-50 border-2 border-violet-200'
-                  }`}>
-                    <div className="flex items-center gap-2">
-                      <div className="flex gap-1">
-                        <span className={`w-2 h-2 rounded-full animate-bounce ${tpmMode ? 'bg-pink-400' : 'bg-violet-400'}`}></span>
-                        <span className={`w-2 h-2 rounded-full animate-bounce ${tpmMode ? 'bg-pink-400' : 'bg-violet-400'}`} style={{animationDelay: '150ms'}}></span>
-                        <span className={`w-2 h-2 rounded-full animate-bounce ${tpmMode ? 'bg-pink-400' : 'bg-violet-400'}`} style={{animationDelay: '300ms'}}></span>
+                  <motion.div 
+                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-lg ring-2 ${
+                      tpmMode 
+                        ? 'bg-gradient-to-br from-pink-400 to-rose-500 ring-pink-300' 
+                        : 'bg-gradient-to-br from-violet-500 to-purple-600 ring-violet-300'
+                    }`}
+                    animate={{ 
+                      scale: [1, 1.1, 1],
+                    }}
+                    transition={{ 
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    <MatteoLogo size="sm" className="w-6 h-6" />
+                  </motion.div>
+                  <motion.div 
+                    className={`p-4 rounded-2xl shadow-lg ${
+                      tpmMode 
+                        ? 'bg-gradient-to-br from-pink-100 to-rose-100 border-2 border-pink-300 shadow-pink-200/50' 
+                        : 'bg-gradient-to-br from-violet-100 to-purple-100 border-2 border-violet-300 shadow-violet-200/50'
+                    }`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex gap-1.5">
+                        <motion.span 
+                          className={`w-2.5 h-2.5 rounded-full ${tpmMode ? 'bg-pink-500' : 'bg-violet-500'}`}
+                          animate={{ y: [0, -8, 0] }}
+                          transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
+                        />
+                        <motion.span 
+                          className={`w-2.5 h-2.5 rounded-full ${tpmMode ? 'bg-pink-500' : 'bg-violet-500'}`}
+                          animate={{ y: [0, -8, 0] }}
+                          transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
+                        />
+                        <motion.span 
+                          className={`w-2.5 h-2.5 rounded-full ${tpmMode ? 'bg-pink-500' : 'bg-violet-500'}`}
+                          animate={{ y: [0, -8, 0] }}
+                          transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
+                        />
                       </div>
                       {typingStatus && (
-                        <span className={`text-sm ${tpmMode ? 'text-rose-600' : 'text-violet-600'}`}>{typingStatus}</span>
+                        <motion.span 
+                          className={`text-sm font-medium ${tpmMode ? 'text-rose-600' : 'text-violet-600'}`}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                        >
+                          {typingStatus}
+                        </motion.span>
                       )}
                     </div>
-                  </div>
+                  </motion.div>
                 </motion.div>
               )}
               
@@ -900,19 +1409,21 @@ const MatteoPage = () => {
                 }`}
                 style={{ minHeight: '44px' }}
               />
-              <button
+              <motion.button
                 onClick={handleSend}
                 disabled={!input.trim()}
+                whileHover={input.trim() ? { scale: 1.1 } : {}}
+                whileTap={input.trim() ? { scale: 0.95 } : {}}
                 className={`p-3 rounded-xl transition-all flex-shrink-0 ${
                   input.trim()
                     ? tpmMode
-                      ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30 hover:shadow-xl'
-                      : 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30'
+                      ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-xl shadow-pink-500/40 ring-2 ring-pink-300'
+                      : 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-xl shadow-violet-500/30 ring-2 ring-violet-300'
                     : tpmMode ? 'bg-pink-100 text-pink-300' : 'bg-violet-100 text-violet-300'
                 }`}
               >
                 <Icons.Send />
-              </button>
+              </motion.button>
             </div>
             <p className={`text-center text-xs mt-3 ${
               tpmMode ? 'text-rose-500' : 'text-violet-500'
@@ -922,6 +1433,125 @@ const MatteoPage = () => {
           </div>
         </footer>
       </div>
+
+      {/* Painel Admin */}
+      <AnimatePresence>
+        {showAdminPanel && isAdmin && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+            onClick={() => setShowAdminPanel(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden"
+            >
+              {/* Header do Painel Admin */}
+              <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6 flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                    <Icons.Admin />
+                    Painel Admin - Histórico de Conversas
+                  </h2>
+                  <p className="text-amber-100 text-sm mt-1">
+                    {adminConversations.length} conversa{adminConversations.length !== 1 ? 's' : ''} encontrada{adminConversations.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowAdminPanel(false)}
+                  className="p-2 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-all"
+                >
+                  <Icons.Close />
+                </button>
+              </div>
+
+              {/* Lista de Conversas */}
+              <div className="flex-1 overflow-y-auto p-6">
+                {adminLoading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                      <p className="text-gray-600">Carregando conversas...</p>
+                    </div>
+                  </div>
+                ) : adminConversations.length === 0 ? (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-500">Nenhuma conversa encontrada</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {adminConversations.map((conv) => (
+                      <motion.div
+                        key={conv.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200 shadow-sm"
+                      >
+                        {/* Cabeçalho da Conversa */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <h3 className="font-bold text-lg text-gray-800 mb-1">{conv.title}</h3>
+                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <span>📅 {formatDate(conv.createdAt)}</span>
+                              <span>💬 {conv.messageCount || 0} mensagens</span>
+                              <span>🆔 {conv.sessionId}</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation()
+                              if (confirm('Tem certeza que deseja deletar esta conversa?')) {
+                                await deleteConversation(conv.id, e)
+                                loadAdminConversations()
+                              }
+                            }}
+                            className="p-2 rounded-lg bg-red-100 hover:bg-red-200 text-red-600 transition-all"
+                            title="Deletar conversa"
+                          >
+                            <Icons.Trash />
+                          </button>
+                        </div>
+
+                        {/* Mensagens */}
+                        {conv.messages && conv.messages.length > 0 && (
+                          <div className="space-y-3 max-h-96 overflow-y-auto bg-white rounded-lg p-4 border border-gray-200">
+                            {conv.messages.map((msg, idx) => (
+                              <div
+                                key={idx}
+                                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                              >
+                                <div
+                                  className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                                    msg.sender === 'user'
+                                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white'
+                                      : 'bg-gradient-to-r from-purple-100 to-purple-200 text-gray-800'
+                                  }`}
+                                >
+                                  <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                                  <p className={`text-xs mt-1 ${
+                                    msg.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
+                                  }`}>
+                                    {formatTime(msg.timestamp)}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
