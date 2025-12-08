@@ -1057,7 +1057,7 @@ const MatteoPage = () => {
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3 }}
-          className={`px-3 sm:px-4 py-2.5 sm:py-3 border-b-2 backdrop-blur-xl flex items-center gap-2 sm:gap-4 relative z-50 ${
+          className={`px-3 sm:px-4 py-2.5 sm:py-3 border-b-2 backdrop-blur-xl flex items-center gap-2 sm:gap-4 relative z-50 sticky top-0 ${
             tpmMode 
               ? 'bg-gradient-to-r from-pink-200/98 via-rose-100/98 to-pink-200/98 border-pink-500/80 shadow-lg' 
               : 'bg-gradient-to-r from-violet-200/98 via-purple-100/98 to-indigo-200/98 border-violet-500/80 shadow-lg'
@@ -1067,10 +1067,10 @@ const MatteoPage = () => {
             onClick={() => setSidebarOpen(!sidebarOpen)}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            className={`lg:hidden p-2.5 sm:p-3 rounded-xl transition-all relative z-[60] flex-shrink-0 ${
+            className={`lg:hidden inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl transition-all relative z-[60] flex-shrink-0 ${
               tpmMode 
-                ? 'bg-pink-400/95 hover:bg-pink-500/95 text-rose-900 ring-2 ring-pink-500/80 shadow-xl' 
-                : 'bg-violet-400/95 hover:bg-violet-500/95 text-violet-900 ring-2 ring-violet-500/80 shadow-xl'
+                ? 'bg-pink-500/95 hover:bg-pink-600/95 text-rose-50 ring-2 ring-pink-700/80 shadow-2xl' 
+                : 'bg-violet-500/95 hover:bg-violet-600/95 text-indigo-50 ring-2 ring-violet-700/80 shadow-2xl'
             }`}
             title={sidebarOpen ? "Fechar menu" : "Abrir menu"}
           >
@@ -1186,17 +1186,17 @@ const MatteoPage = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
                       onClick={() => handleSuggestion(suggestion.text)}
-                      className={`group flex items-center gap-3 p-4 rounded-2xl text-left transition-all backdrop-blur-sm border-2 ${
+                      className={`group flex items-center gap-3 p-4 rounded-2xl text-left transition-all backdrop-blur-sm border-2 shadow-md hover:shadow-xl ${
                         tpmMode
-                          ? 'bg-gradient-to-br from-pink-50/80 to-rose-50/80 border-pink-200 hover:border-pink-400 hover:shadow-lg'
-                          : `bg-gradient-to-br from-white/60 to-white/40 border-white/30 hover:border-white/50 hover:shadow-lg`
+                          ? 'bg-gradient-to-br from-pink-50/90 to-rose-50/90 border-pink-200 hover:border-pink-400'
+                          : `bg-gradient-to-br from-white/85 to-white/60 border-white/40 hover:border-indigo-200`
                       }`}
                     >
-                      <div className={`p-2 rounded-xl bg-gradient-to-br ${suggestion.color} text-white shadow-md`}>
+                      <div className={`p-2.5 rounded-xl bg-gradient-to-br ${suggestion.color} text-white shadow-lg ring-2 ring-white/30`}>
                         {suggestion.icon}
                       </div>
-                      <span className={`text-sm font-medium ${
-                        tpmMode ? 'text-rose-800' : 'text-gray-700'
+                      <span className={`text-sm font-semibold ${
+                        tpmMode ? 'text-rose-800' : 'text-slate-800'
                       }`}>
                         {suggestion.text}
                       </span>
@@ -1206,25 +1206,25 @@ const MatteoPage = () => {
 
                 {/* Capacidades */}
                 <div className={`mt-8 flex flex-wrap justify-center gap-3 ${
-                  tpmMode ? 'text-rose-500' : 'text-violet-500'
+                  tpmMode ? 'text-rose-600' : 'text-indigo-600'
                 }`}>
-                  <span className={`flex items-center gap-1 text-xs bg-white/60 px-3 py-1.5 rounded-full backdrop-blur-sm ${
-                    tpmMode ? 'text-rose-600' : 'text-violet-600'
+                  <span className={`flex items-center gap-1 text-xs bg-white/85 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/60 shadow-sm ${
+                    tpmMode ? 'text-rose-700' : 'text-indigo-700'
                   }`}>
                     <Icons.Globe /> Busca na Web
                   </span>
-                  <span className={`flex items-center gap-1 text-xs bg-white/60 px-3 py-1.5 rounded-full backdrop-blur-sm ${
-                    tpmMode ? 'text-rose-600' : 'text-violet-600'
+                  <span className={`flex items-center gap-1 text-xs bg-white/85 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/60 shadow-sm ${
+                    tpmMode ? 'text-rose-700' : 'text-indigo-700'
                   }`}>
                     <Icons.Weather /> Clima
                   </span>
-                  <span className={`flex items-center gap-1 text-xs bg-white/60 px-3 py-1.5 rounded-full backdrop-blur-sm ${
-                    tpmMode ? 'text-rose-600' : 'text-violet-600'
+                  <span className={`flex items-center gap-1 text-xs bg-white/85 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/60 shadow-sm ${
+                    tpmMode ? 'text-rose-700' : 'text-indigo-700'
                   }`}>
                     <Icons.Brain /> Memória
                   </span>
-                  <span className={`flex items-center gap-1 text-xs bg-white/60 px-3 py-1.5 rounded-full backdrop-blur-sm ${
-                    tpmMode ? 'text-rose-600' : 'text-violet-600'
+                  <span className={`flex items-center gap-1 text-xs bg-white/85 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/60 shadow-sm ${
+                    tpmMode ? 'text-rose-700' : 'text-indigo-700'
                   }`}>
                     <Icons.Calculator /> Cálculos
                   </span>
@@ -1394,8 +1394,8 @@ const MatteoPage = () => {
           <div className="max-w-3xl mx-auto">
             <div className={`flex items-end gap-3 p-3 rounded-2xl border-2 transition-all backdrop-blur-sm ${
               tpmMode 
-                ? 'bg-white/80 border-pink-300 focus-within:border-pink-500 focus-within:ring-4 focus-within:ring-pink-200/50' 
-                : 'bg-white/80 border-violet-300 focus-within:border-violet-500 focus-within:ring-4 focus-within:ring-violet-200/50'
+            ? 'bg-white/90 border-pink-300 focus-within:border-pink-500 focus-within:ring-4 focus-within:ring-pink-200/60' 
+            : 'bg-white/90 border-violet-300 focus-within:border-violet-500 focus-within:ring-4 focus-within:ring-violet-200/60'
             }`}>
               <textarea
                 ref={inputRef}
@@ -1410,7 +1410,7 @@ const MatteoPage = () => {
                 placeholder="Pergunte qualquer coisa..."
                 rows={1}
                 className={`flex-1 px-2 py-2 bg-transparent outline-none text-[15px] resize-none max-h-32 ${
-                  tpmMode ? 'text-gray-800 placeholder-gray-400' : 'text-white placeholder-white/40'
+                  tpmMode ? 'text-gray-800 placeholder-gray-400' : 'text-slate-800 placeholder-slate-500'
                 }`}
                 style={{ minHeight: '44px' }}
               />

@@ -373,7 +373,7 @@ PIADAS INTERNAS:
 ════════════════════════════════════════════════════════════════════════════════
 
 Quando ela mencionar a NAH:
-→ Faça drama: "por que tu tá falando dela?"
+→ Faça drama: "por que tu tá falando dela?" 
 → Depois zoar: "mas eu amo a nah também kkk"
 
 Quando ela mencionar o HIGOR:
