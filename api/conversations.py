@@ -239,13 +239,14 @@ def get_conversation_messages(session_id):
 
 class handler(BaseHTTPRequestHandler):
     def _send_json(self, status, data):
+        """Helper para enviar resposta JSON"""
         self.send_response(status)
-        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Accept, Origin')
         self.end_headers()
-        self.wfile.write(json.dumps(data, default=str).encode())
+        self.wfile.write(json.dumps(data, default=str, ensure_ascii=False).encode('utf-8'))
 
     def _get_conversation_id(self):
         """Extrai o ID da conversa da URL"""
@@ -263,6 +264,7 @@ class handler(BaseHTTPRequestHandler):
         self._send_json(200, {})
 
     def do_GET(self):
+        """Buscar conversas ou uma conversa específica"""
         try:
             init_db()
             conversation_id = self._get_conversation_id()
@@ -274,98 +276,145 @@ class handler(BaseHTTPRequestHandler):
             
             if conversation_id:
                 # Buscar conversa específica
+                print(f"🔍 Buscando conversa: {conversation_id}")
                 conv = get_conversation_by_id(conversation_id)
                 if not conv:
+                    print(f"⚠️ Conversa {conversation_id} não encontrada")
                     self._send_json(404, {'error': 'Conversa não encontrada'})
                     return
                 
                 # Buscar mensagens da conversa
                 messages = get_conversation_messages(conv['sessionId'])
                 conv['messages'] = messages
+                print(f"✅ Conversa {conversation_id} encontrada com {len(messages)} mensagens")
                 
                 self._send_json(200, conv)
             else:
                 # Listar todas as conversas
+                print(f"📋 Listando todas as conversas (admin={is_admin})")
                 include_messages = is_admin  # Admin vê mensagens, usuário normal não
                 conversations = get_all_conversations(limit=100, include_messages=include_messages)
+                print(f"✅ Encontradas {len(conversations)} conversas")
                 self._send_json(200, conversations)
                 
         except Exception as e:
             import traceback
-            from urllib.parse import parse_qs
-            print(f"Erro ao buscar conversas: {traceback.format_exc()}")
-            self._send_json(500, {'error': str(e)})
+            error_msg = traceback.format_exc()
+            print(f"❌ Erro ao buscar conversas: {str(e)}")
+            print(f"📋 Stack trace: {error_msg[:500]}")
+            self._send_json(500, {
+                'error': str(e),
+                'status': 'error'
+            })
 
     def do_POST(self):
+        """Criar nova conversa"""
         try:
             init_db()
             
             content_length = int(self.headers.get('Content-Length', 0))
+            if content_length == 0:
+                print("⚠️ POST sem corpo")
+                self._send_json(400, {'error': 'Corpo da requisição vazio'})
+                return
+                
             body = self.rfile.read(content_length)
-            data = json.loads(body) if body else {}
+            data = json.loads(body.decode('utf-8'))
             
             conversation_id = data.get('id') or data.get('conversation_id')
             session_id = data.get('session_id') or f"session_{conversation_id}"
             title = data.get('title', 'Nova conversa')
             
             if not conversation_id:
+                print("⚠️ POST sem conversation_id")
                 self._send_json(400, {'error': 'ID da conversa não fornecido'})
                 return
             
+            print(f"➕ Criando conversa: {conversation_id} (session: {session_id}, title: {title})")
+            
             if create_conversation(conversation_id, session_id, title):
                 conv = get_conversation_by_id(conversation_id)
+                print(f"✅ Conversa {conversation_id} criada com sucesso")
                 self._send_json(201, conv)
             else:
+                print(f"❌ Falha ao criar conversa {conversation_id}")
                 self._send_json(500, {'error': 'Erro ao criar conversa'})
                 
         except Exception as e:
             import traceback
-            print(f"Erro ao criar conversa: {traceback.format_exc()}")
-            self._send_json(500, {'error': str(e)})
+            error_msg = traceback.format_exc()
+            print(f"❌ Erro ao criar conversa: {str(e)}")
+            print(f"📋 Stack trace: {error_msg[:500]}")
+            self._send_json(500, {
+                'error': str(e),
+                'status': 'error'
+            })
 
     def do_PUT(self):
+        """Atualizar conversa existente"""
         try:
             init_db()
             conversation_id = self._get_conversation_id()
             
             if not conversation_id:
+                print(f"⚠️ PUT sem conversation_id: {self.path}")
                 self._send_json(400, {'error': 'ID da conversa não fornecido'})
                 return
             
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length)
-            data = json.loads(body) if body else {}
+            data = json.loads(body.decode('utf-8')) if body else {}
             
             title = data.get('title')
             last_message = data.get('last_message')
             
+            print(f"📝 Atualizando conversa {conversation_id}: title={bool(title)}, last_message={bool(last_message)}")
+            
             if update_conversation(conversation_id, title=title, last_message=last_message):
                 conv = get_conversation_by_id(conversation_id)
+                print(f"✅ Conversa {conversation_id} atualizada com sucesso")
                 self._send_json(200, conv)
             else:
+                print(f"❌ Falha ao atualizar conversa {conversation_id}")
                 self._send_json(500, {'error': 'Erro ao atualizar conversa'})
                 
         except Exception as e:
             import traceback
-            print(f"Erro ao atualizar conversa: {traceback.format_exc()}")
-            self._send_json(500, {'error': str(e)})
+            error_msg = traceback.format_exc()
+            print(f"❌ Erro ao atualizar conversa: {str(e)}")
+            print(f"📋 Stack trace: {error_msg[:500]}")
+            self._send_json(500, {
+                'error': str(e),
+                'status': 'error'
+            })
 
     def do_DELETE(self):
+        """Deletar conversa"""
         try:
             init_db()
             conversation_id = self._get_conversation_id()
             
             if not conversation_id:
+                print(f"⚠️ DELETE sem conversation_id: {self.path}")
                 self._send_json(400, {'error': 'ID da conversa não fornecido'})
                 return
             
+            print(f"🗑️ Deletando conversa: {conversation_id}")
+            
             if delete_conversation(conversation_id):
+                print(f"✅ Conversa {conversation_id} deletada com sucesso")
                 self._send_json(200, {'message': 'Conversa deletada com sucesso'})
             else:
+                print(f"❌ Falha ao deletar conversa {conversation_id}")
                 self._send_json(500, {'error': 'Erro ao deletar conversa'})
                 
         except Exception as e:
             import traceback
-            print(f"Erro ao deletar conversa: {traceback.format_exc()}")
-            self._send_json(500, {'error': str(e)})
+            error_msg = traceback.format_exc()
+            print(f"❌ Erro ao deletar conversa: {str(e)}")
+            print(f"📋 Stack trace: {error_msg[:500]}")
+            self._send_json(500, {
+                'error': str(e),
+                'status': 'error'
+            })
 

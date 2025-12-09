@@ -1354,14 +1354,66 @@ class handler(BaseHTTPRequestHandler):
                     })
                 
                 # Segunda chamada - com resultados das ferramentas
+                # IMPORTANTE: Precisamos passar tools novamente, mesmo na segunda chamada
                 final_response = client.chat.completions.create(
                     model=LLM_MODEL,
                     messages=messages,
+                    tools=MATTEO_TOOLS,  # Passar tools novamente para evitar erro 400
+                    tool_choice="auto",  # Permitir usar ferramentas novamente se necessário
                     max_tokens=500,
                     temperature=0.85,
+                    top_p=0.9,
                 )
                 
                 bot_response = final_response.choices[0].message.content or ""
+                
+                # Se ainda houver tool_calls na resposta final, executar também
+                if final_response.choices[0].message.tool_calls:
+                    print(f"🔧 Segunda rodada de ferramentas detectada")
+                    # Adicionar resposta do assistente
+                    messages.append({
+                        "role": "assistant",
+                        "content": bot_response,
+                        "tool_calls": [
+                            {
+                                "id": tc.id,
+                                "type": "function",
+                                "function": {
+                                    "name": tc.function.name,
+                                    "arguments": tc.function.arguments
+                                }
+                            } for tc in final_response.choices[0].message.tool_calls
+                        ]
+                    })
+                    
+                    # Executar ferramentas adicionais
+                    for tool_call in final_response.choices[0].message.tool_calls:
+                        tool_name = tool_call.function.name
+                        try:
+                            arguments = json.loads(tool_call.function.arguments)
+                        except:
+                            arguments = {}
+                        
+                        print(f"🔧 Executando ferramenta adicional: {tool_name}")
+                        tool_result = execute_tool(tool_name, arguments)
+                        
+                        messages.append({
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "content": tool_result
+                        })
+                    
+                    # Terceira chamada (se necessário)
+                    third_response = client.chat.completions.create(
+                        model=LLM_MODEL,
+                        messages=messages,
+                        tools=MATTEO_TOOLS,
+                        tool_choice="none",  # Forçar resposta final sem mais ferramentas
+                        max_tokens=500,
+                        temperature=0.85,
+                    )
+                    
+                    bot_response = third_response.choices[0].message.content or ""
             
             # Limpar resposta
             bot_response = bot_response.strip()
