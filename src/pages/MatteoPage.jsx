@@ -1401,28 +1401,34 @@ const MatteoPage = () => {
             setSidebarOpen(false)
           }
         }}
-        className={`lg:translate-x-0 fixed lg:relative left-0 top-0 h-full w-72 sm:w-80 z-50 flex flex-col touch-none ${
+        className={`lg:translate-x-0 fixed lg:relative left-0 top-0 w-72 sm:w-80 z-50 flex flex-col touch-none ${
           tpmMode 
-            ? 'bg-gradient-to-b from-pink-200/98 via-rose-100/98 to-pink-200/98 backdrop-blur-xl border-r-2 border-pink-400/80 shadow-2xl' 
-            : 'bg-gradient-to-b from-violet-200/98 via-purple-100/98 to-indigo-200/98 backdrop-blur-xl border-r-2 border-violet-400/80 shadow-2xl'
+            ? 'bg-gradient-to-br from-pink-200/99 via-rose-100/99 to-pink-300/99 backdrop-blur-2xl border-r-2 border-pink-400/90 shadow-[0_0_30px_rgba(244,63,94,0.15)]' 
+            : 'bg-gradient-to-br from-violet-200/99 via-purple-100/99 to-indigo-200/99 backdrop-blur-2xl border-r-2 border-violet-400/90 shadow-[0_0_30px_rgba(139,92,246,0.15)]'
         }`}
         style={{
           height: '100dvh',
           minHeight: '-webkit-fill-available',
+          maxHeight: '100dvh',
         }}
       >
         {/* Sidebar Header */}
-        <div className={`p-3 sm:p-4 border-b-2 ${tpmMode ? 'border-pink-400/70' : 'border-violet-400/70'}`}>
-          <div className="flex items-center gap-2 mb-2">
+        <div 
+          className={`flex-shrink-0 p-3 sm:p-4 border-b-2 ${tpmMode ? 'border-pink-400/80 shadow-sm' : 'border-violet-400/80 shadow-sm'} bg-gradient-to-r ${tpmMode ? 'from-pink-50/50 to-rose-50/50' : 'from-violet-50/50 to-purple-50/50'}`}
+          style={{
+            paddingTop: `max(12px, env(safe-area-inset-top, 12px))`
+          }}
+        >
+          <div className="flex items-center gap-2.5 mb-3">
             <motion.button
               onClick={createNewConversation}
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              className={`flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base ${
+              whileHover={{ scale: 1.02, y: -1 }}
+              whileTap={{ scale: 0.97 }}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 sm:px-5 py-3 sm:py-3.5 text-sm sm:text-base ${
                 tpmMode
-                  ? 'bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white ring-2 ring-pink-400/70 shadow-lg'
-                  : 'bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white ring-2 ring-violet-400/70 shadow-lg'
-              } rounded-xl font-bold transition-all hover:shadow-xl`}
+                  ? 'bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:via-rose-600 hover:to-pink-700 text-white ring-2 ring-pink-400/60 shadow-lg shadow-pink-500/30 hover:shadow-xl hover:shadow-pink-500/40'
+                  : 'bg-gradient-to-r from-violet-500 via-purple-500 to-violet-600 hover:from-violet-600 hover:via-purple-600 hover:to-violet-700 text-white ring-2 ring-violet-400/60 shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40'
+              } rounded-xl font-bold transition-all duration-200`}
             >
               <Icons.Plus />
               <span className="hidden sm:inline">Nova conversa</span>
@@ -1439,17 +1445,17 @@ const MatteoPage = () => {
                   setSearchQuery('')
                 }
               }}
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, rotate: showSearch ? 0 : 5 }}
               whileTap={{ scale: 0.92 }}
-              className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl active:scale-90 touch-manipulation ${
+              className={`min-w-[48px] min-h-[48px] flex items-center justify-center rounded-xl touch-manipulation transition-all duration-200 ${
                 showSearch
                   ? tpmMode
-                    ? 'bg-pink-500 text-white'
-                    : 'bg-violet-500 text-white'
+                    ? 'bg-gradient-to-br from-pink-500 to-rose-600 text-white shadow-lg shadow-pink-500/40 ring-2 ring-pink-400/50'
+                    : 'bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/40 ring-2 ring-violet-400/50'
                   : tpmMode
-                    ? 'bg-pink-100/80 text-rose-600 hover:bg-pink-200/80'
-                    : 'bg-violet-100/80 text-violet-600 hover:bg-violet-200/80'
-              } transition-all`}
+                    ? 'bg-pink-100/90 text-rose-600 hover:bg-pink-200/90 hover:shadow-md border-2 border-pink-300/50'
+                    : 'bg-violet-100/90 text-violet-600 hover:bg-violet-200/90 hover:shadow-md border-2 border-violet-300/50'
+              }`}
               title={showSearch ? 'Fechar busca' : 'Buscar conversas'}
               aria-label={showSearch ? 'Fechar busca' : 'Buscar conversas'}
             >
@@ -1461,14 +1467,14 @@ const MatteoPage = () => {
           <AnimatePresence>
             {showSearch && (
               <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                initial={{ height: 0, opacity: 0, y: -10 }}
+                animate={{ height: 'auto', opacity: 1, y: 0 }}
+                exit={{ height: 0, opacity: 0, y: -10 }}
+                transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
                 className="overflow-hidden"
               >
-                <div className={`relative mt-2 ${tpmMode ? 'bg-pink-100/80' : 'bg-violet-100/80'} rounded-lg border-2 ${tpmMode ? 'border-pink-300/70' : 'border-violet-300/70'}`}>
-                  <div className="absolute left-2 top-1/2 -translate-y-1/2">
+                <div className={`relative mt-2.5 ${tpmMode ? 'bg-white/90' : 'bg-white/90'} rounded-xl border-2 ${tpmMode ? 'border-pink-300/80 focus-within:border-pink-500 focus-within:ring-2 focus-within:ring-pink-200/50' : 'border-violet-300/80 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-200/50'} shadow-md transition-all duration-200`}>
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <Icons.Search />
                   </div>
                   <input
@@ -1477,14 +1483,17 @@ const MatteoPage = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Buscar conversas..."
-                    className={`w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-transparent outline-none ${tpmMode ? 'text-rose-900 placeholder-rose-500' : 'text-violet-900 placeholder-violet-500'}`}
+                    className={`w-full pl-10 pr-10 py-2.5 text-sm sm:text-base bg-transparent outline-none ${tpmMode ? 'text-rose-900 placeholder-rose-400' : 'text-violet-900 placeholder-violet-400'} font-medium`}
                   />
                   {searchQuery && (
                     <motion.button
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
                       onClick={() => setSearchQuery('')}
-                      whileHover={window.innerWidth >= 768 ? { scale: 1.1 } : {}}
-                      whileTap={{ scale: 0.92 }}
-                      className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded min-w-[32px] min-h-[32px] flex items-center justify-center touch-manipulation ${tpmMode ? 'text-rose-600 hover:text-rose-800' : 'text-violet-600 hover:text-violet-800'}`}
+                      whileHover={{ scale: 1.1, rotate: 90 }}
+                      whileTap={{ scale: 0.9 }}
+                      className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center touch-manipulation transition-colors ${tpmMode ? 'text-rose-500 hover:text-rose-700 hover:bg-rose-100/50' : 'text-violet-500 hover:text-violet-700 hover:bg-violet-100/50'}`}
                     >
                       <Icons.Close />
                     </motion.button>
@@ -1496,56 +1505,69 @@ const MatteoPage = () => {
         </div>
 
         {/* Conversations List */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-2 sm:p-3" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-2.5 sm:p-3.5 pb-4 scrollbar-thin" style={{ WebkitOverflowScrolling: 'touch' }}>
           {isLoadingConversations ? (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex items-center justify-center py-12">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className={`w-8 h-8 border-4 ${tpmMode ? 'border-pink-500 border-t-transparent' : 'border-violet-500 border-t-transparent'} rounded-full`}
+                className={`w-10 h-10 border-4 ${tpmMode ? 'border-pink-500 border-t-transparent' : 'border-violet-500 border-t-transparent'} rounded-full shadow-lg`}
               />
             </div>
           ) : Object.keys(groupedConversations).length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-              <div className="opacity-50 mb-3">
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 0.5 }}
+                className="mb-4"
+              >
                 <Icons.Chat />
-              </div>
-              <p className={`text-sm font-semibold ${tpmMode ? 'text-rose-700' : 'text-violet-700'}`}>
+              </motion.div>
+              <p className={`text-sm font-bold ${tpmMode ? 'text-rose-700' : 'text-violet-700'} mb-1`}>
                 {debouncedSearchQuery ? 'Nenhuma conversa encontrada' : 'Nenhuma conversa ainda'}
               </p>
-              <p className={`text-xs mt-1 ${tpmMode ? 'text-rose-600' : 'text-violet-600'}`}>
+              <p className={`text-xs ${tpmMode ? 'text-rose-600/80' : 'text-violet-600/80'}`}>
                 {debouncedSearchQuery ? 'Tente outra busca' : 'Crie uma nova conversa para começar!'}
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-5">
               {Object.entries(groupedConversations).map(([groupName, groupConvs]) => (
                 <div key={groupName}>
-                  <h3 className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2 px-2 ${tpmMode ? 'text-rose-600' : 'text-violet-600'}`}>
+                  <motion.h3 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className={`text-[10px] sm:text-xs font-extrabold uppercase tracking-widest mb-3 px-2.5 ${tpmMode ? 'text-rose-600/90' : 'text-violet-600/90'} flex items-center gap-2`}
+                  >
+                    <span className={`h-px flex-1 ${tpmMode ? 'bg-pink-300/50' : 'bg-violet-300/50'}`}></span>
                     {groupName}
-                  </h3>
-                  <div className="space-y-1.5 sm:space-y-2">
-                    {groupConvs.map(conv => (
+                    <span className={`h-px flex-1 ${tpmMode ? 'bg-pink-300/50' : 'bg-violet-300/50'}`}></span>
+                  </motion.h3>
+                  <div className="space-y-2 sm:space-y-2.5">
+                    {groupConvs.map((conv, index) => (
                       <motion.div
                         key={conv.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.05 }}
-                        whileHover={window.innerWidth >= 768 ? { scale: 1.02, x: 4 } : {}}
-                        whileTap={{ scale: 0.95 }}
-                        className={`group flex items-start gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-lg sm:rounded-xl cursor-pointer transition-all border-2 touch-manipulation active:scale-95 ${
+                        initial={{ opacity: 0, x: -20, y: 10 }}
+                        animate={{ opacity: 1, x: 0, y: 0 }}
+                        transition={{ delay: index * 0.03, type: "spring", stiffness: 300, damping: 25 }}
+                        whileHover={window.innerWidth >= 768 ? { scale: 1.01, x: 2, y: -1 } : {}}
+                        whileTap={{ scale: 0.98 }}
+                        className={`group flex items-start gap-2.5 sm:gap-3 p-3 sm:p-4 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-200 border-2 touch-manipulation ${
                           currentConversationId === conv.id 
                             ? tpmMode 
-                              ? 'bg-gradient-to-r from-pink-400/90 to-rose-400/90 shadow-lg border-pink-500/90' 
-                              : 'bg-gradient-to-r from-violet-400/90 to-purple-400/90 shadow-lg border-violet-500/90'
+                              ? 'bg-gradient-to-r from-pink-400/95 via-rose-400/95 to-pink-500/95 shadow-lg shadow-pink-500/30 border-pink-500/90 ring-2 ring-pink-300/50' 
+                              : 'bg-gradient-to-r from-violet-400/95 via-purple-400/95 to-violet-500/95 shadow-lg shadow-violet-500/30 border-violet-500/90 ring-2 ring-violet-300/50'
                             : tpmMode
-                              ? 'hover:bg-pink-300/80 border-pink-300/70 hover:border-pink-400/90 bg-pink-100/60 active:bg-pink-300/90'
-                              : 'hover:bg-violet-300/80 border-violet-300/70 hover:border-violet-400/90 bg-violet-100/60 active:bg-violet-300/90'
+                              ? 'hover:bg-pink-200/90 border-pink-300/60 hover:border-pink-400/80 bg-pink-100/70 active:bg-pink-300/90 hover:shadow-md'
+                              : 'hover:bg-violet-200/90 border-violet-300/60 hover:border-violet-400/80 bg-violet-100/70 active:bg-violet-300/90 hover:shadow-md'
                         }`}
                       >
-                        <div className="flex-shrink-0 pt-0.5">
+                        <motion.div 
+                          className="flex-shrink-0 pt-0.5"
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                        >
                           <Icons.Chat />
-                        </div>
+                        </motion.div>
                         <div 
                           className="flex-1 min-w-0"
                           onClick={() => {
@@ -1569,15 +1591,16 @@ const MatteoPage = () => {
                                   }
                                 }}
                                 autoFocus
-                                className={`flex-1 text-xs sm:text-sm font-bold bg-white border-2 ${tpmMode ? 'border-pink-400 text-rose-950' : 'border-violet-400 text-violet-950'} rounded px-2 py-1.5 outline-none`}
+                                className={`flex-1 text-xs sm:text-sm font-bold bg-white/95 border-2 ${tpmMode ? 'border-pink-400 text-rose-950 focus:border-pink-500 focus:ring-2 focus:ring-pink-200' : 'border-violet-400 text-violet-950 focus:border-violet-500 focus:ring-2 focus:ring-violet-200'} rounded-lg px-3 py-2 outline-none shadow-sm`}
                               />
                               <motion.button
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   renameConversation(conv.id, editingTitle)
                                 }}
+                                whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.9 }}
-                                className={`min-w-[44px] min-h-[44px] p-2 rounded-lg ${tpmMode ? 'bg-green-500 text-white' : 'bg-green-500 text-white'}`}
+                                className={`min-w-[44px] min-h-[44px] p-2 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-md hover:shadow-lg transition-all`}
                                 title="Salvar"
                               >
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1589,8 +1612,9 @@ const MatteoPage = () => {
                                   e.stopPropagation()
                                   cancelEditing()
                                 }}
+                                whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.9 }}
-                                className={`min-w-[44px] min-h-[44px] p-2 rounded-lg ${tpmMode ? 'bg-red-500 text-white' : 'bg-red-500 text-white'}`}
+                                className={`min-w-[44px] min-h-[44px] p-2 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-md hover:shadow-lg transition-all`}
                                 title="Cancelar"
                               >
                                 <Icons.Close />
@@ -1598,32 +1622,33 @@ const MatteoPage = () => {
                             </div>
                           ) : (
                             <>
-                              <p className={`text-xs sm:text-sm font-bold truncate ${tpmMode ? 'text-rose-950' : 'text-violet-950'}`}>
+                              <p className={`text-xs sm:text-sm font-bold truncate leading-tight ${tpmMode ? 'text-rose-950' : 'text-violet-950'} mb-0.5`}>
                                 {conv.title}
                               </p>
                               {conv.lastMessage && (
-                                <p className={`text-[10px] sm:text-xs font-medium truncate mt-0.5 ${tpmMode ? 'text-rose-700' : 'text-violet-700'}`}>
-                                  {conv.lastMessage.length > 40 ? conv.lastMessage.substring(0, 40) + '...' : conv.lastMessage}
+                                <p className={`text-[10px] sm:text-xs font-medium truncate mt-1 leading-snug ${tpmMode ? 'text-rose-700/80' : 'text-violet-700/80'}`}>
+                                  {conv.lastMessage.length > 45 ? conv.lastMessage.substring(0, 45) + '...' : conv.lastMessage}
                                 </p>
                               )}
-                              <p className={`text-[9px] sm:text-[10px] font-semibold mt-0.5 ${tpmMode ? 'text-rose-600' : 'text-violet-600'}`}>
+                              <p className={`text-[9px] sm:text-[10px] font-semibold mt-1.5 ${tpmMode ? 'text-rose-600/70' : 'text-violet-600/70'}`}>
                                 {formatDate(conv.updatedAt)}
                               </p>
                             </>
                           )}
                         </div>
                         {editingConversationId !== conv.id && (
-                          <div className="flex items-center gap-1 flex-shrink-0 mt-0.5">
+                          <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
                             <motion.button
                               onClick={(e) => {
                                 e.stopPropagation()
                                 startEditing(conv)
                               }}
+                              whileHover={{ scale: 1.1, rotate: 15 }}
                               whileTap={{ scale: 0.9 }}
-                              className={`min-w-[44px] min-h-[44px] p-2 rounded-lg opacity-70 sm:opacity-0 group-hover:opacity-100 transition-all ${
+                              className={`min-w-[40px] min-h-[40px] p-2 rounded-lg opacity-60 sm:opacity-0 group-hover:opacity-100 transition-all duration-200 ${
                                 tpmMode 
-                                  ? 'text-rose-600 hover:text-rose-800 hover:bg-rose-200/70' 
-                                  : 'text-violet-600 hover:text-violet-800 hover:bg-violet-200/70'
+                                  ? 'text-rose-600 hover:text-rose-800 hover:bg-rose-200/80' 
+                                  : 'text-violet-600 hover:text-violet-800 hover:bg-violet-200/80'
                               }`}
                               title="Renomear"
                             >
@@ -1634,11 +1659,12 @@ const MatteoPage = () => {
                             </motion.button>
                             <motion.button
                               onClick={(e) => confirmDelete(conv.id, e)}
+                              whileHover={{ scale: 1.1, rotate: -5 }}
                               whileTap={{ scale: 0.9 }}
-                              className={`min-w-[44px] min-h-[44px] p-2 rounded-lg opacity-70 sm:opacity-0 group-hover:opacity-100 transition-all ${
+                              className={`min-w-[40px] min-h-[40px] p-2 rounded-lg opacity-60 sm:opacity-0 group-hover:opacity-100 transition-all duration-200 ${
                                 tpmMode 
-                                  ? 'text-rose-600 hover:text-red-600 hover:bg-red-200/70' 
-                                  : 'text-violet-600 hover:text-red-600 hover:bg-red-200/70'
+                                  ? 'text-rose-600 hover:text-red-600 hover:bg-red-200/80' 
+                                  : 'text-violet-600 hover:text-red-600 hover:bg-red-200/80'
                               }`}
                               title="Deletar"
                             >
@@ -1656,15 +1682,20 @@ const MatteoPage = () => {
         </div>
 
         {/* Sidebar Footer */}
-        <div className={`p-3 sm:p-4 border-t-2 ${tpmMode ? 'border-pink-400/70' : 'border-violet-400/70'} space-y-2`}>
+        <div 
+          className={`flex-shrink-0 p-3 sm:p-4 border-t-2 ${tpmMode ? 'border-pink-400/80 shadow-sm' : 'border-violet-400/80 shadow-sm'} space-y-2.5 bg-gradient-to-r ${tpmMode ? 'from-pink-50/50 to-rose-50/50' : 'from-violet-50/50 to-purple-50/50'}`}
+          style={{
+            paddingBottom: `max(12px, env(safe-area-inset-bottom, 12px))`
+          }}
+        >
           <motion.button
             onClick={toggleTpmMode}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className={`w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base transition-all ${
+            whileHover={{ scale: 1.02, y: -1 }}
+            whileTap={{ scale: 0.97 }}
+            className={`w-full flex items-center justify-center gap-2.5 px-4 sm:px-5 py-3 sm:py-3.5 rounded-xl font-bold text-sm sm:text-base transition-all duration-200 ${
               tpmMode 
-                ? 'bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-lg ring-2 ring-pink-400/70' 
-                : 'bg-gradient-to-r from-pink-200 to-rose-200 hover:from-pink-300 hover:to-rose-300 text-rose-800 border-2 border-rose-400/70'
+                ? 'bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 text-white shadow-lg shadow-pink-500/40 ring-2 ring-pink-400/60 hover:shadow-xl hover:shadow-pink-500/50' 
+                : 'bg-gradient-to-r from-pink-200 via-rose-200 to-pink-300 hover:from-pink-300 hover:via-rose-300 hover:to-pink-400 text-rose-800 border-2 border-rose-400/70 hover:border-rose-500/80 hover:shadow-md'
             }`}
           >
             <Icons.Heart />
@@ -1674,12 +1705,12 @@ const MatteoPage = () => {
           
           <motion.button
             onClick={() => navigate('/presente')}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className={`w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all border-2 ${
+            whileHover={{ scale: 1.02, y: -1 }}
+            whileTap={{ scale: 0.97 }}
+            className={`w-full flex items-center justify-center gap-2.5 px-4 sm:px-5 py-3 sm:py-3.5 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 border-2 ${
               tpmMode
-                ? 'bg-pink-100/90 hover:bg-pink-200/90 text-rose-800 border-pink-400/70'
-                : 'bg-violet-100/90 hover:bg-violet-200/90 text-violet-800 border-violet-400/70'
+                ? 'bg-white/90 hover:bg-pink-100/90 text-rose-800 border-pink-400/70 hover:border-pink-500/80 hover:shadow-md'
+                : 'bg-white/90 hover:bg-violet-100/90 text-violet-800 border-violet-400/70 hover:border-violet-500/80 hover:shadow-md'
             }`}
           >
             <Icons.Home />
