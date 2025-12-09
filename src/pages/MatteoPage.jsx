@@ -654,66 +654,18 @@ const MatteoPage = () => {
     }
   }, [])
 
-  const createNewConversation = async () => {
+  const createNewConversation = () => {
+    // Apenas prepara o estado local - NÃO cria no banco ainda
+    // A conversa só será criada no banco quando a primeira mensagem for enviada
     const newId = `conv_${Date.now()}`
     const newSessionId = `session_${Date.now()}`
     
-    try {
-      const response = await fetch(`${API_URL}/api/conversations`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: newId,
-          session_id: newSessionId,
-          title: 'Nova conversa'
-        })
-      })
-      
-      if (response.ok) {
-        const newConv = await response.json()
-        // Atualizar estado local imediatamente
-        setConversations(prev => [newConv, ...prev])
-        setCurrentConversationId(newId)
-        setSessionId(newSessionId)
-        setMessages([])
-        setSidebarOpen(false)
-        // Recarregar lista do servidor para garantir sincronização
-        setTimeout(() => loadConversations(), 300)
-      } else {
-        // Fallback local se API falhar
-        const newConv = {
-          id: newId,
-          sessionId: newSessionId,
-          title: 'Nova conversa',
-          messages: [],
-          lastMessage: 'Nova conversa',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-        setConversations(prev => [newConv, ...prev])
-        setCurrentConversationId(newId)
-        setSessionId(newSessionId)
-        setMessages([])
-        setSidebarOpen(false)
-      }
-    } catch (error) {
-      console.error('Erro ao criar conversa:', error)
-      // Fallback local
-      const newConv = {
-        id: newId,
-        sessionId: newSessionId,
-        title: 'Nova conversa',
-        messages: [],
-        lastMessage: 'Nova conversa',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-      setConversations(prev => [newConv, ...prev])
-      setCurrentConversationId(newId)
-      setSessionId(newSessionId)
-      setMessages([])
-      setSidebarOpen(false)
-    }
+    // Preparar estado local apenas (sem criar no banco)
+    setCurrentConversationId(newId)
+    setSessionId(newSessionId)
+    setMessages([])
+    setInput('')
+    setSidebarOpen(false)
   }
 
   const loadConversation = async (conv) => {
@@ -792,7 +744,7 @@ const MatteoPage = () => {
         body: JSON.stringify({ 
           message, 
           session_id: sessionId, 
-          conversation_id: currentConversationId,
+          conversation_id: currentConversationId, // Sempre enviar conversation_id se existir
           tpm_mode: tpmMode 
         })
       })
@@ -800,9 +752,13 @@ const MatteoPage = () => {
       if (!response.ok) throw new Error()
       const data = await response.json()
       
-      // Atualizar conversation_id se foi criado
-      if (data.conversation_id && !currentConversationId) {
+      // Atualizar conversation_id se foi criado pelo backend
+      if (data.conversation_id && data.conversation_id !== currentConversationId) {
         setCurrentConversationId(data.conversation_id)
+        // Atualizar session_id também se necessário
+        if (data.session_id) {
+          setSessionId(data.session_id)
+        }
       }
       
       // Mostrar ferramentas usadas
@@ -833,13 +789,17 @@ const MatteoPage = () => {
   const handleSend = async () => {
     if (!input.trim()) return
     
-    // Criar conversa se não existir
+    const currentInput = input
+    setInput('')
+    
+    // Criar conversa no banco apenas quando enviar a primeira mensagem
     let conversationCreated = false
     if (!currentConversationId) {
       const newId = `conv_${Date.now()}`
       const newSessionId = `session_${Date.now()}`
-      const title = input.substring(0, 30) + (input.length > 30 ? '...' : '')
+      const title = currentInput.substring(0, 30) + (currentInput.length > 30 ? '...' : '')
       
+      // Criar conversa no banco ANTES de enviar a mensagem
       try {
         const response = await fetch(`${API_URL}/api/conversations`, {
           method: 'POST',
@@ -858,49 +818,18 @@ const MatteoPage = () => {
           setSessionId(newSessionId)
           conversationCreated = true
         } else {
-          // Fallback local
-          const newConv = {
-            id: newId,
-            sessionId: newSessionId,
-            title: title,
-            messages: [],
-            lastMessage: input.substring(0, 50),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          }
-          setConversations(prev => [newConv, ...prev])
+          console.error('Erro ao criar conversa no banco')
+          // Se falhar, ainda tenta enviar a mensagem (o backend pode criar)
           setCurrentConversationId(newId)
           setSessionId(newSessionId)
-          conversationCreated = true
         }
       } catch (error) {
         console.error('Erro ao criar conversa:', error)
-        // Fallback local
-        const newId = `conv_${Date.now()}`
-        const newSessionId = `session_${Date.now()}`
-        const newConv = {
-          id: newId,
-          sessionId: newSessionId,
-          title: input.substring(0, 30) + (input.length > 30 ? '...' : ''),
-          messages: [],
-          lastMessage: input.substring(0, 50),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-        setConversations(prev => [newConv, ...prev])
+        // Se falhar, ainda tenta enviar a mensagem (o backend pode criar)
         setCurrentConversationId(newId)
         setSessionId(newSessionId)
-        conversationCreated = true
-      }
-      
-      // Recarregar lista do servidor após criar conversa
-      if (conversationCreated) {
-        setTimeout(() => loadConversations(), 300)
       }
     }
-    
-    const currentInput = input
-    setInput('')
     
     const userMessage = {
       id: Date.now(),
@@ -912,6 +841,7 @@ const MatteoPage = () => {
     setMessages(prev => [...prev, userMessage])
     setIsTyping(true)
 
+    // Enviar mensagem - o backend vai salvar no banco
     const response = await sendMessageToAPI(currentInput)
     
     const botMessage = {
@@ -925,7 +855,8 @@ const MatteoPage = () => {
     setMessages(prev => [...prev, botMessage])
 
     // Atualizar título da conversa se for a primeira mensagem
-    if (messages.length === 0 && currentConversationId) {
+    const isFirstMessage = messages.length === 0
+    if (isFirstMessage && currentConversationId) {
       const title = currentInput.substring(0, 30) + (currentInput.length > 30 ? '...' : '')
       
       // Atualizar no banco
@@ -939,10 +870,10 @@ const MatteoPage = () => {
       setConversations(prev => prev.map(conv =>
         conv.id === currentConversationId ? { ...conv, title } : conv
       ))
-      
-      // Recarregar lista para garantir sincronização
-      setTimeout(() => loadConversations(), 500)
     }
+    
+    // Recarregar lista do servidor após enviar mensagem para garantir sincronização
+    setTimeout(() => loadConversations(), 500)
   }
 
   const handleSuggestion = (text) => {
@@ -956,7 +887,7 @@ const MatteoPage = () => {
     if (!tpmMode) {
       const modeMessage = {
         id: Date.now(),
-        text: "🆘 MODO CARINHO ATIVADO! 🆘\n\nPrincesa, tô aqui pra você agora! Vou te dar todo carinho do mundo. Quer desabafar? Tô ouvindo... 💙🫂",
+        text: "🆘 MODO TPM ATIVADO! 🆘\n\nPrincesa, tô aqui pra você agora! Vou te dar todo carinho do mundo. Quer desabafar? Tô ouvindo... 💙🫂",
         sender: 'bot',
         timestamp: new Date().toISOString()
       }
@@ -1786,18 +1717,20 @@ const MatteoPage = () => {
             pointerEvents: sidebarOpen ? 'none' : 'auto'
           }}
           transition={{ duration: 0.2 }}
-          className={`px-4 py-3 border-t backdrop-blur-xl fixed bottom-0 left-0 right-0 z-40 lg:opacity-100 lg:translate-x-0 lg:pointer-events-auto lg:left-80 ${
+          className={`px-3 sm:px-4 ${keyboardHeight > 0 ? 'py-2' : 'py-3'} border-t backdrop-blur-xl fixed bottom-0 left-0 right-0 z-40 lg:opacity-100 lg:translate-x-0 lg:pointer-events-auto lg:left-80 ${
             tpmMode 
               ? 'bg-gradient-to-r from-pink-200/95 via-rose-100/95 to-pink-200/95 border-pink-300/50' 
               : 'bg-gradient-to-r from-violet-200/95 via-purple-100/95 to-indigo-200/95 border-violet-300/50'
           }`} 
           style={{
             bottom: keyboardHeight > 0 ? `${keyboardHeight}px` : '0',
-            paddingBottom: 'env(safe-area-inset-bottom, 16px)'
+            paddingBottom: keyboardHeight > 0 
+              ? 'max(8px, env(safe-area-inset-bottom, 8px))' 
+              : 'max(12px, env(safe-area-inset-bottom, 12px))'
           }}
         >
           <div className="max-w-3xl w-full mx-auto">
-            <div className={`flex items-end gap-3 p-3 rounded-2xl border-2 transition-all backdrop-blur-sm ${
+            <div className={`flex items-end gap-2 sm:gap-3 ${keyboardHeight > 0 ? 'p-2' : 'p-3'} rounded-2xl border-2 transition-all backdrop-blur-sm ${
               tpmMode 
             ? 'bg-white/90 border-pink-300 focus-within:border-pink-500 focus-within:ring-4 focus-within:ring-pink-200/60' 
             : 'bg-white/90 border-violet-300 focus-within:border-violet-500 focus-within:ring-4 focus-within:ring-violet-200/60'
@@ -1814,7 +1747,7 @@ const MatteoPage = () => {
                 }}
                 placeholder="Pergunte qualquer coisa..."
                 rows={1}
-                className={`flex-1 px-2 py-2 bg-transparent outline-none text-[15px] resize-none max-h-32 ${
+                className={`flex-1 px-2 sm:px-3 ${keyboardHeight > 0 ? 'py-1.5' : 'py-2'} bg-transparent outline-none text-[15px] resize-none max-h-32 ${
                   tpmMode ? 'text-gray-800 placeholder-gray-400' : 'text-slate-800 placeholder-slate-500'
                 }`}
                 style={{ minHeight: '44px' }}
@@ -1824,7 +1757,7 @@ const MatteoPage = () => {
                 disabled={!input.trim()}
                 whileHover={input.trim() ? { scale: 1.1 } : {}}
                 whileTap={input.trim() ? { scale: 0.95 } : {}}
-                className={`p-3 rounded-xl transition-all flex-shrink-0 ${
+                className={`${keyboardHeight > 0 ? 'p-2.5' : 'p-3'} rounded-xl transition-all flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center ${
                   input.trim()
                     ? tpmMode
                       ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-xl shadow-pink-500/40 ring-2 ring-pink-300'
@@ -1835,13 +1768,15 @@ const MatteoPage = () => {
                 <Icons.Send />
               </motion.button>
             </div>
+            {keyboardHeight === 0 && (
               <p className={`text-center text-xs mt-2 ${
                 tpmMode ? 'text-rose-500' : 'text-violet-500'
               }`}>
                 Matteo pode cometer erros, igual a mim. Criado com 💙 pelo Pablo.
               </p>
-            </div>
-          </motion.footer>
+            )}
+          </div>
+        </motion.footer>
       </div>
 
       {/* Modal de Confirmação de Deletar */}
