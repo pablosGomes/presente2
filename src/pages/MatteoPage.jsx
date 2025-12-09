@@ -2177,12 +2177,12 @@ const MatteoPage = () => {
                 </div>
               </div>
             )}
-            <div className={`flex items-end gap-2 sm:gap-3 ${keyboardHeight > 0 ? 'p-2' : 'p-3 sm:p-4'} rounded-2xl border-2 transition-all backdrop-blur-sm ${
+            <div className={`flex items-end gap-2 sm:gap-3 ${keyboardHeight > 0 ? 'p-2.5' : 'p-3 sm:p-4'} rounded-2xl border-2 transition-all duration-200 backdrop-blur-sm shadow-lg ${
               tpmMode 
-            ? 'bg-white/90 border-pink-300 focus-within:border-pink-500 focus-within:ring-4 focus-within:ring-pink-200/60' 
-            : 'bg-white/90 border-violet-300 focus-within:border-violet-500 focus-within:ring-4 focus-within:ring-violet-200/60'
+            ? 'bg-white/95 border-pink-300/80 focus-within:border-pink-500 focus-within:ring-4 focus-within:ring-pink-200/50 focus-within:shadow-pink-200/30' 
+            : 'bg-white/95 border-violet-300/80 focus-within:border-violet-500 focus-within:ring-4 focus-within:ring-violet-200/50 focus-within:shadow-violet-200/30'
             }`}>
-              <div className="flex-1 flex flex-col">
+              <div className="flex-1 flex flex-col min-w-0">
                 <textarea
                   ref={inputRef}
                   value={input}
@@ -2203,20 +2203,21 @@ const MatteoPage = () => {
                   placeholder={!isOnline ? "Sem conexão..." : "Pergunte qualquer coisa..."}
                   rows={1}
                   disabled={isSending || !isOnline}
-                  className={`w-full px-3 sm:px-4 ${keyboardHeight > 0 ? 'py-2' : 'py-2.5'} bg-transparent outline-none text-base sm:text-[15px] resize-none max-h-32 ${
-                    tpmMode ? 'text-gray-800 placeholder-gray-400' : 'text-slate-800 placeholder-slate-500'
-                  } ${isSending || !isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`w-full px-3 sm:px-4 ${keyboardHeight > 0 ? 'py-2.5' : 'py-3'} bg-transparent outline-none text-base sm:text-[16px] resize-none max-h-36 overflow-y-auto leading-relaxed ${
+                    tpmMode ? 'text-gray-800 placeholder-gray-400' : 'text-slate-800 placeholder-slate-400'
+                  } ${isSending || !isOnline ? 'opacity-50 cursor-not-allowed' : 'cursor-text'} scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent`}
                   style={{ 
-                    minHeight: '44px',
+                    minHeight: '48px',
                     fontSize: '16px', // Previne zoom no iOS
+                    lineHeight: '1.5',
                   }}
                 />
                 {input.length > MAX_MESSAGE_LENGTH * 0.8 && (
-                  <div className={`text-xs px-2 mt-1 ${
+                  <div className={`text-xs px-3 mt-1.5 font-medium ${
                     input.length >= MAX_MESSAGE_LENGTH 
                       ? 'text-red-600 font-bold' 
                       : input.length > MAX_MESSAGE_LENGTH * 0.9 
-                        ? 'text-orange-600' 
+                        ? 'text-orange-600 font-semibold' 
                         : 'text-gray-500'
                   }`}>
                     {input.length} / {MAX_MESSAGE_LENGTH} caracteres
@@ -2226,14 +2227,14 @@ const MatteoPage = () => {
               <motion.button
                 onClick={handleSend}
                 disabled={!input.trim() || isSending || !isOnline}
-                whileHover={input.trim() && !isSending && isOnline ? { scale: 1.1 } : {}}
-                whileTap={input.trim() && !isSending && isOnline ? { scale: 0.92 } : {}}
-                className={`${keyboardHeight > 0 ? 'p-2.5' : 'p-3 sm:p-3.5'} rounded-xl transition-all flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-90 ${
+                whileHover={input.trim() && !isSending && isOnline ? { scale: 1.05 } : {}}
+                whileTap={input.trim() && !isSending && isOnline ? { scale: 0.95 } : {}}
+                className={`${keyboardHeight > 0 ? 'p-2.5' : 'p-3 sm:p-3.5'} rounded-xl transition-all duration-200 flex-shrink-0 min-w-[48px] min-h-[48px] flex items-center justify-center touch-manipulation ${
                   input.trim() && !isSending && isOnline
                     ? tpmMode
-                      ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-xl shadow-pink-500/40 ring-2 ring-pink-300'
-                      : 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-xl shadow-violet-500/30 ring-2 ring-violet-300'
-                    : tpmMode ? 'bg-pink-100 text-pink-300 cursor-not-allowed' : 'bg-violet-100 text-violet-300 cursor-not-allowed'
+                      ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/40 ring-2 ring-pink-300/50 hover:shadow-xl hover:shadow-pink-500/50'
+                      : 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/30 ring-2 ring-violet-300/50 hover:shadow-xl hover:shadow-violet-500/40'
+                    : tpmMode ? 'bg-pink-100/80 text-pink-300 cursor-not-allowed' : 'bg-violet-100/80 text-violet-300 cursor-not-allowed'
                 }`}
                 title={!isOnline ? 'Sem conexão' : isSending ? 'Enviando...' : !input.trim() ? 'Digite uma mensagem' : 'Enviar'}
                 aria-label={!isOnline ? 'Sem conexão' : isSending ? 'Enviando...' : !input.trim() ? 'Digite uma mensagem' : 'Enviar'}
