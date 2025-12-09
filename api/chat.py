@@ -24,9 +24,11 @@ except ImportError:
 # Tentar importar OpenAI (funciona com Groq!)
 try:
     from openai import OpenAI
+    from openai import RateLimitError
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
+    RateLimitError = Exception  # Fallback
     print("openai não disponível")
 
 # Configuração do Groq
@@ -1304,15 +1306,60 @@ class handler(BaseHTTPRequestHandler):
                 })
             
             # Primeira chamada - com ferramentas
-            response = client.chat.completions.create(
-                model=LLM_MODEL,
-                messages=messages,
-                tools=MATTEO_TOOLS,
-                tool_choice="auto",
-                max_tokens=500,
-                temperature=0.85,
-                top_p=0.9,
-            )
+            try:
+                response = client.chat.completions.create(
+                    model=LLM_MODEL,
+                    messages=messages,
+                    tools=MATTEO_TOOLS,
+                    tool_choice="auto",
+                    max_tokens=500,
+                    temperature=0.85,
+                    top_p=0.9,
+                )
+            except Exception as api_error:
+                # Tratar rate limit especificamente
+                error_str = str(api_error)
+                if "429" in error_str or "rate_limit" in error_str.lower() or "RateLimitError" in str(type(api_error)):
+                    print(f"⚠️ Rate limit atingido: {error_str}")
+                    # Extrair tempo de espera se disponível
+                    wait_time = "alguns minutos"
+                    if "try again in" in error_str:
+                        try:
+                            import re
+                            match = re.search(r'try again in (\d+)m(\d+)', error_str)
+                            if match:
+                                wait_time = f"{match.group(1)} minutos"
+                        except:
+                            pass
+                    
+                    bot_response = f"Oi princesa! 💙\n\nTô passando por um limite de uso agora (já usei muitos tokens hoje). O Pablo precisa aumentar o limite da API.\n\nTenta de novo em {wait_time}, tá bom? Ou manda uma mensagem pro Pablo pra ele resolver isso! 😅"
+                    
+                    # Salvar mensagem do usuário mesmo com erro
+                    try:
+                        save_chat_message(session_id, 'user', user_message)
+                        save_chat_message(session_id, 'assistant', bot_response)
+                        if conversation_id:
+                            update_conversation(conversation_id, last_message=bot_response[:50] + ('...' if len(bot_response) > 50 else ''))
+                    except:
+                        pass
+                    
+                    # Retornar resposta de rate limit
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json; charset=utf-8')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'response': bot_response,
+                        'session_id': session_id,
+                        'conversation_id': conversation_id,
+                        'status': 'rate_limit',
+                        'tools_used': []
+                    }, ensure_ascii=False).encode('utf-8'))
+                    return
+                else:
+                    # Outros erros da API - re-lançar para tratamento geral
+                    raise api_error
             
             response_message = response.choices[0].message
             bot_response = response_message.content or ""
@@ -1355,17 +1402,25 @@ class handler(BaseHTTPRequestHandler):
                 
                 # Segunda chamada - com resultados das ferramentas
                 # IMPORTANTE: Precisamos passar tools novamente, mesmo na segunda chamada
-                final_response = client.chat.completions.create(
-                    model=LLM_MODEL,
-                    messages=messages,
-                    tools=MATTEO_TOOLS,  # Passar tools novamente para evitar erro 400
-                    tool_choice="auto",  # Permitir usar ferramentas novamente se necessário
-                    max_tokens=500,
-                    temperature=0.85,
-                    top_p=0.9,
-                )
-                
-                bot_response = final_response.choices[0].message.content or ""
+                try:
+                    final_response = client.chat.completions.create(
+                        model=LLM_MODEL,
+                        messages=messages,
+                        tools=MATTEO_TOOLS,  # Passar tools novamente para evitar erro 400
+                        tool_choice="auto",  # Permitir usar ferramentas novamente se necessário
+                        max_tokens=500,
+                        temperature=0.85,
+                        top_p=0.9,
+                    )
+                    bot_response = final_response.choices[0].message.content or ""
+                except Exception as api_error:
+                    # Se der rate limit na segunda chamada, usar resposta parcial
+                    error_str = str(api_error)
+                    if "429" in error_str or "rate_limit" in error_str.lower() or "RateLimitError" in str(type(api_error)):
+                        print(f"⚠️ Rate limit na segunda chamada, usando resposta parcial")
+                        bot_response = response_message.content or "Desculpa princesa, tô com limite de uso agora. Tenta de novo em alguns minutos! 💙"
+                    else:
+                        raise api_error
                 
                 # Se ainda houver tool_calls na resposta final, executar também
                 if final_response.choices[0].message.tool_calls:
@@ -1404,16 +1459,24 @@ class handler(BaseHTTPRequestHandler):
                         })
                     
                     # Terceira chamada (se necessário)
-                    third_response = client.chat.completions.create(
-                        model=LLM_MODEL,
-                        messages=messages,
-                        tools=MATTEO_TOOLS,
-                        tool_choice="none",  # Forçar resposta final sem mais ferramentas
-                        max_tokens=500,
-                        temperature=0.85,
-                    )
-                    
-                    bot_response = third_response.choices[0].message.content or ""
+                    try:
+                        third_response = client.chat.completions.create(
+                            model=LLM_MODEL,
+                            messages=messages,
+                            tools=MATTEO_TOOLS,
+                            tool_choice="none",  # Forçar resposta final sem mais ferramentas
+                            max_tokens=500,
+                            temperature=0.85,
+                        )
+                        bot_response = third_response.choices[0].message.content or ""
+                    except Exception as api_error:
+                        # Se der rate limit na terceira chamada, usar resposta anterior
+                        error_str = str(api_error)
+                        if "429" in error_str or "rate_limit" in error_str.lower() or "RateLimitError" in str(type(api_error)):
+                            print(f"⚠️ Rate limit na terceira chamada, usando resposta anterior")
+                            # bot_response já está definido da chamada anterior
+                        else:
+                            raise api_error
             
             # Limpar resposta
             bot_response = bot_response.strip()
