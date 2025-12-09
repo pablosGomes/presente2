@@ -228,7 +228,7 @@ def get_conversation_messages(session_id):
             {
                 'id': idx,
                 'text': m['content'],
-                'sender': 'user' if m['role'] == 'user' else 'bot',
+                'sender': 'pablo' if m['role'] == 'admin' else ('matteo' if m['role'] == 'matteo_admin' else ('user' if m['role'] == 'user' else 'bot')),
                 'timestamp': m['created_at'].isoformat() if hasattr(m['created_at'], 'isoformat') else str(m['created_at'])
             }
             for idx, m in enumerate(messages, 1)

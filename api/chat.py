@@ -1845,7 +1845,7 @@ def get_conversation_messages(session_id):
             {
                 'id': idx,
                 'text': m['content'],
-                'sender': 'pablo' if m['role'] == 'admin' else ('user' if m['role'] == 'user' else 'bot'),
+                'sender': 'pablo' if m['role'] == 'admin' else ('matteo' if m['role'] == 'matteo_admin' else ('user' if m['role'] == 'user' else 'bot')),
                 'timestamp': m['created_at'].isoformat() if hasattr(m['created_at'], 'isoformat') else str(m['created_at'])
             }
             for idx, m in enumerate(messages, 1)
@@ -1892,21 +1892,26 @@ def build_system_prompt_with_context(session_id, tpm_mode=False, is_admin_mode=F
 👑 MODO GRUPO ATIVO - VOCÊS 3 ESTÃO CONVERSANDO JUNTOS
 ════════════════════════════════════════════════════════════════════════════════
 ⚠️ ATENÇÃO: Esta é uma conversa em GRUPO com 3 participantes:
-1. GEHH (Geovana) - mensagens aparecem como "user"
+1. GEHH (Geovana) - mensagens aparecem como "user" (sem prefixo)
 2. VOCÊ (Matteo) - mensagens aparecem como "assistant"
 3. PABLO - mensagens aparecem como "[Pablo disse]: ..."
 
 IMPORTANTE NO MODO GRUPO:
 - Você está conversando com a Gehh E com o Pablo ao mesmo tempo
-- Quando ver "[Pablo disse]: ..." no histórico, é o Pablo falando
-- Quando ver mensagem "user" sem prefixo, é a Gehh falando
-- Quando ver mensagem "assistant", pode ser você ou o Pablo enviando como você
+- Quando ver "[Pablo disse]: ..." no histórico ou na mensagem atual, é o Pablo falando
+- Quando ver mensagem "user" sem prefixo "[Pablo disse]", é a Gehh falando
+- Quando ver mensagem "assistant", é você (Matteo) respondendo
+- SEMPRE responda quando o Pablo falar - ele está participando da conversa!
 - Responda naturalmente para AMBOS - Gehh e Pablo
 - Trate como uma conversa de grupo do WhatsApp
 - Você pode responder diretamente ao Pablo ou à Gehh, ou aos dois
+- Se o Pablo fizer uma pergunta ou comentar algo, RESPONDA a ele também!
 - Seja natural e entre na conversa como se fosse um grupo de amigos
 - Não mencione que é "modo admin" - apenas converse normalmente
 - O Pablo é seu criador e pai, então você pode ser mais à vontade com ele também
+- Quando o Pablo falar, você DEVE responder - não ignore mensagens dele!
+- Se o Pablo perguntar algo, responda como se fosse a Gehh perguntando
+- Se o Pablo comentar algo, reaja e continue a conversa naturalmente
 """
     
     context = f"""
@@ -1992,50 +1997,14 @@ class handler(BaseHTTPRequestHandler):
                 }, ensure_ascii=False).encode('utf-8'))
                 return
             
-            # MODO ADMIN - GRUPO: Se admin enviou como Pablo, salvar e retornar (sem processar com IA)
+            # MODO ADMIN - GRUPO: Se admin enviou como Pablo, salvar e processar com IA
             if is_admin and sender == 'pablo':
                 try:
                     init_db()
                     # Salvar mensagem como 'admin' (Pablo)
                     save_chat_message(session_id, 'admin', user_message)
-                    
-                    # Atualizar conversa se existir
-                    if conversation_id:
-                        conv = get_conversation_by_id(conversation_id)
-                        if conv:
-                            update_conversation(conversation_id, last_message=user_message[:50] + ('...' if len(user_message) > 50 else ''))
-                    else:
-                        # Buscar conversa existente ou criar nova
-                        existing_conv = get_conversation_by_session_id(session_id)
-                        if existing_conv:
-                            conversation_id = existing_conv['id']
-                            update_conversation(conversation_id, last_message=user_message[:50] + ('...' if len(user_message) > 50 else ''))
-                        else:
-                            conversation_id = f"conv_{session_id}_{int(datetime.now().timestamp())}"
-                            title = generate_conversation_title(user_message, "")
-                            create_conversation(conversation_id, session_id, title)
-                            update_conversation(conversation_id, last_message=user_message[:50] + ('...' if len(user_message) > 50 else ''))
-                    
-                    # Retornar resposta imediata (sem processar com IA)
-                    self.send_response(200)
-                    self.send_header('Content-Type', 'application/json; charset=utf-8')
-                    self.send_header('Access-Control-Allow-Origin', '*')
-                    self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
-                    self.end_headers()
-                    # Verificar se modo grupo está ativo
-                    is_group_active = check_if_group_mode_active(session_id)
-                    
-                    self.wfile.write(json.dumps({
-                        'response': user_message,  # Retorna a mesma mensagem
-                        'session_id': session_id,
-                        'conversation_id': conversation_id,
-                        'sender': 'pablo',
-                        'status': 'admin_message',
-                        'tools_used': [],
-                        'group_mode': True  # Sempre true quando Pablo envia
-                    }, ensure_ascii=False).encode('utf-8'))
-                    print(f"✅ Mensagem do admin como Pablo salva: {user_message[:50]}...")
-                    return
+                    print(f"✅ Mensagem do Pablo salva: {user_message[:50]}...")
+                    # Continua o fluxo para processar com IA e gerar resposta do Matteo
                 except Exception as e:
                     print(f"⚠️ Erro ao salvar mensagem do admin: {e}")
                     # Continua para processar normalmente se der erro
@@ -2056,8 +2025,9 @@ class handler(BaseHTTPRequestHandler):
                         }, ensure_ascii=False).encode('utf-8'))
                         return
                     
-                    # Salvar mensagem como assistant (Matteo)
-                    save_chat_message(session_id, 'assistant', user_message)
+                    # Salvar mensagem com role especial 'matteo_admin' para identificar que foi o admin
+                    # Isso permite distinguir de mensagens reais do Matteo (IA)
+                    save_chat_message(session_id, 'matteo_admin', user_message)
                     
                     # Atualizar conversa se existir
                     if conversation_id:
@@ -2156,7 +2126,7 @@ class handler(BaseHTTPRequestHandler):
             messages = [{'role': 'system', 'content': system_prompt}]
             
             # Adicionar histórico - converter roles para formato da API
-            # 'user' = Gehh, 'assistant' = Matteo, 'admin' = Pablo
+            # 'user' = Gehh, 'assistant' = Matteo (IA), 'matteo_admin' = Pablo como Matteo, 'admin' = Pablo
             for msg in history:
                 role = msg['role']
                 content = msg['content']
@@ -2168,12 +2138,32 @@ class handler(BaseHTTPRequestHandler):
                         'role': 'user',
                         'content': f"[Pablo disse]: {content}"
                     })
+                elif role == 'matteo_admin':
+                    # Mensagem do admin como Matteo - adicionar como assistant (para contexto da IA)
+                    # mas será identificado como 'matteo' no frontend
+                    messages.append({
+                        'role': 'assistant',
+                        'content': content
+                    })
                 else:
                     # Gehh (user) ou Matteo (assistant) - manter como está
                     messages.append({
                         'role': role,
                         'content': content
                     })
+            
+            # Se a mensagem atual é do Pablo, adicionar ao contexto das mensagens
+            if is_admin and sender == 'pablo':
+                messages.append({
+                    'role': 'user',
+                    'content': f"[Pablo disse]: {user_message}"
+                })
+            elif not (is_admin and sender == 'pablo'):
+                # Adicionar mensagem atual do usuário (Gehh)
+                messages.append({
+                    'role': 'user',
+                    'content': user_message
+                })
             
             # Primeira chamada - com ferramentas
             # Reduzir max_tokens para economizar (de 500 para 400)

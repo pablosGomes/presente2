@@ -1619,6 +1619,8 @@ const MatteoPage = () => {
                       <span className="text-white text-xs sm:text-sm font-bold">G</span>
                     ) : msg.sender === 'pablo' ? (
                       <span className="text-white text-xs sm:text-sm font-bold">P</span>
+                    ) : (msg.sender === 'matteo' || msg.sender === 'bot') ? (
+                      <MatteoLogo size="sm" className="w-5 h-5 sm:w-6 sm:h-6" />
                     ) : (
                       <MatteoLogo size="sm" className="w-5 h-5 sm:w-6 sm:h-6" />
                     )}
