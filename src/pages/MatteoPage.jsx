@@ -678,7 +678,14 @@ const MatteoPage = () => {
         const fullConv = await response.json()
         setCurrentConversationId(fullConv.id)
         setSessionId(fullConv.sessionId)
-        setMessages(fullConv.messages || [])
+        // Validar e mapear mensagens corretamente
+        const validatedMessages = (fullConv.messages || []).map((msg, index) => ({
+          id: msg.id || index + 1,
+          text: msg.text || msg.content || '',
+          sender: msg.sender || (msg.role === 'admin' ? 'pablo' : (msg.role === 'matteo_admin' ? 'matteo' : (msg.role === 'user' ? 'user' : 'bot'))),
+          timestamp: msg.timestamp || new Date().toISOString()
+        }))
+        setMessages(validatedMessages)
         // Recarregar lista para garantir que está atualizada
         loadConversations()
       } else {
@@ -762,6 +769,17 @@ const MatteoPage = () => {
         // Atualizar session_id também se necessário
         if (data.session_id) {
           setSessionId(data.session_id)
+        }
+      }
+      
+      // Se for múltiplas mensagens (Pablo + resposta do Matteo)
+      if (data.is_multiple && data.messages) {
+        return { 
+          is_multiple: true, 
+          messages: data.messages,
+          session_id: data.session_id,
+          conversation_id: data.conversation_id,
+          group_mode: data.group_mode
         }
       }
       
@@ -855,28 +873,64 @@ const MatteoPage = () => {
     setIsTyping(true)
 
     // Enviar mensagem - o backend vai salvar no banco
-    const responseData = await sendMessageToAPI(currentInput)
-    
-    setIsTyping(false)
-    
-    // Se for mensagem do admin (Pablo ou Matteo), adicionar com o sender correto
-    if (responseData.isAdminMessage) {
-      const adminMessage = {
-        id: Date.now() + 1,
-        text: responseData.response,
-        sender: responseData.sender,
-        timestamp: new Date().toISOString()
+    try {
+      const responseData = await sendMessageToAPI(currentInput)
+      
+      setIsTyping(false)
+      
+      // Validar que responseData existe e tem dados
+      if (!responseData) {
+        console.error('Resposta da API vazia')
+        return
       }
-      setMessages(prev => [...prev, adminMessage])
-    } else {
+      
+      // Se for múltiplas mensagens (Pablo + resposta do Matteo)
+      if (responseData.is_multiple && responseData.messages && Array.isArray(responseData.messages)) {
+        responseData.messages.forEach((msg, index) => {
+          if (msg && msg.response && msg.sender) {
+            const message = {
+              id: Date.now() + index + 1,
+              text: msg.response,
+              sender: msg.sender,
+              timestamp: new Date().toISOString()
+            }
+            setMessages(prev => [...prev, message])
+          }
+        })
+      }
+      // Se for mensagem do admin (Pablo ou Matteo), adicionar com o sender correto
+      else if (responseData.isAdminMessage && responseData.response && responseData.sender) {
+        const adminMessage = {
+          id: Date.now() + 1,
+          text: responseData.response,
+          sender: responseData.sender,
+          timestamp: new Date().toISOString()
+        }
+        setMessages(prev => [...prev, adminMessage])
+      } 
       // Mensagem normal do bot
-      const botMessage = {
+      else if (responseData.response) {
+        const botMessage = {
+          id: Date.now() + 1,
+          text: responseData.response,
+          sender: responseData.sender || 'bot',
+          timestamp: new Date().toISOString()
+        }
+        setMessages(prev => [...prev, botMessage])
+      } else {
+        console.error('Formato de resposta inválido:', responseData)
+      }
+    } catch (error) {
+      console.error('Erro ao enviar mensagem:', error)
+      setIsTyping(false)
+      // Adicionar mensagem de erro
+      const errorMessage = {
         id: Date.now() + 1,
-        text: responseData.response,
-        sender: responseData.sender || 'bot',
+        text: "Ops! Algo deu errado. Tenta de novo? 💙",
+        sender: 'bot',
         timestamp: new Date().toISOString()
       }
-      setMessages(prev => [...prev, botMessage])
+      setMessages(prev => [...prev, errorMessage])
     }
 
     // Atualizar título da conversa se for a primeira mensagem

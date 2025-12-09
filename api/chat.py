@@ -1998,15 +1998,40 @@ class handler(BaseHTTPRequestHandler):
                 return
             
             # MODO ADMIN - GRUPO: Se admin enviou como Pablo, salvar e processar com IA
+            # Mas primeiro retornar a mensagem do Pablo para o frontend
+            pablo_message_sent = False
+            pablo_message_content = None
             if is_admin and sender == 'pablo':
                 try:
                     init_db()
                     # Salvar mensagem como 'admin' (Pablo)
                     save_chat_message(session_id, 'admin', user_message)
                     print(f"✅ Mensagem do Pablo salva: {user_message[:50]}...")
+                    pablo_message_sent = True
+                    pablo_message_content = user_message
+                    
+                    # Atualizar conversa se existir
+                    if conversation_id:
+                        conv = get_conversation_by_id(conversation_id)
+                        if conv:
+                            update_conversation(conversation_id, last_message=user_message[:50] + ('...' if len(user_message) > 50 else ''))
+                    else:
+                        # Buscar conversa existente ou criar nova
+                        existing_conv = get_conversation_by_session_id(session_id)
+                        if existing_conv:
+                            conversation_id = existing_conv['id']
+                            update_conversation(conversation_id, last_message=user_message[:50] + ('...' if len(user_message) > 50 else ''))
+                        else:
+                            conversation_id = f"conv_{session_id}_{int(datetime.now().timestamp())}"
+                            title = generate_conversation_title(user_message, "")
+                            create_conversation(conversation_id, session_id, title)
+                            update_conversation(conversation_id, last_message=user_message[:50] + ('...' if len(user_message) > 50 else ''))
+                    
                     # Continua o fluxo para processar com IA e gerar resposta do Matteo
                 except Exception as e:
                     print(f"⚠️ Erro ao salvar mensagem do admin: {e}")
+                    pablo_message_sent = False
+                    pablo_message_content = None
                     # Continua para processar normalmente se der erro
             
             # MODO ADMIN: Se admin enviou como Matteo, apenas salvar e retornar
@@ -2235,19 +2260,42 @@ class handler(BaseHTTPRequestHandler):
                         except:
                             pass
                         
+                        # Se foi mensagem do Pablo, retornar também ela junto com o erro
+                        if pablo_message_sent and pablo_message_content:
+                            response_data = {
+                                'messages': [
+                                    {
+                                        'response': pablo_message_content,
+                                        'sender': 'pablo',
+                                        'status': 'admin_message'
+                                    },
+                                    {
+                                        'response': bot_response,
+                                        'sender': 'matteo',
+                                        'status': 'rate_limit_error'
+                                    }
+                                ],
+                                'session_id': session_id,
+                                'conversation_id': conversation_id,
+                                'group_mode': True,
+                                'is_multiple': True
+                            }
+                        else:
+                            response_data = {
+                                'response': bot_response,
+                                'session_id': session_id,
+                                'conversation_id': conversation_id,
+                                'status': 'rate_limit_error',
+                                'sender': 'matteo'
+                            }
+                        
                         # Retornar resposta de rate limit
                         self.send_response(200)
                         self.send_header('Content-Type', 'application/json; charset=utf-8')
                         self.send_header('Access-Control-Allow-Origin', '*')
                         self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
                         self.end_headers()
-                        self.wfile.write(json.dumps({
-                            'response': bot_response,
-                            'session_id': session_id,
-                            'conversation_id': conversation_id,
-                            'status': 'rate_limit',
-                            'tools_used': []
-                        }, ensure_ascii=False).encode('utf-8'))
+                        self.wfile.write(json.dumps(response_data, ensure_ascii=False).encode('utf-8'))
                         return
                 else:
                     # Outros erros da API - re-lançar para tratamento geral
@@ -2498,16 +2546,40 @@ class handler(BaseHTTPRequestHandler):
             # Detectar modo grupo para retornar na resposta
             is_group_mode_detected = check_if_group_mode_active(session_id)
             
-            # Preparar resposta
-            response_data = {
-                'response': bot_response,
-                'session_id': session_id,
-                'conversation_id': conversation_id,
-                'tools_used': [tc.function.name for tc in response_message.tool_calls] if response_message.tool_calls else [],
-                'status': 'success',
-                'sender': 'matteo',  # Sempre retorna como Matteo quando é resposta da IA
-                'group_mode': is_group_mode_detected or is_admin  # Indica se está em modo grupo
-            }
+            # Se foi mensagem do Pablo, retornar também a mensagem dele junto com a resposta do Matteo
+            # Isso permite que o frontend mostre ambas as mensagens
+            if pablo_message_sent and pablo_message_content:
+                # Retornar array com mensagem do Pablo e resposta do Matteo
+                response_data = {
+                    'messages': [
+                        {
+                            'response': user_message,
+                            'sender': 'pablo',
+                            'status': 'admin_message'
+                        },
+                        {
+                            'response': bot_response,
+                            'sender': 'matteo',
+                            'status': 'success',
+                            'tools_used': [tc.function.name for tc in response_message.tool_calls] if response_message.tool_calls else []
+                        }
+                    ],
+                    'session_id': session_id,
+                    'conversation_id': conversation_id,
+                    'group_mode': True,
+                    'is_multiple': True  # Indica que são múltiplas mensagens
+                }
+            else:
+                # Preparar resposta normal
+                response_data = {
+                    'response': bot_response,
+                    'session_id': session_id,
+                    'conversation_id': conversation_id,
+                    'tools_used': [tc.function.name for tc in response_message.tool_calls] if response_message.tool_calls else [],
+                    'status': 'success',
+                    'sender': 'matteo',  # Sempre retorna como Matteo quando é resposta da IA
+                    'group_mode': is_group_mode_detected or is_admin  # Indica se está em modo grupo
+                }
             
             # Enviar resposta
             self.send_response(200)
