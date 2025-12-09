@@ -1512,27 +1512,31 @@ def get_intimacy_level(session_id):
 
 client = None
 LLM_ENABLED = False
-# Modelo principal - MISTRAL LARGE 3 (MELHOR MODELO)
-# Usando o Mistral Large 3 para máxima qualidade, inteligência e naturalidade
-# Mistral Large 3 é o modelo mais avançado da Mistral AI com:
-# - 675 bilhões de parâmetros totais (41B ativos - arquitetura MoE)
+# Modelo principal - PIXTRAL LARGE (MELHOR MODELO MULTIMODAL)
+# Usando o Pixtral Large para máxima qualidade, inteligência e naturalidade
+# Pixtral Large é o modelo multimodal mais avançado da Mistral AI com:
+# - 123 bilhões de parâmetros
 # - 128.000 tokens de contexto (contexto muito longo)
+# - Capacidades multimodais (texto + imagem)
 # - Melhor em raciocínio, matemática e código
 # - Suporte multilíngue avançado (português nativo)
 # - Melhor compreensão de contexto e nuance
 # - Respostas mais naturais e humanas
 # - Melhor em evitar repetições
-# - Arquitetura Mixture of Experts (MoE) para eficiência
+# - Arquitetura avançada para máxima qualidade
 # 
-# Opções disponíveis:
-#   - "mistral-large-3-latest" (MELHOR - última versão do Large 3) ⭐ USANDO
-#   - "mistral-large-latest" (versão anterior, ainda excelente)
-#   - "pixtral-large-latest" (multimodal, 123B parâmetros)
+# Opções disponíveis (da melhor para a mais básica):
+#   - "pixtral-large-latest" (MELHOR - multimodal, 128k contexto) ⭐ USANDO
+#   - "mistral-large-latest" (excelente - 32k contexto, estável)
 #   - "mistral-medium-latest" (boa qualidade, balanceado)
 #   - "mistral-small-latest" (rápido, menos tokens)
-LLM_MODEL = os.environ.get("MISTRAL_MODEL", "mistral-large-3-latest")
+# 
+# NOTA: Se pixtral-large-latest não funcionar, tente:
+#   - "pixtral-12x32b-2409" (versão específica do Pixtral)
+#   - "mistral-large-latest" (fallback estável)
+LLM_MODEL = os.environ.get("MISTRAL_MODEL", "pixtral-large-latest")
 # Modelo fallback para quando rate limit for atingido (só em emergência)
-FALLBACK_MODEL = "mistral-large-latest"  # Se Large 3 não disponível, usar Large
+FALLBACK_MODEL = "mistral-large-latest"  # Se Pixtral não disponível, usar Large
 
 if OPENAI_AVAILABLE and MISTRAL_API_KEY:
     try:
