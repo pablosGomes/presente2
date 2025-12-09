@@ -1410,21 +1410,88 @@ const MatteoPage = () => {
           height: '100dvh',
           minHeight: '-webkit-fill-available',
           maxHeight: '100dvh',
+          top: 0,
         }}
       >
-        {/* Sidebar Header */}
+        {/* Sidebar Top Header - Logo e Status */}
         <div 
-          className={`flex-shrink-0 p-3 sm:p-4 border-b-2 ${tpmMode ? 'border-pink-400/80 shadow-sm' : 'border-violet-400/80 shadow-sm'} bg-gradient-to-r ${tpmMode ? 'from-pink-50/50 to-rose-50/50' : 'from-violet-50/50 to-purple-50/50'}`}
+          className={`flex-shrink-0 px-3 sm:px-4 py-2.5 sm:py-3 border-b-2 ${tpmMode ? 'border-pink-400/80' : 'border-violet-400/80'} flex items-center justify-between`}
           style={{
-            paddingTop: `max(12px, env(safe-area-inset-top, 12px))`
+            paddingTop: `max(12px, calc(env(safe-area-inset-top, 0px) + 12px))`,
+            paddingBottom: '10px',
+            minHeight: 'auto'
           }}
         >
-          <div className="flex items-center gap-2.5 mb-3">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <motion.button
+              onClick={() => setSidebarOpen(false)}
+              whileHover={{ scale: 1.05, rotate: 90 }}
+              whileTap={{ scale: 0.95 }}
+              className={`lg:hidden min-w-[48px] min-h-[48px] sm:min-w-[52px] sm:min-h-[52px] flex items-center justify-center rounded-2xl touch-manipulation transition-all duration-200 shadow-lg ${
+                tpmMode
+                  ? 'bg-gradient-to-br from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white'
+                  : 'bg-gradient-to-br from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white'
+              }`}
+              title="Fechar menu"
+              aria-label="Fechar menu"
+            >
+              <Icons.Close />
+            </motion.button>
+            
+            <div className="flex items-center gap-2.5 flex-1 min-w-0">
+              <MatteoLogo size="sm" className="flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <h2 className={`font-bold text-base sm:text-lg truncate ${tpmMode ? 'text-rose-900' : 'text-violet-900'} mb-0.5`}>
+                  Matteo
+                </h2>
+                <div className="flex items-center gap-1.5">
+                  <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${isOnline ? 'animate-pulse' : ''} ${
+                    isOnline 
+                      ? (tpmMode ? 'bg-pink-600' : 'bg-emerald-500')
+                      : 'bg-red-500'
+                  }`}></span>
+                  <span className={`text-xs sm:text-sm font-semibold ${tpmMode ? 'text-rose-700' : 'text-violet-700'}`}>
+                    {tpmMode ? 'Modo Carinho' : (isOnline ? 'On' : 'Off')}
+                  </span>
+                  {apiError && (
+                    <span className="text-xs text-red-600 font-semibold" title="Erro na conexão">
+                      ⚠️
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <motion.button
+            onClick={() => navigate('/presente')}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={`min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px] flex items-center justify-center rounded-xl touch-manipulation transition-all duration-200 ${
+              tpmMode
+                ? 'bg-blue-100/90 hover:bg-blue-200/90 text-blue-700 border-2 border-blue-300/70 shadow-sm'
+                : 'bg-blue-100/90 hover:bg-blue-200/90 text-blue-700 border-2 border-blue-300/70 shadow-sm'
+            }`}
+            title="Voltar ao início"
+            aria-label="Voltar ao início"
+          >
+            <Icons.Home />
+          </motion.button>
+        </div>
+
+        {/* Sidebar Actions Header */}
+        <div 
+          className={`flex-shrink-0 px-3 sm:px-4 py-2.5 sm:py-3 border-b-2 ${tpmMode ? 'border-pink-400/80 shadow-sm' : 'border-violet-400/80 shadow-sm'} bg-gradient-to-r ${tpmMode ? 'from-pink-50/50 to-rose-50/50' : 'from-violet-50/50 to-purple-50/50'}`}
+          style={{
+            minHeight: 'auto'
+          }}
+        >
+          <div className="flex items-center gap-2.5 mb-2.5">
             <motion.button
               onClick={createNewConversation}
               whileHover={{ scale: 1.02, y: -1 }}
               whileTap={{ scale: 0.97 }}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 sm:px-5 py-3 sm:py-3.5 text-sm sm:text-base ${
+              className={`flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base min-h-[48px] ${
                 tpmMode
                   ? 'bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:via-rose-600 hover:to-pink-700 text-white ring-2 ring-pink-400/60 shadow-lg shadow-pink-500/30 hover:shadow-xl hover:shadow-pink-500/40'
                   : 'bg-gradient-to-r from-violet-500 via-purple-500 to-violet-600 hover:from-violet-600 hover:via-purple-600 hover:to-violet-700 text-white ring-2 ring-violet-400/60 shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40'
