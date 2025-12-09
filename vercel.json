@@ -4,6 +4,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
+    { "source": "/api/debug", "destination": "/api/debug.py" },
     { "source": "/api/chat", "destination": "/api/chat.py" },
     { "source": "/api/conversations/:id", "destination": "/api/conversations.py" },
     { "source": "/api/conversations", "destination": "/api/conversations.py" },

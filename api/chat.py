@@ -32,9 +32,22 @@ except ImportError:
 # Configuração do Groq
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
+# Debug: verificar configuração
+if not GROQ_API_KEY:
+    print("⚠️ AVISO: GROQ_API_KEY não configurada no ambiente")
+    print(f"  Variáveis disponíveis: {list(os.environ.keys())[:10]}")
+
 # ============== CONFIGURAÇÕES ==============
 
 POSTGRES_URL = os.environ.get("POSTGRES_URL") or os.environ.get("DATABASE_URL")
+
+# Debug: verificar banco de dados
+if not POSTGRES_URL:
+    print("⚠️ AVISO: POSTGRES_URL não configurada")
+    print(f"  DATABASE_URL existe: {bool(os.environ.get('DATABASE_URL'))}")
+else:
+    print("✅ Banco de dados configurado")
+    print(f"  Tipo: {'postgres' if 'postgres' in POSTGRES_URL else 'outro'}")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 🔧 FERRAMENTAS DO MATTEO (Function Calling)
@@ -836,10 +849,27 @@ if OPENAI_AVAILABLE and GROQ_API_KEY:
             api_key=GROQ_API_KEY,
             base_url="https://api.groq.com/openai/v1"
         )
+        # Testar conexão
+        test_response = client.chat.completions.create(
+            model=LLM_MODEL,
+            messages=[{"role": "user", "content": "test"}],
+            max_tokens=1,
+            temperature=0
+        )
         LLM_ENABLED = True
-        print("✅ Matteo IA Completa - Groq LLaMA 3.3 70B")
+        print("✅ Matteo IA Completa - Groq LLaMA 3.3 70B conectado e funcionando!")
     except Exception as e:
-        print(f"❌ Erro ao configurar Groq: {e}")
+        print(f"❌ Erro ao configurar/testar Groq: {e}")
+        print(f"  API Key presente: {bool(GROQ_API_KEY)}")
+        print(f"  API Key início: {GROQ_API_KEY[:10] if GROQ_API_KEY else 'N/A'}")
+        client = None
+        LLM_ENABLED = False
+elif not OPENAI_AVAILABLE:
+    print("❌ Biblioteca OpenAI não disponível")
+    print("  Execute: pip install openai")
+elif not GROQ_API_KEY:
+    print("❌ GROQ_API_KEY não configurada")
+    print("  Configure nas variáveis de ambiente da Vercel")
 
 # ============== EXECUÇÃO DE FERRAMENTAS ==============
 
@@ -1165,57 +1195,97 @@ NÍVEL DE INTIMIDADE: {intimacy}/5 - {intimacy_desc}
 
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
+        """Handle CORS preflight requests"""
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Accept, Origin')
+        self.send_header('Access-Control-Max-Age', '3600')
         self.end_headers()
 
     def do_POST(self):
+        """Processar mensagem do chat"""
+        print(f"🔵 POST recebido em: {self.path}")
+        
         try:
+            # Ler corpo da requisição
             content_length = int(self.headers.get('Content-Length', 0))
+            if content_length == 0:
+                raise ValueError("Requisição sem corpo")
+                
             body = self.rfile.read(content_length)
-            data = json.loads(body) if body else {}
+            data = json.loads(body.decode('utf-8'))
+            print(f"📝 Dados recebidos: {data.get('message', '')[:50]}...")
             
             user_message = data.get('message', '')
             session_id = data.get('session_id', 'default')
             conversation_id = data.get('conversation_id', None)
             tpm_mode = data.get('tpm_mode', False)
             
-            # Criar conversa se não existir
-            if conversation_id:
-                conv = get_conversation_by_id(conversation_id)
-                if not conv:
+            # Criar conversa se não existir (com tratamento de erro)
+            try:
+                if conversation_id:
+                    conv = get_conversation_by_id(conversation_id)
+                    if not conv:
+                        create_conversation(conversation_id, session_id, user_message[:30] + ('...' if len(user_message) > 30 else ''))
+                elif not conversation_id:
+                    # Criar ID de conversa se não fornecido
+                    conversation_id = f"conv_{session_id}"
                     create_conversation(conversation_id, session_id, user_message[:30] + ('...' if len(user_message) > 30 else ''))
-            elif not conversation_id:
-                # Criar ID de conversa se não fornecido
-                conversation_id = f"conv_{session_id}"
-                create_conversation(conversation_id, session_id, user_message[:30] + ('...' if len(user_message) > 30 else ''))
+            except Exception as e:
+                print(f"⚠️ Erro ao criar/buscar conversa: {e}")
+                # Continua mesmo sem salvar conversa
             
-            if not user_message:
+            # Validar mensagem
+            if not user_message or not user_message.strip():
                 self.send_response(400)
-                self.send_header('Content-Type', 'application/json')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'Mensagem vazia'}).encode())
-                return
-            
-            if not LLM_ENABLED or not client:
-                self.send_response(200)
-                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
                 self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
                 self.wfile.write(json.dumps({
-                    'response': "Ops, o Matteo está de folga hoje! Tenta mais tarde. 😅",
-                    'session_id': session_id
-                }).encode())
+                    'error': 'Mensagem vazia',
+                    'status': 'error'
+                }, ensure_ascii=False).encode('utf-8'))
                 return
             
-            # Inicializar banco
-            init_db()
+            # Verificar se LLM está disponível
+            if not LLM_ENABLED or not client:
+                error_details = []
+                if not OPENAI_AVAILABLE:
+                    error_details.append("Biblioteca OpenAI não instalada")
+                if not GROQ_API_KEY:
+                    error_details.append("GROQ_API_KEY não configurada")
+                if GROQ_API_KEY and not client:
+                    error_details.append("Erro ao conectar com Groq")
+                
+                print(f"⚠️ LLM não disponível: {', '.join(error_details)}")
+                
+                # Mensagem amigável para o usuário
+                user_message = "Oi! O Matteo tá passando por uma manutenção rápida. 🔧\n\n"
+                user_message += "Enquanto isso, que tal explorar as outras partes do site? "
+                user_message += "Tem muitas surpresas te esperando! 💙"
+                
+                self.send_response(200)  # Retorna 200 mesmo assim para não quebrar o frontend
+                self.send_header('Content-Type', 'application/json; charset=utf-8')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'response': user_message,
+                    'session_id': session_id,
+                    'conversation_id': conversation_id,
+                    'status': 'maintenance',
+                    'debug': error_details if os.environ.get('VERCEL_ENV') != 'production' else None
+                }, ensure_ascii=False).encode('utf-8'))
+                return
             
-            # Salvar mensagem do usuário
-            save_chat_message(session_id, 'user', user_message)
+            # Inicializar banco (com tratamento de erro)
+            try:
+                init_db()
+                # Salvar mensagem do usuário
+                save_chat_message(session_id, 'user', user_message)
+            except Exception as e:
+                print(f"⚠️ Erro ao salvar no banco: {e}")
+                # Continua mesmo sem salvar
             
             # Buscar histórico
             history = get_chat_history(session_id, limit=30)
@@ -1300,15 +1370,23 @@ class handler(BaseHTTPRequestHandler):
             if bot_response.lower().startswith('matteo:'):
                 bot_response = bot_response[7:].strip()
             
-            # Salvar resposta
-            save_chat_message(session_id, 'assistant', bot_response)
+            # Salvar resposta (com tratamento de erro)
+            try:
+                save_chat_message(session_id, 'assistant', bot_response)
+                
+                # Atualizar conversa
+                if conversation_id:
+                    update_conversation(conversation_id, last_message=bot_response[:50] + ('...' if len(bot_response) > 50 else ''))
+            except Exception as e:
+                print(f"⚠️ Erro ao salvar resposta: {e}")
+                # Continua mesmo sem salvar
             
-            # Atualizar conversa
-            if conversation_id:
-                update_conversation(conversation_id, last_message=bot_response[:50] + ('...' if len(bot_response) > 50 else ''))
-            
-            # Extração de memórias (a cada 5 mensagens)
-            total_msgs = get_total_messages()
+            # Extração de memórias (a cada 5 mensagens) - com tratamento de erro
+            try:
+                total_msgs = get_total_messages()
+            except:
+                total_msgs = 0
+                
             if total_msgs > 0 and total_msgs % 5 == 0:
                 recent_history = get_chat_history(session_id, limit=10)
                 conversation_text = "\n".join([
@@ -1335,28 +1413,53 @@ class handler(BaseHTTPRequestHandler):
                     save_conversation_summary(session_id, summary, total_msgs)
                     print(f"📝 Resumo salvo: {summary[:100]}...")
             
-            # Responder
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            
-            self.wfile.write(json.dumps({
+            # Preparar resposta
+            response_data = {
                 'response': bot_response,
                 'session_id': session_id,
                 'conversation_id': conversation_id,
-                'tools_used': [tc.function.name for tc in response_message.tool_calls] if response_message.tool_calls else []
-            }).encode())
+                'tools_used': [tc.function.name for tc in response_message.tool_calls] if response_message.tool_calls else [],
+                'status': 'success'
+            }
+            
+            # Enviar resposta
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+            self.end_headers()
+            
+            self.wfile.write(json.dumps(response_data, ensure_ascii=False).encode('utf-8'))
+            print(f"✅ Resposta enviada: {bot_response[:50]}...")
             
         except Exception as e:
             import traceback
             error_msg = traceback.format_exc()
-            print(f"❌ Erro no Matteo: {error_msg}")
-            self.send_response(500)
-            self.send_header('Content-Type', 'application/json')
+            print(f"❌ Erro no Matteo: {str(e)}")
+            print(f"📋 Stack trace: {error_msg}")
+            
+            # Determinar código de status apropriado
+            status_code = 500
+            if "Mensagem vazia" in str(e) or "Requisição sem corpo" in str(e):
+                status_code = 400
+            elif "API_KEY não configurada" in str(e):
+                status_code = 503
+            
+            # Enviar resposta de erro
+            self.send_response(status_code)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
             self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
             self.end_headers()
-            self.wfile.write(json.dumps({
+            
+            error_data = {
                 'error': str(e),
-                'details': error_msg
-            }).encode())
+                'status': 'error',
+                'message': 'Desculpe, tive um probleminha aqui! Tenta de novo? 🥺'
+            }
+            
+            # Incluir detalhes apenas em desenvolvimento
+            if os.environ.get('VERCEL_ENV') != 'production':
+                error_data['details'] = error_msg[:500]  # Limitar tamanho
+            
+            self.wfile.write(json.dumps(error_data, ensure_ascii=False).encode('utf-8'))

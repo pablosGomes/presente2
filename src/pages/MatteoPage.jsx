@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import Flower from '../components/Flower'
 import Petal from '../components/Petal'
 
-// 🤖 Logo do Matteo (versão refinada)
+// 🤖 Logo do Matteo (versão premium)
 const MatteoLogo = ({ className = '', size = 'md' }) => {
   const sizes = {
     sm: 'w-8 h-8',
@@ -15,38 +15,51 @@ const MatteoLogo = ({ className = '', size = 'md' }) => {
 
   return (
     <div className={`${sizes[size]} ${className} relative`}>
-      <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-md">
+      <svg viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-xl">
         <defs>
-          <linearGradient id="matteoGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#7C3AED" />
+          <linearGradient id="matteoAura" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#6D28D9" />
             <stop offset="50%" stopColor="#8B5CF6" />
-            <stop offset="100%" stopColor="#C084FC" />
-          </linearGradient>
-          <linearGradient id="matteoFace" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#7C3AED" />
             <stop offset="100%" stopColor="#A855F7" />
+          </linearGradient>
+          <linearGradient id="matteoCore" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#7C3AED" />
+            <stop offset="100%" stopColor="#9F67FF" />
+          </linearGradient>
+          <linearGradient id="matteoHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#fff" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#fff" stopOpacity="0" />
           </linearGradient>
         </defs>
 
         {/* Aura */}
-        <circle cx="60" cy="60" r="46" fill="url(#matteoGlow)" opacity="0.18" />
-        <circle cx="60" cy="60" r="38" fill="#ffffff" opacity="0.25" />
+        <circle cx="70" cy="70" r="56" fill="url(#matteoAura)" opacity="0.12" />
+        <circle cx="70" cy="70" r="48" fill="url(#matteoAura)" opacity="0.18" />
 
-        {/* Face */}
-        <rect x="30" y="32" width="60" height="56" rx="18" fill="url(#matteoFace)" stroke="#E9D5FF" strokeWidth="2.5" />
+        {/* Face shape */}
+        <rect x="32" y="32" width="76" height="76" rx="26" fill="url(#matteoCore)" />
+        <rect x="32" y="32" width="76" height="76" rx="26" fill="url(#matteoHighlight)" opacity="0.35" />
+        <rect x="32" y="32" width="76" height="76" rx="26" stroke="#E9D5FF" strokeWidth="2.5" />
 
         {/* Eyes */}
-        <circle cx="46" cy="56" r="8" fill="#fff" />
-        <circle cx="74" cy="56" r="8" fill="#fff" />
-        <circle cx="48" cy="56" r="3" fill="#111827" />
-        <circle cx="72" cy="56" r="3" fill="#111827" />
+        <circle cx="52" cy="66" r="10" fill="#fff" />
+        <circle cx="88" cy="66" r="10" fill="#fff" />
+        <circle cx="54" cy="66" r="4" fill="#0F172A" />
+        <circle cx="86" cy="66" r="4" fill="#0F172A" />
 
         {/* Smile */}
-        <path d="M46 70C48.5 76 52.5 79 60 79C67.5 79 71.5 76 74 70" stroke="#F8FAFC" strokeWidth="4" strokeLinecap="round" />
+        <path d="M50 82C53 91 60 96 70 96C80 96 87 91 90 82" stroke="#F8FAFC" strokeWidth="4.5" strokeLinecap="round" />
+
+        {/* Cheeks */}
+        <circle cx="45" cy="78" r="4" fill="#F9A8D4" opacity="0.8" />
+        <circle cx="95" cy="78" r="4" fill="#F9A8D4" opacity="0.8" />
 
         {/* Antenna */}
-        <path d="M60 32V22" stroke="url(#matteoGlow)" strokeWidth="6" strokeLinecap="round" />
-        <circle cx="60" cy="18" r="6" fill="#22C55E" stroke="#ffffff" strokeWidth="2" />
+        <path d="M70 32V20" stroke="url(#matteoAura)" strokeWidth="7" strokeLinecap="round" />
+        <circle cx="70" cy="16" r="8" fill="#22C55E" stroke="#ffffff" strokeWidth="2.5" />
+
+        {/* Sparkle */}
+        <circle cx="92" cy="44" r="6" fill="#fff" opacity="0.7" />
       </svg>
     </div>
   )
@@ -451,6 +464,8 @@ const MatteoPage = () => {
   const [sessionId, setSessionId] = useState(() => `session_${Date.now()}`)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
+  const [keyboardHeight, setKeyboardHeight] = useState(0)
+  const mainRef = useRef(null)
 
   const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:5000')
 
@@ -581,6 +596,66 @@ const MatteoPage = () => {
   }
 
   useEffect(() => scrollToBottom(), [messages])
+
+  // Detectar e compensar o teclado virtual
+  useEffect(() => {
+    let initialHeight = window.innerHeight
+    
+    const handleFocusInput = () => {
+      // Ao focar no input, aguarda teclado abrir e ajusta scroll
+      setTimeout(() => {
+        if (inputRef.current && mainRef.current) {
+          const rect = inputRef.current.getBoundingClientRect()
+          const viewHeight = window.visualViewport?.height || window.innerHeight
+          
+          // Se o input está abaixo da metade da tela, rola para cima
+          if (rect.bottom > viewHeight - 100) {
+            mainRef.current.scrollTop = mainRef.current.scrollHeight
+          }
+        }
+      }, 300)
+    }
+
+    const handleViewportChange = () => {
+      const currentHeight = window.visualViewport?.height || window.innerHeight
+      const diff = initialHeight - currentHeight
+      
+      // Só considera como teclado se a diferença for significativa (>100px)
+      if (diff > 100) {
+        setKeyboardHeight(diff)
+        // Rola automaticamente para última mensagem
+        setTimeout(() => {
+          if (mainRef.current) {
+            mainRef.current.scrollTop = mainRef.current.scrollHeight
+          }
+        }, 100)
+      } else {
+        setKeyboardHeight(0)
+      }
+    }
+
+    const textarea = inputRef.current
+    if (textarea) {
+      textarea.addEventListener('focus', handleFocusInput)
+    }
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange)
+    }
+    
+    // Fallback para iOS Safari
+    window.addEventListener('resize', handleViewportChange)
+
+    return () => {
+      if (textarea) {
+        textarea.removeEventListener('focus', handleFocusInput)
+      }
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportChange)
+      }
+      window.removeEventListener('resize', handleViewportChange)
+    }
+  }, [])
 
   const createNewConversation = async () => {
     const newId = `conv_${Date.now()}`
@@ -1054,7 +1129,9 @@ const MatteoPage = () => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-full min-h-0">
+      <div className="flex-1 flex flex-col h-full min-h-0" style={{
+        height: keyboardHeight > 0 ? `calc(100vh - ${keyboardHeight}px)` : '100%'
+      }}>
         
         {/* Header */}
         <motion.header 
@@ -1135,8 +1212,12 @@ const MatteoPage = () => {
 
         {/* Messages Area */}
         <main
+          ref={mainRef}
           className="flex-1 overflow-y-auto overscroll-contain"
-          style={{ scrollPaddingBottom: '260px' }}
+          style={{ 
+            scrollPaddingBottom: '160px',
+            paddingBottom: keyboardHeight > 0 ? '20px' : '0'
+          }}
         >
           {messages.length === 0 ? (
             // Tela inicial - estilo ChatGPT/Gemini
@@ -1240,7 +1321,7 @@ const MatteoPage = () => {
             </div>
           ) : (
             // Lista de mensagens
-            <div className="max-w-3xl w-full mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 pb-40 sm:pb-44 lg:pb-48">
+            <div className="max-w-3xl w-full mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6" style={{ paddingBottom: '140px' }}>
               {messages.map((msg, index) => (
                 <motion.div
                   key={msg.id}
@@ -1393,12 +1474,15 @@ const MatteoPage = () => {
         </main>
 
         {/* Input Area */}
-        <footer className={`px-4 py-4 border-t backdrop-blur-xl transition-all duration-500 sticky bottom-0 z-40 ${
+        <footer className={`px-4 py-3 border-t backdrop-blur-xl transition-all duration-300 fixed bottom-0 left-0 right-0 z-50 ${
           tpmMode 
-            ? 'bg-gradient-to-r from-pink-200/80 via-rose-100/80 to-pink-200/80 border-pink-300/50' 
-            : 'bg-gradient-to-r from-violet-200/80 via-purple-100/80 to-indigo-200/80 border-violet-300/50'
-        }`}>
-          <div className="max-w-3xl w-full mx-auto pb-[env(safe-area-inset-bottom)]">
+            ? 'bg-gradient-to-r from-pink-200/95 via-rose-100/95 to-pink-200/95 border-pink-300/50' 
+            : 'bg-gradient-to-r from-violet-200/95 via-purple-100/95 to-indigo-200/95 border-violet-300/50'
+        }`} style={{
+          bottom: keyboardHeight > 0 ? `${keyboardHeight}px` : '0',
+          paddingBottom: 'env(safe-area-inset-bottom, 16px)'
+        }}>
+          <div className="max-w-3xl w-full mx-auto">
             <div className={`flex items-end gap-3 p-3 rounded-2xl border-2 transition-all backdrop-blur-sm ${
               tpmMode 
             ? 'bg-white/90 border-pink-300 focus-within:border-pink-500 focus-within:ring-4 focus-within:ring-pink-200/60' 
@@ -1437,7 +1521,7 @@ const MatteoPage = () => {
                 <Icons.Send />
               </motion.button>
             </div>
-            <p className={`text-center text-xs mt-3 ${
+            <p className={`text-center text-xs mt-2 ${
               tpmMode ? 'text-rose-500' : 'text-violet-500'
             }`}>
               Matteo pode cometer erros, igual a mim. Criado com 💙 pelo Pablo.
