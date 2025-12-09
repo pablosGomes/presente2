@@ -679,12 +679,25 @@ const MatteoPage = () => {
     setSidebarOpen(false)
   }
 
+  // Ref para evitar múltiplos recarregamentos simultâneos
+  const isReloadingMessagesRef = useRef(false)
+  const lastReloadTimeRef = useRef(0)
+  
   // Função auxiliar para recarregar mensagens da conversa atual do banco
   const reloadCurrentConversationMessages = useCallback(async (conversationId = null) => {
     const convId = conversationId || currentConversationId
     if (!convId) return Promise.resolve()
     
+    const now = Date.now()
+    // Evitar múltiplos recarregamentos simultâneos ou muito próximos
+    if (isReloadingMessagesRef.current || (now - lastReloadTimeRef.current < 500)) {
+      console.log('Recarregamento já em andamento ou muito recente, ignorando...')
+      return Promise.resolve()
+    }
+    
     try {
+      isReloadingMessagesRef.current = true
+      lastReloadTimeRef.current = now
       // Marcar que estamos recarregando para evitar loop no useEffect
       isReloadingRef.current = true
       
@@ -693,18 +706,35 @@ const MatteoPage = () => {
         const fullConv = await response.json()
         // Validar e mapear mensagens corretamente
         const validatedMessages = (fullConv.messages || []).map((msg, index) => ({
-          id: msg.id || index + 1,
+          id: msg.id || `msg_${index}_${msg.timestamp || Date.now()}`,
           text: msg.text || msg.content || '',
           sender: msg.sender || (msg.role === 'admin' ? 'pablo' : (msg.role === 'matteo_admin' ? 'matteo' : (msg.role === 'user' ? 'user' : 'bot'))),
           timestamp: msg.timestamp || new Date().toISOString()
         }))
-        setMessages(validatedMessages)
+        
+        // Remover duplicatas baseado em texto + sender + timestamp (aproximado)
+        const uniqueMessages = []
+        const seen = new Set()
+        for (const msg of validatedMessages) {
+          const key = `${msg.text}_${msg.sender}_${msg.timestamp?.substring(0, 16)}` // Usar timestamp até segundos
+          if (!seen.has(key)) {
+            seen.add(key)
+            uniqueMessages.push(msg)
+          }
+        }
+        
+        setMessages(uniqueMessages)
         return Promise.resolve()
       }
       return Promise.reject(new Error('Failed to load conversation'))
     } catch (error) {
       console.error('Erro ao recarregar mensagens:', error)
       return Promise.reject(error)
+    } finally {
+      // Liberar flag após um pequeno delay para evitar recarregamentos muito rápidos
+      setTimeout(() => {
+        isReloadingMessagesRef.current = false
+      }, 1000)
     }
   }, [currentConversationId, API_URL])
 
@@ -896,18 +926,6 @@ const MatteoPage = () => {
       }
     }
     
-    // Se for admin enviando como Pablo ou Matteo, não adicionar mensagem de user ainda
-    // A mensagem será adicionada após a resposta da API
-    if (!isAdmin || adminSender === 'gehh') {
-      const userMessage = {
-        id: Date.now(),
-        text: currentInput,
-        sender: 'user',
-        timestamp: new Date().toISOString()
-      }
-      setMessages(prev => [...prev, userMessage])
-    }
-    
     setIsTyping(true)
 
     // Enviar mensagem - o backend vai salvar no banco
@@ -919,6 +937,7 @@ const MatteoPage = () => {
       // Validar que responseData existe e tem dados
       if (!responseData) {
         console.error('Resposta da API vazia')
+        setIsTyping(false)
         return
       }
       
@@ -929,24 +948,20 @@ const MatteoPage = () => {
       }
       
       // Sempre recarregar mensagens do banco após envio para evitar duplicação
-      // O backend já salvou todas as mensagens, então recarregamos para garantir sincronização
+      // O backend já salvou todas as mensagens (usuário + bot), então recarregamos para garantir sincronização
       if (finalConversationId) {
         // Aguardar um pouco para garantir que o backend salvou as mensagens
-        // Usar retry para garantir que as mensagens foram salvas
-        const reloadWithRetry = (retries = 2, delay = 600) => {
-          setTimeout(() => {
-            // Usar o conversation_id final para garantir que estamos recarregando a conversa correta
-            reloadCurrentConversationMessages(finalConversationId).then(() => {
-              // Sucesso - não precisa tentar novamente
-            }).catch(() => {
-              // Erro - tentar novamente se ainda tiver tentativas
-              if (retries > 0) {
-                reloadWithRetry(retries - 1, delay)
-              }
-            })
-          }, delay)
-        }
-        reloadWithRetry()
+        // Usar retry apenas uma vez (não múltiplas tentativas para evitar duplicação)
+        setTimeout(() => {
+          // Usar o conversation_id final para garantir que estamos recarregando a conversa correta
+          reloadCurrentConversationMessages(finalConversationId).catch((error) => {
+            console.error('Erro ao recarregar mensagens:', error)
+            // Tentar novamente apenas uma vez após delay maior
+            setTimeout(() => {
+              reloadCurrentConversationMessages(finalConversationId).catch(console.error)
+            }, 1000)
+          })
+        }, 800) // Delay maior para garantir que o backend salvou
       } else {
         // Fallback: se não tiver conversation_id, adicionar manualmente (caso raro)
         if (responseData.is_multiple && responseData.messages && Array.isArray(responseData.messages)) {
@@ -1013,7 +1028,8 @@ const MatteoPage = () => {
     }
     
     // Recarregar lista do servidor após enviar mensagem para garantir sincronização
-    setTimeout(() => loadConversations(), 500)
+    // Aguardar mais tempo para não interferir com o recarregamento de mensagens
+    setTimeout(() => loadConversations(), 1500)
   }
 
   const handleSuggestion = (text) => {
