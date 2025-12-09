@@ -210,6 +210,27 @@ MATTEO_TOOLS = [
                 "required": ["topic"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "call_pablo",
+            "description": "Chama o Pablo para entrar na conversa (modo grupo). Use quando a Gehh pedir para chamar o Pablo, quando ela precisar de ajuda, quando ela estiver triste ou quando você achar que seria bom ele participar. Isso ativa o modo grupo onde vocês 3 (Gehh, você e Pablo) podem conversar juntos.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "description": "Motivo para chamar o Pablo (ex: 'Gehh pediu', 'Ela está triste', 'Ela precisa de ajuda', 'TPM')"
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Mensagem para o Pablo explicando por que você está chamando ele"
+                    }
+                },
+                "required": ["reason", "message"]
+            }
+        }
     }
 ]
 
@@ -399,6 +420,170 @@ def tool_get_random_fact(topic):
         return f"💡 Curiosidade: {topic} é um tópico muito interessante! Quer que eu pesquise mais sobre isso?"
     except:
         return f"💡 Não consegui buscar curiosidade sobre {topic} agora, mas é um assunto interessante mesmo!"
+
+def check_if_group_mode_active(session_id):
+    """Verifica se o modo grupo já está ativo (se já tem mensagens do Pablo)"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return False
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT COUNT(*) FROM chat_history 
+            WHERE session_id = %s AND role = 'admin'
+        """, (session_id,))
+        count = cur.fetchone()[0]
+        cur.close()
+        conn.close()
+        return count > 0
+    except:
+        return False
+
+def get_recent_conversation_context(session_id, limit=5):
+    """Busca contexto recente da conversa para incluir no email"""
+    try:
+        if not session_id or not isinstance(session_id, str):
+            return "Nova conversa"
+        
+        history = get_chat_history(session_id, limit=limit)
+        if not history:
+            return "Nova conversa"
+        
+        context_lines = []
+        for msg in history[-limit:]:  # Últimas mensagens
+            role_name = "Gehh" if msg['role'] == 'user' else ("Pablo" if msg['role'] == 'admin' else "Matteo")
+            content = msg.get('content', '')
+            content_preview = content[:100] + ('...' if len(content) > 100 else '')
+            context_lines.append(f"{role_name}: {content_preview}")
+        
+        return "\n".join(context_lines) if context_lines else "Nova conversa"
+    except Exception as e:
+        print(f"Erro ao buscar contexto: {e}")
+        return "Não foi possível carregar o contexto"
+
+def tool_call_pablo(reason, message, session_id=None):
+    """Chama o Pablo para entrar na conversa (ativa modo grupo) e envia email"""
+    try:
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        
+        # Verificar se já está em modo grupo (evitar emails duplicados)
+        if session_id and check_if_group_mode_active(session_id):
+            print("ℹ️ Modo grupo já está ativo, não enviando email duplicado")
+            return f"✅ O Pablo já está na conversa, princesa! Vocês 3 já podem conversar juntos! 💙"
+        
+        SENDER_EMAIL = os.environ.get('SENDER_EMAIL')
+        SENDER_PASSWORD = os.environ.get('SENDER_PASSWORD')
+        RECEIVER_EMAIL = os.environ.get('RECEIVER_EMAIL')
+        
+        # Buscar conversation_id se não fornecido
+        conversation_id = None
+        if session_id:
+            existing_conv = get_conversation_by_session_id(session_id)
+            if existing_conv:
+                conversation_id = existing_conv['id']
+        
+        # Buscar contexto da conversa
+        conversation_context = get_recent_conversation_context(session_id, limit=5) if session_id else "Nova conversa"
+        
+        # Preparar mensagem de email
+        hora_atual = datetime.now().strftime("%d/%m/%Y às %H:%M")
+        
+        # Link com session_id e conversation_id se disponível
+        link_params = []
+        if session_id:
+            link_params.append(f"session={session_id}")
+        if conversation_id:
+            link_params.append(f"conv={conversation_id}")
+        link_params.append("admin=pablo")
+        link_url = f"https://presente2.vercel.app/matteo?{'&'.join(link_params)}"
+        
+        html_content = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px;">
+                <h1 style="color: #e74c3c; text-align: center;">📞 O Matteo te chamou!</h1>
+                <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3498db;">
+                    <p style="margin: 0; font-size: 16px; color: #333;"><strong>Motivo:</strong> {reason}</p>
+                    <p style="margin: 10px 0 0 0; font-size: 16px; color: #333;"><strong>Mensagem do Matteo:</strong></p>
+                    <p style="margin: 10px 0 0 0; font-size: 16px; color: #333;">{message}</p>
+                </div>
+                <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
+                    <p style="margin: 0; font-size: 14px; color: #856404;"><strong>📋 Contexto da conversa:</strong></p>
+                    <p style="margin: 5px 0 0 0; font-size: 13px; color: #856404; white-space: pre-wrap;">{conversation_context}</p>
+                </div>
+                <p style="text-align: center; color: #666;"><strong>Data:</strong> {hora_atual}</p>
+                <p style="text-align: center; margin-top: 20px;">
+                    <a href="{link_url}" style="background-color: #e74c3c; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Entrar no Modo Grupo</a>
+                </p>
+                <p style="text-align: center; margin-top: 10px; font-size: 12px; color: #999;">
+                    Session ID: {session_id or 'N/A'}<br>
+                    Conversation ID: {conversation_id or 'N/A'}
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Enviar email se credenciais estiverem configuradas
+        email_sent = False
+        if all([SENDER_EMAIL, SENDER_PASSWORD, RECEIVER_EMAIL]):
+            try:
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = f"📞 Matteo te chamou! - {hora_atual}"
+                msg['From'] = SENDER_EMAIL
+                msg['To'] = RECEIVER_EMAIL
+                
+                text_content = f"""O Matteo te chamou para entrar na conversa!
+
+Motivo: {reason}
+
+Mensagem do Matteo:
+{message}
+
+📋 Contexto da conversa:
+{conversation_context}
+
+Data: {hora_atual}
+
+Acesse: {link_url}
+
+Session ID: {session_id or 'N/A'}
+Conversation ID: {conversation_id or 'N/A'}
+"""
+                
+                msg.attach(MIMEText(text_content, 'plain', 'utf-8'))
+                msg.attach(MIMEText(html_content, 'html', 'utf-8'))
+                
+                with smtplib.SMTP('smtp.gmail.com', 587) as server:
+                    server.starttls()
+                    server.login(SENDER_EMAIL, SENDER_PASSWORD)
+                    server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, msg.as_string())
+                
+                email_sent = True
+                print(f"✅ Email enviado para {RECEIVER_EMAIL} - Matteo chamou o Pablo!")
+                print(f"   Link: {link_url}")
+            except Exception as e:
+                print(f"⚠️ Erro ao enviar email: {e}")
+                email_sent = False
+        else:
+            print("⚠️ Credenciais de email não configuradas")
+        
+        # Salvar mensagem do Matteo chamando o Pablo no histórico
+        if session_id:
+            try:
+                save_chat_message(session_id, 'assistant', f"📞 Chamando o Pablo... {message}")
+            except:
+                pass
+        
+        if email_sent:
+            return f"✅ Pronto princesa! Chamei o Pablo pra você! 📞\n\nMotivo: {reason}\n\nEle vai receber uma notificação no email com o link direto pra entrar na conversa. Agora vocês 3 podem conversar juntos! 💙"
+        else:
+            return f"✅ Pronto princesa! Tentei chamar o Pablo pra você! 📞\n\nMotivo: {reason}\n\nEle pode entrar na conversa a qualquer momento pelo modo admin. Agora vocês 3 podem conversar juntos! 💙"
+    except Exception as e:
+        print(f"Erro ao chamar Pablo: {e}")
+        return f"Tentei chamar o Pablo, princesa! Ele pode entrar na conversa pelo modo admin quando quiser! 💙"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 🆘 MODO TPM - PROMPT SUPER CARINHOSO
@@ -1306,6 +1491,12 @@ def execute_tool(tool_name, arguments, session_id=None):
             return tool_get_conversation_stats(session_id or "default")
         elif tool_name == "get_random_fact":
             return tool_get_random_fact(arguments.get("topic", "ciência"))
+        elif tool_name == "call_pablo":
+            return tool_call_pablo(
+                arguments.get("reason", "Gehh pediu"),
+                arguments.get("message", "A Gehh precisa de você!"),
+                session_id=session_id
+            )
         else:
             return f"Ferramenta {tool_name} não encontrada."
     except Exception as e:
@@ -1388,6 +1579,118 @@ def create_conversation(conversation_id, session_id, title='Nova conversa'):
         print(f"Erro create_conversation: {e}")
         return False
 
+def get_conversation_by_session_id(session_id):
+    """Busca a conversa mais recente de um session_id"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return None
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("""
+            SELECT id, session_id, title, last_message, created_at, updated_at
+            FROM conversations
+            WHERE session_id = %s
+            ORDER BY updated_at DESC
+            LIMIT 1
+        """, (session_id,))
+        result = cur.fetchone()
+        cur.close()
+        conn.close()
+        if result:
+            return {
+                'id': result['id'],
+                'sessionId': result['session_id'],
+                'title': result['title'],
+                'lastMessage': result['last_message'] or 'Nova conversa',
+                'createdAt': result['created_at'].isoformat() if hasattr(result['created_at'], 'isoformat') else str(result['created_at']),
+                'updatedAt': result['updated_at'].isoformat() if hasattr(result['updated_at'], 'isoformat') else str(result['updated_at'])
+            }
+        return None
+    except Exception as e:
+        print(f"Erro get_conversation_by_session_id: {e}")
+        return None
+
+def get_conversation_message_count(conversation_id):
+    """Conta quantas mensagens tem uma conversa"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return 0
+        cur = conn.cursor()
+        # Buscar session_id da conversa
+        cur.execute("SELECT session_id FROM conversations WHERE id = %s", (conversation_id,))
+        result = cur.fetchone()
+        if not result:
+            return 0
+        session_id = result[0]
+        # Contar mensagens
+        cur.execute("SELECT COUNT(*) FROM chat_history WHERE session_id = %s", (session_id,))
+        count = cur.fetchone()[0]
+        cur.close()
+        conn.close()
+        return count
+    except Exception as e:
+        print(f"Erro get_conversation_message_count: {e}")
+        return 0
+
+def generate_conversation_title(user_message, bot_response):
+    """Gera um título descritivo para a conversa baseado nas mensagens"""
+    # Se a mensagem do usuário for muito curta, usar a resposta do bot
+    if len(user_message) < 10:
+        title_source = bot_response[:40] if bot_response else user_message[:40]
+    else:
+        title_source = user_message[:40]
+    
+    # Limpar e formatar título
+    title = title_source.strip()
+    # Remover emojis excessivos e caracteres especiais
+    title = re.sub(r'[^\w\s\-.,!?]', '', title)
+    # Capitalizar primeira letra
+    if title:
+        title = title[0].upper() + title[1:] if len(title) > 1 else title.upper()
+    
+    # Se título ficou muito curto, usar padrão
+    if len(title) < 5:
+        title = "Conversa com Matteo"
+    
+    return title[:50]  # Limitar a 50 caracteres
+
+def cleanup_orphan_conversations():
+    """Remove conversas que não têm mensagens associadas"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return 0
+        cur = conn.cursor()
+        
+        # Buscar todas as conversas
+        cur.execute("SELECT id, session_id FROM conversations")
+        conversations = cur.fetchall()
+        
+        deleted_count = 0
+        for conv_id, session_id in conversations:
+            # Verificar se tem mensagens
+            cur.execute("SELECT COUNT(*) FROM chat_history WHERE session_id = %s", (session_id,))
+            count = cur.fetchone()[0]
+            
+            if count == 0:
+                # Deletar conversa órfã
+                cur.execute("DELETE FROM conversations WHERE id = %s", (conv_id,))
+                deleted_count += 1
+                print(f"🗑️ Conversa órfã removida: {conv_id}")
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        if deleted_count > 0:
+            print(f"✅ {deleted_count} conversa(s) órfã(s) removida(s)")
+        
+        return deleted_count
+    except Exception as e:
+        print(f"Erro cleanup_orphan_conversations: {e}")
+        return 0
+
 def get_all_conversations(limit=50):
     """Busca todas as conversas ordenadas por data de atualização"""
     try:
@@ -1402,19 +1705,28 @@ def get_all_conversations(limit=50):
             LIMIT %s
         """, (limit,))
         conversations = cur.fetchall()
+        
+        result = []
+        for c in conversations:
+            # Contar mensagens da conversa
+            message_count = get_conversation_message_count(c['id'])
+            
+            # Só incluir se tiver mensagens (evitar mostrar conversas vazias)
+            if message_count > 0:
+                conv_data = {
+                    'id': c['id'],
+                    'sessionId': c['session_id'],
+                    'title': c['title'],
+                    'lastMessage': c['last_message'] or 'Nova conversa',
+                    'createdAt': c['created_at'].isoformat() if hasattr(c['created_at'], 'isoformat') else str(c['created_at']),
+                    'updatedAt': c['updated_at'].isoformat() if hasattr(c['updated_at'], 'isoformat') else str(c['updated_at']),
+                    'messageCount': message_count
+                }
+                result.append(conv_data)
+        
         cur.close()
         conn.close()
-        return [
-            {
-                'id': c['id'],
-                'sessionId': c['session_id'],
-                'title': c['title'],
-                'lastMessage': c['last_message'] or 'Nova conversa',
-                'createdAt': c['created_at'].isoformat() if hasattr(c['created_at'], 'isoformat') else str(c['created_at']),
-                'updatedAt': c['updated_at'].isoformat() if hasattr(c['updated_at'], 'isoformat') else str(c['updated_at'])
-            }
-            for c in conversations
-        ]
+        return result
     except Exception as e:
         print(f"Erro get_all_conversations: {e}")
         return []
@@ -1533,7 +1845,7 @@ def get_conversation_messages(session_id):
             {
                 'id': idx,
                 'text': m['content'],
-                'sender': 'user' if m['role'] == 'user' else 'bot',
+                'sender': 'pablo' if m['role'] == 'admin' else ('user' if m['role'] == 'user' else 'bot'),
                 'timestamp': m['created_at'].isoformat() if hasattr(m['created_at'], 'isoformat') else str(m['created_at'])
             }
             for idx, m in enumerate(messages, 1)
@@ -1542,7 +1854,7 @@ def get_conversation_messages(session_id):
         print(f"Erro get_conversation_messages: {e}")
         return []
 
-def build_system_prompt_with_context(session_id, tpm_mode=False):
+def build_system_prompt_with_context(session_id, tpm_mode=False, is_admin_mode=False):
     """Constrói o prompt do sistema com todo o contexto"""
     memories = get_memories(limit=30)
     
@@ -1572,6 +1884,31 @@ def build_system_prompt_with_context(session_id, tpm_mode=False):
 {previous_summary}
 """
     
+    # Aviso sobre modo admin (GRUPO)
+    admin_section = ""
+    if is_admin_mode:
+        admin_section = """
+════════════════════════════════════════════════════════════════════════════════
+👑 MODO GRUPO ATIVO - VOCÊS 3 ESTÃO CONVERSANDO JUNTOS
+════════════════════════════════════════════════════════════════════════════════
+⚠️ ATENÇÃO: Esta é uma conversa em GRUPO com 3 participantes:
+1. GEHH (Geovana) - mensagens aparecem como "user"
+2. VOCÊ (Matteo) - mensagens aparecem como "assistant"
+3. PABLO - mensagens aparecem como "[Pablo disse]: ..."
+
+IMPORTANTE NO MODO GRUPO:
+- Você está conversando com a Gehh E com o Pablo ao mesmo tempo
+- Quando ver "[Pablo disse]: ..." no histórico, é o Pablo falando
+- Quando ver mensagem "user" sem prefixo, é a Gehh falando
+- Quando ver mensagem "assistant", pode ser você ou o Pablo enviando como você
+- Responda naturalmente para AMBOS - Gehh e Pablo
+- Trate como uma conversa de grupo do WhatsApp
+- Você pode responder diretamente ao Pablo ou à Gehh, ou aos dois
+- Seja natural e entre na conversa como se fosse um grupo de amigos
+- Não mencione que é "modo admin" - apenas converse normalmente
+- O Pablo é seu criador e pai, então você pode ser mais à vontade com ele também
+"""
+    
     context = f"""
 ════════════════════════════════════════════════════════════════════════════════
 ⏰ CONTEXTO ATUAL
@@ -1579,6 +1916,7 @@ def build_system_prompt_with_context(session_id, tpm_mode=False):
 DATA E HORA: {now.strftime('%d/%m/%Y %H:%M')} ({current_day})
 NÍVEL DE INTIMIDADE: {intimacy}/5 - {intimacy_desc}
 {summary_section}
+{admin_section}
 """
     
     full_prompt = BASE_SYSTEM_PROMPT + context
@@ -1629,20 +1967,18 @@ class handler(BaseHTTPRequestHandler):
             session_id = data.get('session_id', 'default')
             conversation_id = data.get('conversation_id', None)
             tpm_mode = data.get('tpm_mode', False)
+            is_admin = data.get('is_admin', False)
+            sender = data.get('sender', 'gehh')  # 'gehh', 'matteo' ou 'pablo' (apenas para admin)
             
-            # Criar conversa se não existir (com tratamento de erro)
-            try:
-                if conversation_id:
-                    conv = get_conversation_by_id(conversation_id)
-                    if not conv:
-                        create_conversation(conversation_id, session_id, user_message[:30] + ('...' if len(user_message) > 30 else ''))
-                elif not conversation_id:
-                    # Criar ID de conversa se não fornecido
-                    conversation_id = f"conv_{session_id}"
-                    create_conversation(conversation_id, session_id, user_message[:30] + ('...' if len(user_message) > 30 else ''))
-            except Exception as e:
-                print(f"⚠️ Erro ao criar/buscar conversa: {e}")
-                # Continua mesmo sem salvar conversa
+            # Validações
+            if not session_id or not isinstance(session_id, str) or len(session_id.strip()) == 0:
+                session_id = f"session_{int(datetime.now().timestamp())}"
+                print(f"⚠️ Session ID inválido, gerando novo: {session_id}")
+            
+            # Validar sender se for admin
+            if is_admin and sender not in ['gehh', 'matteo', 'pablo']:
+                print(f"⚠️ Sender inválido '{sender}', usando 'gehh' como padrão")
+                sender = 'gehh'
             
             # Validar mensagem
             if not user_message or not user_message.strip():
@@ -1655,6 +1991,117 @@ class handler(BaseHTTPRequestHandler):
                     'status': 'error'
                 }, ensure_ascii=False).encode('utf-8'))
                 return
+            
+            # MODO ADMIN - GRUPO: Se admin enviou como Pablo, salvar e retornar (sem processar com IA)
+            if is_admin and sender == 'pablo':
+                try:
+                    init_db()
+                    # Salvar mensagem como 'admin' (Pablo)
+                    save_chat_message(session_id, 'admin', user_message)
+                    
+                    # Atualizar conversa se existir
+                    if conversation_id:
+                        conv = get_conversation_by_id(conversation_id)
+                        if conv:
+                            update_conversation(conversation_id, last_message=user_message[:50] + ('...' if len(user_message) > 50 else ''))
+                    else:
+                        # Buscar conversa existente ou criar nova
+                        existing_conv = get_conversation_by_session_id(session_id)
+                        if existing_conv:
+                            conversation_id = existing_conv['id']
+                            update_conversation(conversation_id, last_message=user_message[:50] + ('...' if len(user_message) > 50 else ''))
+                        else:
+                            conversation_id = f"conv_{session_id}_{int(datetime.now().timestamp())}"
+                            title = generate_conversation_title(user_message, "")
+                            create_conversation(conversation_id, session_id, title)
+                            update_conversation(conversation_id, last_message=user_message[:50] + ('...' if len(user_message) > 50 else ''))
+                    
+                    # Retornar resposta imediata (sem processar com IA)
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json; charset=utf-8')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+                    self.end_headers()
+                    # Verificar se modo grupo está ativo
+                    is_group_active = check_if_group_mode_active(session_id)
+                    
+                    self.wfile.write(json.dumps({
+                        'response': user_message,  # Retorna a mesma mensagem
+                        'session_id': session_id,
+                        'conversation_id': conversation_id,
+                        'sender': 'pablo',
+                        'status': 'admin_message',
+                        'tools_used': [],
+                        'group_mode': True  # Sempre true quando Pablo envia
+                    }, ensure_ascii=False).encode('utf-8'))
+                    print(f"✅ Mensagem do admin como Pablo salva: {user_message[:50]}...")
+                    return
+                except Exception as e:
+                    print(f"⚠️ Erro ao salvar mensagem do admin: {e}")
+                    # Continua para processar normalmente se der erro
+            
+            # MODO ADMIN: Se admin enviou como Matteo, apenas salvar e retornar
+            if is_admin and sender == 'matteo':
+                try:
+                    init_db()
+                    # Validar que a mensagem não está vazia
+                    if not user_message or not user_message.strip():
+                        self.send_response(400)
+                        self.send_header('Content-Type', 'application/json; charset=utf-8')
+                        self.send_header('Access-Control-Allow-Origin', '*')
+                        self.end_headers()
+                        self.wfile.write(json.dumps({
+                            'error': 'Mensagem vazia',
+                            'status': 'error'
+                        }, ensure_ascii=False).encode('utf-8'))
+                        return
+                    
+                    # Salvar mensagem como assistant (Matteo)
+                    save_chat_message(session_id, 'assistant', user_message)
+                    
+                    # Atualizar conversa se existir
+                    if conversation_id:
+                        conv = get_conversation_by_id(conversation_id)
+                        if conv:
+                            update_conversation(conversation_id, last_message=user_message[:50] + ('...' if len(user_message) > 50 else ''))
+                    else:
+                        # Buscar conversa existente ou criar nova
+                        existing_conv = get_conversation_by_session_id(session_id)
+                        if existing_conv:
+                            conversation_id = existing_conv['id']
+                            update_conversation(conversation_id, last_message=user_message[:50] + ('...' if len(user_message) > 50 else ''))
+                        else:
+                            conversation_id = f"conv_{session_id}_{int(datetime.now().timestamp())}"
+                            title = generate_conversation_title(user_message, "")
+                            create_conversation(conversation_id, session_id, title)
+                            update_conversation(conversation_id, last_message=user_message[:50] + ('...' if len(user_message) > 50 else ''))
+                    
+                    # Retornar resposta imediata (sem processar com IA)
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json; charset=utf-8')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+                    self.end_headers()
+                    # Verificar se modo grupo está ativo
+                    is_group_active = check_if_group_mode_active(session_id)
+                    
+                    self.wfile.write(json.dumps({
+                        'response': user_message,  # Retorna a mesma mensagem
+                        'session_id': session_id,
+                        'conversation_id': conversation_id,
+                        'sender': 'matteo',
+                        'status': 'admin_message',
+                        'tools_used': [],
+                        'group_mode': is_group_active
+                    }, ensure_ascii=False).encode('utf-8'))
+                    print(f"✅ Mensagem do admin como Matteo salva: {user_message[:50]}...")
+                    return
+                except Exception as e:
+                    print(f"⚠️ Erro ao salvar mensagem do admin: {e}")
+                    # Continua para processar normalmente se der erro
+            
+            # MODO ADMIN: Se admin enviou como Gehh, processar normalmente (salva como 'user')
+            # O fluxo continua normalmente abaixo para processar com IA
             
             # Verificar se LLM está disponível
             if not LLM_ENABLED or not client:
@@ -1698,18 +2145,35 @@ class handler(BaseHTTPRequestHandler):
             # Buscar histórico
             history = get_chat_history(session_id, limit=30)
             
+            # Detectar modo grupo automaticamente (se já tem mensagens do Pablo)
+            is_group_mode_detected = check_if_group_mode_active(session_id)
+            is_group_mode = is_admin or is_group_mode_detected
+            
             # Construir prompt com contexto completo
-            system_prompt = build_system_prompt_with_context(session_id, tpm_mode=tpm_mode)
+            system_prompt = build_system_prompt_with_context(session_id, tpm_mode=tpm_mode, is_admin_mode=is_group_mode)
             
             # Criar mensagens para API
             messages = [{'role': 'system', 'content': system_prompt}]
             
-            # Adicionar histórico
+            # Adicionar histórico - converter roles para formato da API
+            # 'user' = Gehh, 'assistant' = Matteo, 'admin' = Pablo
             for msg in history:
-                messages.append({
-                    'role': msg['role'],
-                    'content': msg['content']
-                })
+                role = msg['role']
+                content = msg['content']
+                
+                # Se for mensagem do Pablo (admin), adicionar prefixo para o Matteo entender
+                if role == 'admin':
+                    # Adicionar como user mas com contexto claro de que é o Pablo
+                    messages.append({
+                        'role': 'user',
+                        'content': f"[Pablo disse]: {content}"
+                    })
+                else:
+                    # Gehh (user) ou Matteo (assistant) - manter como está
+                    messages.append({
+                        'role': role,
+                        'content': content
+                    })
             
             # Primeira chamada - com ferramentas
             # Reduzir max_tokens para economizar (de 500 para 400)
@@ -1755,12 +2219,29 @@ class handler(BaseHTTPRequestHandler):
                         
                         bot_response = f"Oi princesa! 💙\n\nTô passando por um limite de uso agora (já usei muitos tokens hoje). O Pablo precisa aumentar o limite da API.\n\nTenta de novo em {wait_time}, tá bom? Ou manda uma mensagem pro Pablo pra ele resolver isso! 😅"
                         
-                        # Salvar mensagem do usuário mesmo com erro
+                        # Salvar mensagem do usuário e resposta mesmo com erro de rate limit
                         try:
                             save_chat_message(session_id, 'user', user_message)
                             save_chat_message(session_id, 'assistant', bot_response)
-                            if conversation_id:
-                                update_conversation(conversation_id, last_message=bot_response[:50] + ('...' if len(bot_response) > 50 else ''))
+                            
+                            # Criar ou atualizar conversa APENAS se o bot respondeu
+                            title = generate_conversation_title(user_message, bot_response)
+                            last_message_preview = bot_response[:50] + ('...' if len(bot_response) > 50 else '')
+                            
+                            if not conversation_id:
+                                # Verificar se já existe conversa para este session_id
+                                existing_conv = get_conversation_by_session_id(session_id)
+                                if existing_conv:
+                                    conversation_id = existing_conv['id']
+                                else:
+                                    conversation_id = f"conv_{session_id}_{int(datetime.now().timestamp())}"
+                            
+                            conv = get_conversation_by_id(conversation_id)
+                            if conv:
+                                update_conversation(conversation_id, last_message=last_message_preview)
+                            else:
+                                create_conversation(conversation_id, session_id, title)
+                                update_conversation(conversation_id, last_message=last_message_preview)
                         except:
                             pass
                         
@@ -1930,13 +2411,57 @@ class handler(BaseHTTPRequestHandler):
             if bot_response.lower().startswith('matteo:'):
                 bot_response = bot_response[7:].strip()
             
+            # Validar que temos uma resposta válida do bot
+            if not bot_response or len(bot_response.strip()) == 0:
+                print("⚠️ Resposta do bot vazia, não criando/atualizando conversa")
+                bot_response = "Desculpa princesa, não consegui processar isso agora. Pode repetir? 💙"
+            
             # Salvar resposta (com tratamento de erro)
             try:
                 save_chat_message(session_id, 'assistant', bot_response)
                 
-                # Atualizar conversa
-                if conversation_id:
-                    update_conversation(conversation_id, last_message=bot_response[:50] + ('...' if len(bot_response) > 50 else ''))
+                # AGORA SIM: Criar ou atualizar conversa APENAS se o bot respondeu com sucesso
+                try:
+                    # Gerar título descritivo
+                    title = generate_conversation_title(user_message, bot_response)
+                    last_message_preview = bot_response[:50] + ('...' if len(bot_response) > 50 else '')
+                    
+                    # Se conversation_id foi fornecido, verificar se existe
+                    if conversation_id:
+                        conv = get_conversation_by_id(conversation_id)
+                        if conv:
+                            # Conversa existe, apenas atualizar
+                            update_conversation(conversation_id, last_message=last_message_preview)
+                            # Atualizar título se for muito genérico ou se a conversa for nova (menos de 3 mensagens)
+                            message_count = get_conversation_message_count(conversation_id)
+                            if message_count <= 2 or conv['title'] == 'Nova conversa' or len(conv['title']) < 10:
+                                update_conversation(conversation_id, title=title)
+                        else:
+                            # Conversa não existe, criar nova
+                            create_conversation(conversation_id, session_id, title)
+                            update_conversation(conversation_id, last_message=last_message_preview)
+                    else:
+                        # Não tem conversation_id, verificar se já existe conversa ativa para este session_id
+                        existing_conv = get_conversation_by_session_id(session_id)
+                        
+                        if existing_conv:
+                            # Usar conversa existente
+                            conversation_id = existing_conv['id']
+                            update_conversation(conversation_id, last_message=last_message_preview)
+                            # Atualizar título se necessário
+                            message_count = get_conversation_message_count(conversation_id)
+                            if message_count <= 2 or existing_conv['title'] == 'Nova conversa' or len(existing_conv['title']) < 10:
+                                update_conversation(conversation_id, title=title)
+                            print(f"✅ Conversa existente atualizada: {conversation_id}")
+                        else:
+                            # Criar nova conversa
+                            conversation_id = f"conv_{session_id}_{int(datetime.now().timestamp())}"
+                            create_conversation(conversation_id, session_id, title)
+                            update_conversation(conversation_id, last_message=last_message_preview)
+                            print(f"✅ Nova conversa criada: {conversation_id} - {title}")
+                except Exception as e:
+                    print(f"⚠️ Erro ao criar/atualizar conversa: {e}")
+                    # Continua mesmo sem salvar conversa
             except Exception as e:
                 print(f"⚠️ Erro ao salvar resposta: {e}")
                 # Continua mesmo sem salvar
@@ -1973,13 +2498,25 @@ class handler(BaseHTTPRequestHandler):
                     save_conversation_summary(session_id, summary, total_msgs)
                     print(f"📝 Resumo salvo: {summary[:100]}...")
             
+            # Limpar conversas órfãs periodicamente (a cada 100 mensagens)
+            if total_msgs > 0 and total_msgs % 100 == 0:
+                try:
+                    cleanup_orphan_conversations()
+                except Exception as e:
+                    print(f"⚠️ Erro ao limpar conversas órfãs: {e}")
+            
+            # Detectar modo grupo para retornar na resposta
+            is_group_mode_detected = check_if_group_mode_active(session_id)
+            
             # Preparar resposta
             response_data = {
                 'response': bot_response,
                 'session_id': session_id,
                 'conversation_id': conversation_id,
                 'tools_used': [tc.function.name for tc in response_message.tool_calls] if response_message.tool_calls else [],
-                'status': 'success'
+                'status': 'success',
+                'sender': 'matteo',  # Sempre retorna como Matteo quando é resposta da IA
+                'group_mode': is_group_mode_detected or is_admin  # Indica se está em modo grupo
             }
             
             # Enviar resposta
