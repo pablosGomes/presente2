@@ -454,6 +454,7 @@ const MatteoPage = () => {
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [adminSender, setAdminSender] = useState('pablo') // 'gehh', 'matteo' ou 'pablo'
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
@@ -746,7 +747,9 @@ const MatteoPage = () => {
           message, 
           session_id: sessionId, 
           conversation_id: currentConversationId, // Sempre enviar conversation_id se existir
-          tpm_mode: tpmMode 
+          tpm_mode: tpmMode,
+          is_admin: isAdmin,
+          sender: isAdmin ? adminSender : 'gehh'
         })
       })
       
@@ -760,6 +763,11 @@ const MatteoPage = () => {
         if (data.session_id) {
           setSessionId(data.session_id)
         }
+      }
+      
+      // Se for mensagem do admin (Pablo ou Matteo), retornar dados completos
+      if (data.status === 'admin_message' && data.sender) {
+        return { response: data.response, sender: data.sender, isAdminMessage: true }
       }
       
       // Mostrar ferramentas usadas
@@ -779,9 +787,9 @@ const MatteoPage = () => {
         }
       }
       
-      return data.response
+      return { response: data.response, sender: data.sender || 'bot', isAdminMessage: false }
     } catch {
-      return "Minha conexão caiu rapidinho! Tenta de novo? ❤️"
+      return { response: "Minha conexão caiu rapidinho! Tenta de novo? ❤️", sender: 'bot', isAdminMessage: false }
     } finally {
       setTypingStatus('')
     }
@@ -832,28 +840,44 @@ const MatteoPage = () => {
       }
     }
     
-    const userMessage = {
-      id: Date.now(),
-      text: currentInput,
-      sender: 'user',
-      timestamp: new Date().toISOString()
+    // Se for admin enviando como Pablo ou Matteo, não adicionar mensagem de user ainda
+    // A mensagem será adicionada após a resposta da API
+    if (!isAdmin || adminSender === 'gehh') {
+      const userMessage = {
+        id: Date.now(),
+        text: currentInput,
+        sender: 'user',
+        timestamp: new Date().toISOString()
+      }
+      setMessages(prev => [...prev, userMessage])
     }
     
-    setMessages(prev => [...prev, userMessage])
     setIsTyping(true)
 
     // Enviar mensagem - o backend vai salvar no banco
-    const response = await sendMessageToAPI(currentInput)
-    
-    const botMessage = {
-      id: Date.now() + 1,
-      text: response,
-      sender: 'bot',
-      timestamp: new Date().toISOString()
-    }
+    const responseData = await sendMessageToAPI(currentInput)
     
     setIsTyping(false)
-    setMessages(prev => [...prev, botMessage])
+    
+    // Se for mensagem do admin (Pablo ou Matteo), adicionar com o sender correto
+    if (responseData.isAdminMessage) {
+      const adminMessage = {
+        id: Date.now() + 1,
+        text: responseData.response,
+        sender: responseData.sender,
+        timestamp: new Date().toISOString()
+      }
+      setMessages(prev => [...prev, adminMessage])
+    } else {
+      // Mensagem normal do bot
+      const botMessage = {
+        id: Date.now() + 1,
+        text: responseData.response,
+        sender: responseData.sender || 'bot',
+        timestamp: new Date().toISOString()
+      }
+      setMessages(prev => [...prev, botMessage])
+    }
 
     // Atualizar título da conversa se for a primeira mensagem
     const isFirstMessage = messages.length === 0
@@ -1575,9 +1599,11 @@ const MatteoPage = () => {
                     className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg ${
                       msg.sender === 'user' 
                         ? 'bg-gradient-to-br from-blue-600 to-blue-700 ring-2 ring-blue-400' 
-                        : tpmMode 
-                          ? 'bg-gradient-to-br from-pink-500 to-rose-600 ring-2 ring-pink-400' 
-                          : 'bg-gradient-to-br from-violet-600 to-purple-700 ring-2 ring-violet-400'
+                        : msg.sender === 'pablo'
+                          ? 'bg-gradient-to-br from-orange-600 to-red-600 ring-2 ring-orange-400'
+                          : tpmMode 
+                            ? 'bg-gradient-to-br from-pink-500 to-rose-600 ring-2 ring-pink-400' 
+                            : 'bg-gradient-to-br from-violet-600 to-purple-700 ring-2 ring-violet-400'
                     }`}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -1591,6 +1617,8 @@ const MatteoPage = () => {
                   >
                     {msg.sender === 'user' ? (
                       <span className="text-white text-xs sm:text-sm font-bold">G</span>
+                    ) : msg.sender === 'pablo' ? (
+                      <span className="text-white text-xs sm:text-sm font-bold">P</span>
                     ) : (
                       <MatteoLogo size="sm" className="w-5 h-5 sm:w-6 sm:h-6" />
                     )}
@@ -1611,9 +1639,11 @@ const MatteoPage = () => {
                       className={`inline-block p-3 sm:p-4 rounded-xl sm:rounded-2xl text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap shadow-lg break-words ${
                         msg.sender === 'user'
                           ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-blue-600/40 ring-2 ring-blue-400'
-                          : tpmMode 
-                            ? 'bg-gradient-to-br from-pink-200 to-rose-200 text-gray-900 border-2 border-pink-400 shadow-pink-300/60' 
-                            : 'bg-gradient-to-br from-violet-200 to-purple-200 text-gray-900 border-2 border-violet-400 shadow-violet-300/60'
+                          : msg.sender === 'pablo'
+                            ? 'bg-gradient-to-br from-orange-200 to-red-200 text-gray-900 border-2 border-orange-400 shadow-orange-300/60'
+                            : tpmMode 
+                              ? 'bg-gradient-to-br from-pink-200 to-rose-200 text-gray-900 border-2 border-pink-400 shadow-pink-300/60' 
+                              : 'bg-gradient-to-br from-violet-200 to-purple-200 text-gray-900 border-2 border-violet-400 shadow-violet-300/60'
                       }`}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -1653,7 +1683,9 @@ const MatteoPage = () => {
                                 className={`ml-2 text-xs font-semibold underline hover:opacity-80 transition-opacity ${
                                   msg.sender === 'user' 
                                     ? 'text-blue-200' 
-                                    : tpmMode ? 'text-rose-600' : 'text-violet-600'
+                                    : msg.sender === 'pablo'
+                                      ? 'text-orange-600'
+                                      : tpmMode ? 'text-rose-600' : 'text-violet-600'
                                 }`}
                               >
                                 {isExpanded ? 'Ver menos' : 'Ver mais'}
@@ -1667,7 +1699,9 @@ const MatteoPage = () => {
                       className={`text-[10px] sm:text-xs mt-1.5 font-bold ${
                         msg.sender === 'user' 
                           ? 'text-blue-300' 
-                          : tpmMode ? 'text-rose-700' : 'text-violet-700'
+                          : msg.sender === 'pablo'
+                            ? 'text-orange-700'
+                            : tpmMode ? 'text-rose-700' : 'text-violet-700'
                       }`}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -1773,6 +1807,31 @@ const MatteoPage = () => {
           }}
         >
           <div className="max-w-3xl w-full mx-auto">
+            {/* Seletor de sender para admin */}
+            {isAdmin && (
+              <div className="mb-2 flex items-center justify-center gap-2">
+                <span className="text-xs font-semibold text-gray-600">Enviar como:</span>
+                <div className="flex gap-1 bg-white/80 rounded-lg p-1 border border-gray-200">
+                  {['gehh', 'pablo', 'matteo'].map((sender) => (
+                    <button
+                      key={sender}
+                      onClick={() => setAdminSender(sender)}
+                      className={`px-3 py-1 rounded-md text-xs font-semibold transition-all ${
+                        adminSender === sender
+                          ? sender === 'pablo'
+                            ? 'bg-orange-500 text-white shadow-md'
+                            : sender === 'matteo'
+                            ? 'bg-violet-500 text-white shadow-md'
+                            : 'bg-blue-500 text-white shadow-md'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      {sender === 'gehh' ? 'Gehh' : sender === 'pablo' ? 'Pablo' : 'Matteo'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className={`flex items-end gap-2 sm:gap-3 ${keyboardHeight > 0 ? 'p-2' : 'p-3'} rounded-2xl border-2 transition-all backdrop-blur-sm ${
               tpmMode 
             ? 'bg-white/90 border-pink-300 focus-within:border-pink-500 focus-within:ring-4 focus-within:ring-pink-200/60' 
