@@ -477,8 +477,38 @@ const MatteoPage = () => {
   const searchTimeoutRef = useRef(null)
   const searchInputRef = useRef(null)
   const [expandedMessages, setExpandedMessages] = useState(new Set())
+  const [isOnline, setIsOnline] = useState(navigator.onLine)
+  const [apiError, setApiError] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
+  const [isSending, setIsSending] = useState(false)
+  const MAX_MESSAGE_LENGTH = 4000
+  const MAX_RETRIES = 3
 
   const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:5000')
+  
+  // Monitorar status de conexão
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true)
+      setApiError(false)
+      if (retryCount > 0) {
+        showToast('Conexão restaurada! 💙', 'success')
+        setRetryCount(0)
+      }
+    }
+    const handleOffline = () => {
+      setIsOnline(false)
+      showToast('Sem conexão com a internet', 'error')
+    }
+    
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [retryCount])
 
   // Elementos decorativos
   const flowers = useMemo(() => [
@@ -509,25 +539,67 @@ const MatteoPage = () => {
     })), [tpmMode]
   )
 
+  // Ref para evitar múltiplos carregamentos simultâneos de conversas
+  const isLoadingConversationsRef = useRef(false)
+  const lastLoadConversationsTimeRef = useRef(0)
+  
   // Carregar conversas do banco de dados
   const loadConversations = useCallback(async () => {
+    const now = Date.now()
+    // Evitar múltiplos carregamentos simultâneos ou muito próximos
+    if (isLoadingConversationsRef.current || (now - lastLoadConversationsTimeRef.current < 500)) {
+      console.log('Carregamento de conversas já em andamento ou muito recente, ignorando...')
+      return
+    }
+    
+    isLoadingConversationsRef.current = true
+    lastLoadConversationsTimeRef.current = now
     setIsLoadingConversations(true)
+    
     try {
       const response = await fetch(`${API_URL}/api/conversations`)
       if (response.ok) {
         const data = await response.json()
-        setConversations(data)
+        
+        // Remover duplicatas baseadas em ID
+        const uniqueConversations = []
+        const seenIds = new Set()
+        for (const conv of data) {
+          if (!seenIds.has(conv.id)) {
+            seenIds.add(conv.id)
+            uniqueConversations.push(conv)
+          }
+        }
+        
+        setConversations(uniqueConversations)
       }
     } catch (error) {
       console.error('Erro ao carregar conversas:', error)
       // Fallback para localStorage se API falhar
       const saved = localStorage.getItem('matteo_conversations')
       if (saved) {
-        const parsed = JSON.parse(saved)
-        setConversations(parsed)
+        try {
+          const parsed = JSON.parse(saved)
+          // Remover duplicatas também do localStorage
+          const uniqueConversations = []
+          const seenIds = new Set()
+          for (const conv of parsed) {
+            if (!seenIds.has(conv.id)) {
+              seenIds.add(conv.id)
+              uniqueConversations.push(conv)
+            }
+          }
+          setConversations(uniqueConversations)
+        } catch (e) {
+          console.error('Erro ao parsear conversas do localStorage:', e)
+        }
       }
     } finally {
       setIsLoadingConversations(false)
+      // Liberar flag após um pequeno delay
+      setTimeout(() => {
+        isLoadingConversationsRef.current = false
+      }, 500)
     }
   }, [API_URL])
 
@@ -579,21 +651,12 @@ const MatteoPage = () => {
           body: JSON.stringify({ last_message: lastMessage })
         }).then(() => {
           // Recarregar lista após atualizar para garantir sincronização
-          loadConversations()
+          // Aguardar um pouco para não interferir com outros recarregamentos
+          setTimeout(() => loadConversations(), 500)
         }).catch(console.error)
       }, 1000)
       
-      // Atualizar estado local imediatamente
-      setConversations(prev => prev.map(conv => 
-        conv.id === currentConversationId 
-          ? { 
-              ...conv, 
-              messages, 
-              lastMessage,
-              updatedAt: new Date().toISOString()
-            }
-          : conv
-      ))
+      // Não atualizar estado local para evitar duplicação - deixar loadConversations fazer isso
       
       return () => clearTimeout(timeoutId)
     }
@@ -605,9 +668,10 @@ const MatteoPage = () => {
 
   useEffect(() => scrollToBottom(), [messages])
 
-  // Detectar e compensar o teclado virtual
+  // Detectar e compensar o teclado virtual (melhorado para mobile)
   useEffect(() => {
-    let initialHeight = window.innerHeight
+    let initialHeight = window.visualViewport?.height || window.innerHeight
+    let isKeyboardOpen = false
     
     const handleFocusInput = () => {
       // Ao focar no input, aguarda teclado abrir e ajusta scroll
@@ -618,45 +682,69 @@ const MatteoPage = () => {
           
           // Se o input está abaixo da metade da tela, rola para cima
           if (rect.bottom > viewHeight - 100) {
-            mainRef.current.scrollTop = mainRef.current.scrollHeight
+            mainRef.current.scrollTo({
+              top: mainRef.current.scrollHeight,
+              behavior: 'smooth'
+            })
           }
         }
-      }, 300)
+      }, 350) // Aumentado para dar tempo do teclado abrir
     }
 
     const handleViewportChange = () => {
       const currentHeight = window.visualViewport?.height || window.innerHeight
       const diff = initialHeight - currentHeight
       
-      // Só considera como teclado se a diferença for significativa (>100px)
-      if (diff > 100) {
+      // Só considera como teclado se a diferença for significativa (>150px para mobile)
+      const threshold = window.innerWidth < 768 ? 150 : 100
+      
+      if (diff > threshold && !isKeyboardOpen) {
+        isKeyboardOpen = true
         setKeyboardHeight(diff)
         // Rola automaticamente para última mensagem
         setTimeout(() => {
           if (mainRef.current) {
-            mainRef.current.scrollTop = mainRef.current.scrollHeight
+            mainRef.current.scrollTo({
+              top: mainRef.current.scrollHeight,
+              behavior: 'smooth'
+            })
           }
-        }, 100)
-      } else {
+        }, 150)
+      } else if (diff <= threshold && isKeyboardOpen) {
+        isKeyboardOpen = false
         setKeyboardHeight(0)
+        // Atualizar altura inicial quando teclado fecha
+        initialHeight = window.visualViewport?.height || window.innerHeight
       }
+    }
+
+    const handleBlurInput = () => {
+      // Pequeno delay para permitir que o teclado feche antes de resetar
+      setTimeout(() => {
+        if (!document.activeElement || document.activeElement !== inputRef.current) {
+          setKeyboardHeight(0)
+          isKeyboardOpen = false
+        }
+      }, 200)
     }
 
     const textarea = inputRef.current
     if (textarea) {
       textarea.addEventListener('focus', handleFocusInput)
+      textarea.addEventListener('blur', handleBlurInput)
     }
 
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleViewportChange)
     }
     
-    // Fallback para iOS Safari
+    // Fallback para iOS Safari e Android
     window.addEventListener('resize', handleViewportChange)
 
     return () => {
       if (textarea) {
         textarea.removeEventListener('focus', handleFocusInput)
+        textarea.removeEventListener('blur', handleBlurInput)
       }
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', handleViewportChange)
@@ -666,17 +754,36 @@ const MatteoPage = () => {
   }, [])
 
   const createNewConversation = () => {
-    // Apenas prepara o estado local - NÃO cria no banco ainda
-    // A conversa só será criada no banco quando a primeira mensagem for enviada
+    // Confirmar se há mensagens não salvas na conversa atual
+    if (messages.length > 0 && currentConversationId) {
+      const hasUnsavedMessages = messages.some(msg => {
+        // Verificar se a mensagem foi salva (tem timestamp válido e não é muito recente)
+        const msgTime = new Date(msg.timestamp).getTime()
+        const now = Date.now()
+        return (now - msgTime) < 5000 // Mensagens muito recentes podem não estar salvas
+      })
+      
+      if (hasUnsavedMessages && !window.confirm('Tem certeza que quer criar uma nova conversa? A conversa atual será salva automaticamente.')) {
+        return
+      }
+    }
+    
+    // Preparar estado local apenas (sem criar no banco ainda)
     const newId = `conv_${Date.now()}`
     const newSessionId = `session_${Date.now()}`
     
-    // Preparar estado local apenas (sem criar no banco)
     setCurrentConversationId(newId)
     setSessionId(newSessionId)
     setMessages([])
     setInput('')
     setSidebarOpen(false)
+    setApiError(false)
+    setRetryCount(0)
+    
+    // Focar no input após criar nova conversa
+    setTimeout(() => {
+      inputRef.current?.focus()
+    }, 100)
   }
 
   // Ref para evitar múltiplos recarregamentos simultâneos
@@ -754,8 +861,8 @@ const MatteoPage = () => {
           timestamp: msg.timestamp || new Date().toISOString()
         }))
         setMessages(validatedMessages)
-        // Recarregar lista para garantir que está atualizada
-        loadConversations()
+        // Recarregar lista para garantir que está atualizada (com delay para evitar múltiplas chamadas)
+        setTimeout(() => loadConversations(), 300)
       } else {
         // Fallback para dados locais
         setCurrentConversationId(conv.id)
@@ -811,9 +918,19 @@ const MatteoPage = () => {
     setDeleteConfirmId(null)
   }
 
-  const sendMessageToAPI = async (message) => {
+  const sendMessageToAPI = async (message, retryAttempt = 0) => {
     try {
       setTypingStatus('Pensando...')
+      setApiError(false)
+      
+      // Verificar conexão
+      if (!isOnline) {
+        throw new Error('Sem conexão com a internet')
+      }
+      
+      // Timeout de 30 segundos
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000)
       
       const response = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
@@ -821,20 +938,26 @@ const MatteoPage = () => {
         body: JSON.stringify({ 
           message, 
           session_id: sessionId, 
-          conversation_id: currentConversationId, // Sempre enviar conversation_id se existir
+          conversation_id: currentConversationId,
           tpm_mode: tpmMode,
           is_admin: isAdmin,
           sender: isAdmin ? adminSender : 'gehh'
-        })
+        }),
+        signal: controller.signal
       })
       
-      if (!response.ok) throw new Error()
+      clearTimeout(timeoutId)
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Erro ${response.status}`)
+      }
+      
       const data = await response.json()
       
       // Atualizar conversation_id se foi criado pelo backend
       if (data.conversation_id && data.conversation_id !== currentConversationId) {
         setCurrentConversationId(data.conversation_id)
-        // Atualizar session_id também se necessário
         if (data.session_id) {
           setSessionId(data.session_id)
         }
@@ -873,18 +996,60 @@ const MatteoPage = () => {
         }
       }
       
+      setRetryCount(0)
       return { response: data.response, sender: data.sender || 'bot', isAdminMessage: false }
-    } catch {
-      return { response: "Minha conexão caiu rapidinho! Tenta de novo? ❤️", sender: 'bot', isAdminMessage: false }
+    } catch (error) {
+      console.error('Erro ao enviar mensagem:', error)
+      setApiError(true)
+      
+      // Retry automático se não excedeu o limite
+      if (retryAttempt < MAX_RETRIES && (error.name === 'AbortError' || error.message.includes('Failed to fetch'))) {
+        setRetryCount(retryAttempt + 1)
+        setTypingStatus(`Tentando novamente... (${retryAttempt + 1}/${MAX_RETRIES})`)
+        await new Promise(r => setTimeout(r, 2000 * (retryAttempt + 1)))
+        return sendMessageToAPI(message, retryAttempt + 1)
+      }
+      
+      // Mensagens de erro específicas
+      let errorMessage = "Ops! Algo deu errado. Tenta de novo? 💙"
+      if (error.name === 'AbortError') {
+        errorMessage = "A requisição demorou muito. Tenta de novo? ⏱️"
+      } else if (!isOnline) {
+        errorMessage = "Sem conexão com a internet. Verifica sua rede! 📡"
+      } else if (error.message.includes('429')) {
+        errorMessage = "Muitas requisições! Aguarda um pouquinho e tenta de novo. 😅"
+      } else if (error.message.includes('500')) {
+        errorMessage = "Erro no servidor. O Pablo já foi avisado! 🔧"
+      }
+      
+      return { response: errorMessage, sender: 'bot', isAdminMessage: false, error: true }
     } finally {
       setTypingStatus('')
     }
   }
 
   const handleSend = async () => {
-    if (!input.trim()) return
+    // Validações
+    const trimmedInput = input.trim()
+    if (!trimmedInput) return
     
-    const currentInput = input
+    if (trimmedInput.length > MAX_MESSAGE_LENGTH) {
+      showToast(`Mensagem muito longa! Máximo de ${MAX_MESSAGE_LENGTH} caracteres.`, 'error')
+      return
+    }
+    
+    if (isSending) {
+      showToast('Aguarde, enviando mensagem...', 'error')
+      return
+    }
+    
+    if (!isOnline) {
+      showToast('Sem conexão com a internet', 'error')
+      return
+    }
+    
+    setIsSending(true)
+    const currentInput = trimmedInput
     setInput('')
     
     // Criar conversa no banco apenas quando enviar a primeira mensagem
@@ -908,10 +1073,13 @@ const MatteoPage = () => {
         
         if (response.ok) {
           const newConv = await response.json()
-          setConversations(prev => [newConv, ...prev])
+          // Não adicionar manualmente - recarregar do banco para evitar duplicação
+          // setConversations(prev => [newConv, ...prev]) // Removido para evitar duplicação
           setCurrentConversationId(newId)
           setSessionId(newSessionId)
           conversationCreated = true
+          // Recarregar do banco após um pequeno delay
+          setTimeout(() => loadConversations(), 300)
         } else {
           console.error('Erro ao criar conversa no banco')
           // Se falhar, ainda tenta enviar a mensagem (o backend pode criar)
@@ -999,14 +1167,9 @@ const MatteoPage = () => {
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error)
       setIsTyping(false)
-      // Adicionar mensagem de erro
-      const errorMessage = {
-        id: Date.now() + 1,
-        text: "Ops! Algo deu errado. Tenta de novo? 💙",
-        sender: 'bot',
-        timestamp: new Date().toISOString()
-      }
-      setMessages(prev => [...prev, errorMessage])
+      showToast('Erro ao enviar mensagem. Tenta de novo?', 'error')
+    } finally {
+      setIsSending(false)
     }
 
     // Atualizar título da conversa se for a primeira mensagem
@@ -1102,10 +1265,8 @@ const MatteoPage = () => {
       })
       
       if (response.ok) {
-        setConversations(prev => prev.map(conv =>
-          conv.id === convId ? { ...conv, title: trimmedTitle } : conv
-        ))
-        loadConversations()
+        // Não atualizar estado local - recarregar do banco para evitar duplicação
+        setTimeout(() => loadConversations(), 300)
         showToast('Conversa renomeada com sucesso!')
       } else {
         showToast('Erro ao renomear conversa', 'error')
@@ -1176,11 +1337,17 @@ const MatteoPage = () => {
   ]
 
   return (
-    <div className={`h-screen w-screen flex overflow-hidden transition-all duration-700 ${
-      tpmMode 
-        ? 'bg-gradient-to-br from-pink-100 via-rose-50 via-pink-50 to-rose-100' 
-        : 'bg-gradient-to-br from-azul-claro via-violet-100 via-purple-50 to-azul-bebe'
-    }`}>
+    <div 
+      className={`h-screen w-screen flex overflow-hidden transition-all duration-700 ${
+        tpmMode 
+          ? 'bg-gradient-to-br from-pink-100 via-rose-50 via-pink-50 to-rose-100' 
+          : 'bg-gradient-to-br from-azul-claro via-violet-100 via-purple-50 to-azul-bebe'
+      }`}
+      style={{
+        height: '100dvh', // Dynamic viewport height para mobile
+        minHeight: '-webkit-fill-available', // Fallback para iOS Safari
+      }}
+    >
       
       {/* Elementos decorativos */}
       {/* Pétalas caindo */}
@@ -1225,11 +1392,24 @@ const MatteoPage = () => {
           x: sidebarOpen ? 0 : -288,
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className={`lg:translate-x-0 fixed lg:relative left-0 top-0 h-full w-72 sm:w-80 z-50 flex flex-col ${
+        drag="x"
+        dragConstraints={{ left: -288, right: 0 }}
+        dragElastic={0.1}
+        onDragEnd={(e, info) => {
+          // Fechar sidebar se arrastar para esquerda mais de 50px
+          if (info.offset.x < -50) {
+            setSidebarOpen(false)
+          }
+        }}
+        className={`lg:translate-x-0 fixed lg:relative left-0 top-0 h-full w-72 sm:w-80 z-50 flex flex-col touch-none ${
           tpmMode 
             ? 'bg-gradient-to-b from-pink-200/98 via-rose-100/98 to-pink-200/98 backdrop-blur-xl border-r-2 border-pink-400/80 shadow-2xl' 
             : 'bg-gradient-to-b from-violet-200/98 via-purple-100/98 to-indigo-200/98 backdrop-blur-xl border-r-2 border-violet-400/80 shadow-2xl'
         }`}
+        style={{
+          height: '100dvh',
+          minHeight: '-webkit-fill-available',
+        }}
       >
         {/* Sidebar Header */}
         <div className={`p-3 sm:p-4 border-b-2 ${tpmMode ? 'border-pink-400/70' : 'border-violet-400/70'}`}>
@@ -1260,8 +1440,8 @@ const MatteoPage = () => {
                 }
               }}
               whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl ${
+              whileTap={{ scale: 0.92 }}
+              className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl active:scale-90 touch-manipulation ${
                 showSearch
                   ? tpmMode
                     ? 'bg-pink-500 text-white'
@@ -1271,6 +1451,7 @@ const MatteoPage = () => {
                     : 'bg-violet-100/80 text-violet-600 hover:bg-violet-200/80'
               } transition-all`}
               title={showSearch ? 'Fechar busca' : 'Buscar conversas'}
+              aria-label={showSearch ? 'Fechar busca' : 'Buscar conversas'}
             >
               {showSearch ? <Icons.Close /> : <Icons.Search />}
             </motion.button>
@@ -1301,9 +1482,9 @@ const MatteoPage = () => {
                   {searchQuery && (
                     <motion.button
                       onClick={() => setSearchQuery('')}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded ${tpmMode ? 'text-rose-600 hover:text-rose-800' : 'text-violet-600 hover:text-violet-800'}`}
+                      whileHover={window.innerWidth >= 768 ? { scale: 1.1 } : {}}
+                      whileTap={{ scale: 0.92 }}
+                      className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded min-w-[32px] min-h-[32px] flex items-center justify-center touch-manipulation ${tpmMode ? 'text-rose-600 hover:text-rose-800' : 'text-violet-600 hover:text-violet-800'}`}
                     >
                       <Icons.Close />
                     </motion.button>
@@ -1350,16 +1531,16 @@ const MatteoPage = () => {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.05 }}
-                        whileHover={{ scale: 1.02, x: 4 }}
-                        whileTap={{ scale: 0.98 }}
-                        className={`group flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg sm:rounded-xl cursor-pointer transition-all border-2 ${
+                        whileHover={window.innerWidth >= 768 ? { scale: 1.02, x: 4 } : {}}
+                        whileTap={{ scale: 0.95 }}
+                        className={`group flex items-start gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-lg sm:rounded-xl cursor-pointer transition-all border-2 touch-manipulation active:scale-95 ${
                           currentConversationId === conv.id 
                             ? tpmMode 
                               ? 'bg-gradient-to-r from-pink-400/90 to-rose-400/90 shadow-lg border-pink-500/90' 
                               : 'bg-gradient-to-r from-violet-400/90 to-purple-400/90 shadow-lg border-violet-500/90'
                             : tpmMode
-                              ? 'hover:bg-pink-300/80 border-pink-300/70 hover:border-pink-400/90 bg-pink-100/60'
-                              : 'hover:bg-violet-300/80 border-violet-300/70 hover:border-violet-400/90 bg-violet-100/60'
+                              ? 'hover:bg-pink-300/80 border-pink-300/70 hover:border-pink-400/90 bg-pink-100/60 active:bg-pink-300/90'
+                              : 'hover:bg-violet-300/80 border-violet-300/70 hover:border-violet-400/90 bg-violet-100/60 active:bg-violet-300/90'
                         }`}
                       >
                         <div className="flex-shrink-0 pt-0.5">
@@ -1514,15 +1695,26 @@ const MatteoPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden touch-none"
           onClick={() => setSidebarOpen(false)}
+          onTouchStart={(e) => {
+            // Fechar sidebar ao tocar no overlay
+            e.preventDefault()
+            setSidebarOpen(false)
+          }}
         />
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-full min-h-0" style={{
-        height: keyboardHeight > 0 ? `calc(100vh - ${keyboardHeight}px)` : '100%'
-      }}>
+      <div 
+        className="flex-1 flex flex-col h-full min-h-0" 
+        style={{
+          height: keyboardHeight > 0 
+            ? `calc(100dvh - ${keyboardHeight}px)` 
+            : '100dvh',
+          minHeight: '-webkit-fill-available',
+        }}
+      >
         
         {/* Header */}
         <motion.header 
@@ -1538,13 +1730,14 @@ const MatteoPage = () => {
           <motion.button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.94 }}
-            className={`lg:hidden inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-2xl transition-all relative z-[60] flex-shrink-0 shadow-xl ring-2 ring-offset-1 ${
+            whileTap={{ scale: 0.92 }}
+            className={`lg:hidden inline-flex items-center justify-center min-w-[44px] min-h-[44px] w-11 h-11 sm:w-12 sm:h-12 rounded-2xl transition-all relative z-[60] flex-shrink-0 shadow-xl ring-2 ring-offset-1 active:scale-95 ${
               tpmMode 
                 ? 'bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white ring-pink-200/70 ring-offset-rose-100' 
                 : 'bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white ring-indigo-200/70 ring-offset-indigo-50'
             }`}
             title={sidebarOpen ? "Fechar menu" : "Abrir menu"}
+            aria-label={sidebarOpen ? "Fechar menu" : "Abrir menu"}
           >
             {sidebarOpen ? <Icons.Close /> : <Icons.Menu />}
           </motion.button>
@@ -1554,11 +1747,20 @@ const MatteoPage = () => {
             <div>
               <h1 className={`font-bold text-base sm:text-lg ${tpmMode ? 'text-rose-900' : 'text-violet-900'}`}>Matteo</h1>
               <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full animate-pulse ${tpmMode ? 'bg-pink-600' : 'bg-emerald-500'}`}></span>
+                <span className={`w-2 h-2 rounded-full ${isOnline ? 'animate-pulse' : ''} ${
+                  isOnline 
+                    ? (tpmMode ? 'bg-pink-600' : 'bg-emerald-500')
+                    : 'bg-red-500'
+                }`}></span>
                 <span className={`text-[10px] sm:text-xs font-semibold ${tpmMode ? 'text-rose-700' : 'text-violet-700'}`}>
-                  <span className="hidden sm:inline">{tpmMode ? 'Modo Carinho Ativo' : 'Online'}</span>
-                  <span className="sm:hidden">{tpmMode ? 'TPM' : 'On'}</span>
+                  <span className="hidden sm:inline">{tpmMode ? 'Modo Carinho Ativo' : (isOnline ? 'Online' : 'Offline')}</span>
+                  <span className="sm:hidden">{tpmMode ? 'TPM' : (isOnline ? 'On' : 'Off')}</span>
                 </span>
+                {apiError && (
+                  <span className="text-[10px] text-red-600 font-semibold ml-1" title="Erro na conexão">
+                    ⚠️
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -1569,9 +1771,9 @@ const MatteoPage = () => {
             {isAdmin && (
               <motion.button
                 onClick={() => navigate('/admin/dashboard')}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className={`p-2 rounded-lg transition-all ${
+                whileHover={window.innerWidth >= 768 ? { scale: 1.1 } : {}}
+                whileTap={{ scale: 0.92 }}
+                className={`p-2.5 rounded-lg transition-all min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation ${
                   tpmMode 
                     ? 'bg-blue-300/80 hover:bg-blue-400/90 text-blue-900 ring-2 ring-blue-400/70' 
                     : 'bg-blue-300/80 hover:bg-blue-400/90 text-blue-900 ring-2 ring-blue-400/70'
@@ -1607,7 +1809,15 @@ const MatteoPage = () => {
           className="flex-1 overflow-y-auto overscroll-contain"
           style={{ 
             scrollPaddingBottom: '160px',
-            paddingBottom: keyboardHeight > 0 ? '20px' : '0'
+            paddingBottom: keyboardHeight > 0 ? '20px' : '0',
+            WebkitOverflowScrolling: 'touch', // Smooth scroll iOS
+            scrollBehavior: 'smooth',
+          }}
+          onTouchStart={(e) => {
+            // Fechar sidebar se tocar na área de mensagens quando sidebar estiver aberto
+            if (sidebarOpen && window.innerWidth < 1024) {
+              setSidebarOpen(false)
+            }
           }}
         >
           {messages.length === 0 ? (
@@ -1719,8 +1929,8 @@ const MatteoPage = () => {
                   initial={{ opacity: 0, y: 20, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ 
-                    duration: 0.4,
-                    delay: index * 0.05,
+                    duration: window.innerWidth < 768 ? 0.2 : 0.4, // Animações mais rápidas no mobile
+                    delay: window.innerWidth < 768 ? 0 : index * 0.05, // Sem delay no mobile
                     ease: [0.25, 0.1, 0.25, 1]
                   }}
                   className={`flex gap-2 sm:gap-3 md:gap-4 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
@@ -1744,7 +1954,8 @@ const MatteoPage = () => {
                       damping: 15,
                       delay: 0.1
                     }}
-                    whileHover={{ scale: 1.1 }}
+                    whileHover={window.innerWidth >= 768 ? { scale: 1.1 } : {}}
+                    whileTap={{ scale: 0.95 }}
                   >
                     {msg.sender === 'user' ? (
                       <span className="text-white text-xs sm:text-sm font-bold">G</span>
@@ -1766,7 +1977,8 @@ const MatteoPage = () => {
                       duration: 0.3,
                       ease: [0.25, 0.1, 0.25, 1]
                     }}
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={window.innerWidth >= 768 ? { scale: 1.02 } : {}}
+                    whileTap={{ scale: 0.98 }}
                   >
                     <motion.div 
                       className={`inline-block p-3 sm:p-4 rounded-xl sm:rounded-2xl text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap shadow-lg break-words ${
@@ -1965,42 +2177,76 @@ const MatteoPage = () => {
                 </div>
               </div>
             )}
-            <div className={`flex items-end gap-2 sm:gap-3 ${keyboardHeight > 0 ? 'p-2' : 'p-3'} rounded-2xl border-2 transition-all backdrop-blur-sm ${
+            <div className={`flex items-end gap-2 sm:gap-3 ${keyboardHeight > 0 ? 'p-2' : 'p-3 sm:p-4'} rounded-2xl border-2 transition-all backdrop-blur-sm ${
               tpmMode 
             ? 'bg-white/90 border-pink-300 focus-within:border-pink-500 focus-within:ring-4 focus-within:ring-pink-200/60' 
             : 'bg-white/90 border-violet-300 focus-within:border-violet-500 focus-within:ring-4 focus-within:ring-violet-200/60'
             }`}>
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    handleSend()
-                  }
-                }}
-                placeholder="Pergunte qualquer coisa..."
-                rows={1}
-                className={`flex-1 px-2 sm:px-3 ${keyboardHeight > 0 ? 'py-1.5' : 'py-2'} bg-transparent outline-none text-[15px] resize-none max-h-32 ${
-                  tpmMode ? 'text-gray-800 placeholder-gray-400' : 'text-slate-800 placeholder-slate-500'
-                }`}
-                style={{ minHeight: '44px' }}
-              />
+              <div className="flex-1 flex flex-col">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    if (value.length <= MAX_MESSAGE_LENGTH) {
+                      setInput(value)
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      if (!isSending && input.trim() && isOnline) {
+                        handleSend()
+                      }
+                    }
+                  }}
+                  placeholder={!isOnline ? "Sem conexão..." : "Pergunte qualquer coisa..."}
+                  rows={1}
+                  disabled={isSending || !isOnline}
+                  className={`w-full px-3 sm:px-4 ${keyboardHeight > 0 ? 'py-2' : 'py-2.5'} bg-transparent outline-none text-base sm:text-[15px] resize-none max-h-32 ${
+                    tpmMode ? 'text-gray-800 placeholder-gray-400' : 'text-slate-800 placeholder-slate-500'
+                  } ${isSending || !isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  style={{ 
+                    minHeight: '44px',
+                    fontSize: '16px', // Previne zoom no iOS
+                  }}
+                />
+                {input.length > MAX_MESSAGE_LENGTH * 0.8 && (
+                  <div className={`text-xs px-2 mt-1 ${
+                    input.length >= MAX_MESSAGE_LENGTH 
+                      ? 'text-red-600 font-bold' 
+                      : input.length > MAX_MESSAGE_LENGTH * 0.9 
+                        ? 'text-orange-600' 
+                        : 'text-gray-500'
+                  }`}>
+                    {input.length} / {MAX_MESSAGE_LENGTH} caracteres
+                  </div>
+                )}
+              </div>
               <motion.button
                 onClick={handleSend}
-                disabled={!input.trim()}
-                whileHover={input.trim() ? { scale: 1.1 } : {}}
-                whileTap={input.trim() ? { scale: 0.95 } : {}}
-                className={`${keyboardHeight > 0 ? 'p-2.5' : 'p-3'} rounded-xl transition-all flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center ${
-                  input.trim()
+                disabled={!input.trim() || isSending || !isOnline}
+                whileHover={input.trim() && !isSending && isOnline ? { scale: 1.1 } : {}}
+                whileTap={input.trim() && !isSending && isOnline ? { scale: 0.92 } : {}}
+                className={`${keyboardHeight > 0 ? 'p-2.5' : 'p-3 sm:p-3.5'} rounded-xl transition-all flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-90 ${
+                  input.trim() && !isSending && isOnline
                     ? tpmMode
                       ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-xl shadow-pink-500/40 ring-2 ring-pink-300'
                       : 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-xl shadow-violet-500/30 ring-2 ring-violet-300'
-                    : tpmMode ? 'bg-pink-100 text-pink-300' : 'bg-violet-100 text-violet-300'
+                    : tpmMode ? 'bg-pink-100 text-pink-300 cursor-not-allowed' : 'bg-violet-100 text-violet-300 cursor-not-allowed'
                 }`}
+                title={!isOnline ? 'Sem conexão' : isSending ? 'Enviando...' : !input.trim() ? 'Digite uma mensagem' : 'Enviar'}
+                aria-label={!isOnline ? 'Sem conexão' : isSending ? 'Enviando...' : !input.trim() ? 'Digite uma mensagem' : 'Enviar'}
               >
-                <Icons.Send />
+                {isSending ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className={`w-5 h-5 border-2 ${tpmMode ? 'border-white border-t-transparent' : 'border-white border-t-transparent'} rounded-full`}
+                  />
+                ) : (
+                  <Icons.Send />
+                )}
               </motion.button>
             </div>
             {keyboardHeight === 0 && (
