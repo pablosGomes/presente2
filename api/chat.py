@@ -1347,7 +1347,6 @@ class handler(BaseHTTPRequestHandler):
                         wait_time = "alguns minutos"
                         if "try again in" in error_str:
                             try:
-                                import re
                                 match = re.search(r'try again in (\d+)m(\d+)', error_str)
                                 if match:
                                     wait_time = f"{match.group(1)} minutos"
