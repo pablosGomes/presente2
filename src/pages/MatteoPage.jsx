@@ -467,9 +467,14 @@ const MatteoPage = () => {
   const [keyboardHeight, setKeyboardHeight] = useState(0)
   const mainRef = useRef(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [showSearch, setShowSearch] = useState(false)
   const [isLoadingConversations, setIsLoadingConversations] = useState(false)
   const [editingConversationId, setEditingConversationId] = useState(null)
   const [editingTitle, setEditingTitle] = useState('')
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null)
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
+  const searchTimeoutRef = useRef(null)
+  const searchInputRef = useRef(null)
 
   const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:5000')
 
@@ -541,6 +546,10 @@ const MatteoPage = () => {
   useEffect(() => {
     if (sidebarOpen) {
       loadConversations()
+    } else {
+      // Fechar busca quando sidebar fechar
+      setShowSearch(false)
+      setSearchQuery('')
     }
   }, [sidebarOpen, loadConversations])
   
@@ -732,16 +741,20 @@ const MatteoPage = () => {
       setMessages(conv.messages || [])
     }
     setSidebarOpen(false)
+    setShowSearch(false)
+    setSearchQuery('')
   }
 
-  const deleteConversation = async (convId, e) => {
-    e.stopPropagation()
+  const confirmDelete = (convId, e) => {
+    e?.stopPropagation()
+    setDeleteConfirmId(convId)
+  }
+
+  const deleteConversation = async () => {
+    const convId = deleteConfirmId
+    if (!convId) return
     
-    // Confirmação antes de deletar
     const convTitle = conversations.find(c => c.id === convId)?.title || 'esta conversa'
-    if (!window.confirm(`Tem certeza que deseja deletar "${convTitle}"?`)) {
-      return
-    }
     
     try {
       const response = await fetch(`${API_URL}/api/conversations/${convId}`, {
@@ -755,27 +768,18 @@ const MatteoPage = () => {
           setSessionId(`session_${Date.now()}`)
           setMessages([])
         }
+        showToast(`"${convTitle}" deletada com sucesso!`)
         // Recarregar lista do servidor para garantir sincronização
         setTimeout(() => loadConversations(), 300)
       } else {
-        // Fallback local se API falhar
-        setConversations(prev => prev.filter(c => c.id !== convId))
-        if (currentConversationId === convId) {
-          setCurrentConversationId(null)
-          setSessionId(`session_${Date.now()}`)
-          setMessages([])
-        }
+        showToast('Erro ao deletar conversa', 'error')
       }
     } catch (error) {
       console.error('Erro ao deletar conversa:', error)
-      // Fallback local
-      setConversations(prev => prev.filter(c => c.id !== convId))
-      if (currentConversationId === convId) {
-        setCurrentConversationId(null)
-        setSessionId(`session_${Date.now()}`)
-        setMessages([])
-      }
+      showToast('Erro ao deletar conversa', 'error')
     }
+    
+    setDeleteConfirmId(null)
   }
 
   const sendMessageToAPI = async (message) => {
@@ -991,39 +995,79 @@ const MatteoPage = () => {
     return 'Anteriores'
   }
 
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type })
+    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000)
+  }
+
   const renameConversation = async (convId, newTitle) => {
-    if (!newTitle.trim()) return
+    const trimmedTitle = newTitle.trim()
+    if (!trimmedTitle) {
+      showToast('O título não pode estar vazio', 'error')
+      return
+    }
     
     try {
       const response = await fetch(`${API_URL}/api/conversations/${convId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: newTitle.trim() })
+        body: JSON.stringify({ title: trimmedTitle })
       })
       
       if (response.ok) {
         setConversations(prev => prev.map(conv =>
-          conv.id === convId ? { ...conv, title: newTitle.trim() } : conv
+          conv.id === convId ? { ...conv, title: trimmedTitle } : conv
         ))
         loadConversations()
+        showToast('Conversa renomeada com sucesso!')
+      } else {
+        showToast('Erro ao renomear conversa', 'error')
       }
     } catch (error) {
       console.error('Erro ao renomear conversa:', error)
+      showToast('Erro ao renomear conversa', 'error')
     }
     setEditingConversationId(null)
     setEditingTitle('')
   }
 
-  // Filtrar conversas por busca
-  const filteredConversations = useMemo(() => {
-    if (!searchQuery.trim()) return conversations
+  const startEditing = (conv) => {
+    setEditingConversationId(conv.id)
+    setEditingTitle(conv.title)
+  }
+
+  const cancelEditing = () => {
+    setEditingConversationId(null)
+    setEditingTitle('')
+  }
+
+  // Filtrar conversas por busca (com debounce)
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
+  
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 300)
     
-    const query = searchQuery.toLowerCase()
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [searchQuery])
+
+  const filteredConversations = useMemo(() => {
+    if (!debouncedSearchQuery.trim()) return conversations
+    
+    const query = debouncedSearchQuery.toLowerCase()
     return conversations.filter(conv => 
       conv.title?.toLowerCase().includes(query) ||
       conv.lastMessage?.toLowerCase().includes(query)
     )
-  }, [conversations, searchQuery])
+  }, [conversations, debouncedSearchQuery])
 
   // Agrupar conversas por data
   const groupedConversations = useMemo(() => {
@@ -1101,48 +1145,90 @@ const MatteoPage = () => {
         }`}
       >
         {/* Sidebar Header */}
-        <div className={`p-3 sm:p-4 border-b-2 ${tpmMode ? 'border-pink-400/70' : 'border-violet-400/70'} space-y-2`}>
-          <motion.button
-            onClick={createNewConversation}
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            className={`w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base ${
-              tpmMode
-                ? 'bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white ring-2 ring-pink-400/70 shadow-lg'
-                : 'bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white ring-2 ring-violet-400/70 shadow-lg'
-            } rounded-xl font-bold transition-all hover:shadow-xl`}
-          >
-            <Icons.Plus />
-            Nova conversa
-          </motion.button>
-          
-          {/* Campo de busca */}
-          <div className={`relative ${tpmMode ? 'bg-pink-100/80' : 'bg-violet-100/80'} rounded-lg border-2 ${tpmMode ? 'border-pink-300/70' : 'border-violet-300/70'}`}>
-            <div className="absolute left-2 top-1/2 -translate-y-1/2">
-              <Icons.Search />
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar conversas..."
-              className={`w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-transparent outline-none ${tpmMode ? 'text-rose-900 placeholder-rose-500' : 'text-violet-900 placeholder-violet-500'}`}
-            />
-            {searchQuery && (
-              <motion.button
-                onClick={() => setSearchQuery('')}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded ${tpmMode ? 'text-rose-600 hover:text-rose-800' : 'text-violet-600 hover:text-violet-800'}`}
-              >
-                <Icons.Close />
-              </motion.button>
-            )}
+        <div className={`p-3 sm:p-4 border-b-2 ${tpmMode ? 'border-pink-400/70' : 'border-violet-400/70'}`}>
+          <div className="flex items-center gap-2 mb-2">
+            <motion.button
+              onClick={createNewConversation}
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className={`flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base ${
+                tpmMode
+                  ? 'bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white ring-2 ring-pink-400/70 shadow-lg'
+                  : 'bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white ring-2 ring-violet-400/70 shadow-lg'
+              } rounded-xl font-bold transition-all hover:shadow-xl`}
+            >
+              <Icons.Plus />
+              <span className="hidden sm:inline">Nova conversa</span>
+              <span className="sm:hidden">Nova</span>
+            </motion.button>
+            
+            {/* Botão de busca */}
+            <motion.button
+              onClick={() => {
+                setShowSearch(!showSearch)
+                if (!showSearch) {
+                  setTimeout(() => searchInputRef.current?.focus(), 100)
+                } else {
+                  setSearchQuery('')
+                }
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl ${
+                showSearch
+                  ? tpmMode
+                    ? 'bg-pink-500 text-white'
+                    : 'bg-violet-500 text-white'
+                  : tpmMode
+                    ? 'bg-pink-100/80 text-rose-600 hover:bg-pink-200/80'
+                    : 'bg-violet-100/80 text-violet-600 hover:bg-violet-200/80'
+              } transition-all`}
+              title={showSearch ? 'Fechar busca' : 'Buscar conversas'}
+            >
+              {showSearch ? <Icons.Close /> : <Icons.Search />}
+            </motion.button>
           </div>
+          
+          {/* Campo de busca - aparece apenas quando showSearch é true */}
+          <AnimatePresence>
+            {showSearch && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className={`relative mt-2 ${tpmMode ? 'bg-pink-100/80' : 'bg-violet-100/80'} rounded-lg border-2 ${tpmMode ? 'border-pink-300/70' : 'border-violet-300/70'}`}>
+                  <div className="absolute left-2 top-1/2 -translate-y-1/2">
+                    <Icons.Search />
+                  </div>
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Buscar conversas..."
+                    className={`w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-transparent outline-none ${tpmMode ? 'text-rose-900 placeholder-rose-500' : 'text-violet-900 placeholder-violet-500'}`}
+                  />
+                  {searchQuery && (
+                    <motion.button
+                      onClick={() => setSearchQuery('')}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded ${tpmMode ? 'text-rose-600 hover:text-rose-800' : 'text-violet-600 hover:text-violet-800'}`}
+                    >
+                      <Icons.Close />
+                    </motion.button>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Conversations List */}
-        <div className="flex-1 overflow-y-auto p-2 sm:p-3">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-2 sm:p-3" style={{ WebkitOverflowScrolling: 'touch' }}>
           {isLoadingConversations ? (
             <div className="flex items-center justify-center py-8">
               <motion.div
@@ -1157,10 +1243,10 @@ const MatteoPage = () => {
                 <Icons.Chat />
               </div>
               <p className={`text-sm font-semibold ${tpmMode ? 'text-rose-700' : 'text-violet-700'}`}>
-                {searchQuery ? 'Nenhuma conversa encontrada' : 'Nenhuma conversa ainda'}
+                {debouncedSearchQuery ? 'Nenhuma conversa encontrada' : 'Nenhuma conversa ainda'}
               </p>
               <p className={`text-xs mt-1 ${tpmMode ? 'text-rose-600' : 'text-violet-600'}`}>
-                {searchQuery ? 'Tente outra busca' : 'Crie uma nova conversa para começar!'}
+                {debouncedSearchQuery ? 'Tente outra busca' : 'Crie uma nova conversa para começar!'}
               </p>
             </div>
           ) : (
@@ -1200,32 +1286,51 @@ const MatteoPage = () => {
                           }}
                         >
                           {editingConversationId === conv.id ? (
-                            <input
-                              type="text"
-                              value={editingTitle}
-                              onChange={(e) => setEditingTitle(e.target.value)}
-                              onBlur={() => renameConversation(conv.id, editingTitle)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={editingTitle}
+                                onChange={(e) => setEditingTitle(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault()
+                                    renameConversation(conv.id, editingTitle)
+                                  } else if (e.key === 'Escape') {
+                                    e.preventDefault()
+                                    cancelEditing()
+                                  }
+                                }}
+                                autoFocus
+                                className={`flex-1 text-xs sm:text-sm font-bold bg-white border-2 ${tpmMode ? 'border-pink-400 text-rose-950' : 'border-violet-400 text-violet-950'} rounded px-2 py-1.5 outline-none`}
+                              />
+                              <motion.button
+                                onClick={(e) => {
+                                  e.stopPropagation()
                                   renameConversation(conv.id, editingTitle)
-                                } else if (e.key === 'Escape') {
-                                  setEditingConversationId(null)
-                                  setEditingTitle('')
-                                }
-                              }}
-                              autoFocus
-                              className={`w-full text-xs sm:text-sm font-bold bg-transparent border-2 ${tpmMode ? 'border-pink-400 text-rose-950' : 'border-violet-400 text-violet-950'} rounded px-2 py-1 outline-none`}
-                            />
+                                }}
+                                whileTap={{ scale: 0.9 }}
+                                className={`min-w-[44px] min-h-[44px] p-2 rounded-lg ${tpmMode ? 'bg-green-500 text-white' : 'bg-green-500 text-white'}`}
+                                title="Salvar"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                              </motion.button>
+                              <motion.button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  cancelEditing()
+                                }}
+                                whileTap={{ scale: 0.9 }}
+                                className={`min-w-[44px] min-h-[44px] p-2 rounded-lg ${tpmMode ? 'bg-red-500 text-white' : 'bg-red-500 text-white'}`}
+                                title="Cancelar"
+                              >
+                                <Icons.Close />
+                              </motion.button>
+                            </div>
                           ) : (
                             <>
-                              <p 
-                                className={`text-xs sm:text-sm font-bold truncate ${tpmMode ? 'text-rose-950' : 'text-violet-950'}`}
-                                onDoubleClick={() => {
-                                  setEditingConversationId(conv.id)
-                                  setEditingTitle(conv.title)
-                                }}
-                                title="Duplo clique para renomear"
-                              >
+                              <p className={`text-xs sm:text-sm font-bold truncate ${tpmMode ? 'text-rose-950' : 'text-violet-950'}`}>
                                 {conv.title}
                               </p>
                               {conv.lastMessage && (
@@ -1240,16 +1345,38 @@ const MatteoPage = () => {
                           )}
                         </div>
                         {editingConversationId !== conv.id && (
-                          <button
-                            onClick={(e) => deleteConversation(conv.id, e)}
-                            className={`p-1.5 sm:p-2 rounded-lg opacity-70 sm:opacity-0 group-hover:opacity-100 transition-all flex-shrink-0 mt-0.5 ${
-                              tpmMode 
-                                ? 'text-rose-600 hover:text-red-600 hover:bg-red-200/70' 
-                                : 'text-violet-600 hover:text-red-600 hover:bg-red-200/70'
-                            }`}
-                          >
-                            <Icons.Trash />
-                          </button>
+                          <div className="flex items-center gap-1 flex-shrink-0 mt-0.5">
+                            <motion.button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                startEditing(conv)
+                              }}
+                              whileTap={{ scale: 0.9 }}
+                              className={`min-w-[44px] min-h-[44px] p-2 rounded-lg opacity-70 sm:opacity-0 group-hover:opacity-100 transition-all ${
+                                tpmMode 
+                                  ? 'text-rose-600 hover:text-rose-800 hover:bg-rose-200/70' 
+                                  : 'text-violet-600 hover:text-violet-800 hover:bg-violet-200/70'
+                              }`}
+                              title="Renomear"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                              </svg>
+                            </motion.button>
+                            <motion.button
+                              onClick={(e) => confirmDelete(conv.id, e)}
+                              whileTap={{ scale: 0.9 }}
+                              className={`min-w-[44px] min-h-[44px] p-2 rounded-lg opacity-70 sm:opacity-0 group-hover:opacity-100 transition-all ${
+                                tpmMode 
+                                  ? 'text-rose-600 hover:text-red-600 hover:bg-red-200/70' 
+                                  : 'text-violet-600 hover:text-red-600 hover:bg-red-200/70'
+                              }`}
+                              title="Deletar"
+                            >
+                              <Icons.Trash />
+                            </motion.button>
+                          </div>
                         )}
                       </motion.div>
                     ))}
@@ -1651,14 +1778,24 @@ const MatteoPage = () => {
         </main>
 
         {/* Input Area */}
-        <footer className={`px-4 py-3 border-t backdrop-blur-xl transition-all duration-300 fixed bottom-0 left-0 right-0 z-50 ${
-          tpmMode 
-            ? 'bg-gradient-to-r from-pink-200/95 via-rose-100/95 to-pink-200/95 border-pink-300/50' 
-            : 'bg-gradient-to-r from-violet-200/95 via-purple-100/95 to-indigo-200/95 border-violet-300/50'
-        }`} style={{
-          bottom: keyboardHeight > 0 ? `${keyboardHeight}px` : '0',
-          paddingBottom: 'env(safe-area-inset-bottom, 16px)'
-        }}>
+        {/* No mobile: esconde quando sidebar está aberto. No desktop: sempre visível */}
+        <motion.footer 
+          animate={{ 
+            opacity: sidebarOpen ? 0 : 1,
+            x: sidebarOpen ? 288 : 0,
+            pointerEvents: sidebarOpen ? 'none' : 'auto'
+          }}
+          transition={{ duration: 0.2 }}
+          className={`px-4 py-3 border-t backdrop-blur-xl fixed bottom-0 left-0 right-0 z-40 lg:opacity-100 lg:translate-x-0 lg:pointer-events-auto lg:left-80 ${
+            tpmMode 
+              ? 'bg-gradient-to-r from-pink-200/95 via-rose-100/95 to-pink-200/95 border-pink-300/50' 
+              : 'bg-gradient-to-r from-violet-200/95 via-purple-100/95 to-indigo-200/95 border-violet-300/50'
+          }`} 
+          style={{
+            bottom: keyboardHeight > 0 ? `${keyboardHeight}px` : '0',
+            paddingBottom: 'env(safe-area-inset-bottom, 16px)'
+          }}
+        >
           <div className="max-w-3xl w-full mx-auto">
             <div className={`flex items-end gap-3 p-3 rounded-2xl border-2 transition-all backdrop-blur-sm ${
               tpmMode 
@@ -1698,14 +1835,82 @@ const MatteoPage = () => {
                 <Icons.Send />
               </motion.button>
             </div>
-            <p className={`text-center text-xs mt-2 ${
-              tpmMode ? 'text-rose-500' : 'text-violet-500'
-            }`}>
-              Matteo pode cometer erros, igual a mim. Criado com 💙 pelo Pablo.
-            </p>
-          </div>
-        </footer>
+              <p className={`text-center text-xs mt-2 ${
+                tpmMode ? 'text-rose-500' : 'text-violet-500'
+              }`}>
+                Matteo pode cometer erros, igual a mim. Criado com 💙 pelo Pablo.
+              </p>
+            </div>
+          </motion.footer>
       </div>
+
+      {/* Modal de Confirmação de Deletar */}
+      {deleteConfirmId && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+          onClick={() => setDeleteConfirmId(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className={`w-full max-w-sm rounded-2xl p-6 shadow-2xl ${
+              tpmMode 
+                ? 'bg-gradient-to-br from-pink-100 to-rose-100 border-2 border-pink-400' 
+                : 'bg-gradient-to-br from-violet-100 to-purple-100 border-2 border-violet-400'
+            }`}
+          >
+            <h3 className={`text-lg font-bold mb-2 ${tpmMode ? 'text-rose-900' : 'text-violet-900'}`}>
+              Deletar conversa?
+            </h3>
+            <p className={`text-sm mb-6 ${tpmMode ? 'text-rose-700' : 'text-violet-700'}`}>
+              Tem certeza que deseja deletar "{conversations.find(c => c.id === deleteConfirmId)?.title || 'esta conversa'}"? Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex gap-3">
+              <motion.button
+                onClick={() => setDeleteConfirmId(null)}
+                whileTap={{ scale: 0.95 }}
+                className={`flex-1 px-4 py-2.5 rounded-xl font-semibold ${
+                  tpmMode 
+                    ? 'bg-pink-200 text-rose-800 hover:bg-pink-300' 
+                    : 'bg-violet-200 text-violet-800 hover:bg-violet-300'
+                }`}
+              >
+                Cancelar
+              </motion.button>
+              <motion.button
+                onClick={deleteConversation}
+                whileTap={{ scale: 0.95 }}
+                className="flex-1 px-4 py-2.5 rounded-xl font-semibold bg-red-500 text-white hover:bg-red-600"
+              >
+                Deletar
+              </motion.button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Toast Notifications */}
+      <AnimatePresence>
+        {toast.show && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, x: '-50%' }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className={`fixed bottom-20 left-1/2 transform -translate-x-1/2 z-[100] px-4 py-3 rounded-xl shadow-2xl max-w-sm ${
+              toast.type === 'error'
+                ? 'bg-red-500 text-white'
+                : 'bg-green-500 text-white'
+            }`}
+          >
+            <p className="text-sm font-semibold text-center">{toast.message}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   )
