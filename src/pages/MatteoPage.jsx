@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import Flower from '../components/Flower'
@@ -466,6 +466,10 @@ const MatteoPage = () => {
   const inputRef = useRef(null)
   const [keyboardHeight, setKeyboardHeight] = useState(0)
   const mainRef = useRef(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isLoadingConversations, setIsLoadingConversations] = useState(false)
+  const [editingConversationId, setEditingConversationId] = useState(null)
+  const [editingTitle, setEditingTitle] = useState('')
 
   const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:5000')
 
@@ -499,7 +503,8 @@ const MatteoPage = () => {
   )
 
   // Carregar conversas do banco de dados
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
+    setIsLoadingConversations(true)
     try {
       const response = await fetch(`${API_URL}/api/conversations`)
       if (response.ok) {
@@ -514,8 +519,10 @@ const MatteoPage = () => {
         const parsed = JSON.parse(saved)
         setConversations(parsed)
       }
+    } finally {
+      setIsLoadingConversations(false)
     }
-  }
+  }, [API_URL])
 
   useEffect(() => {
     loadConversations()
@@ -526,38 +533,16 @@ const MatteoPage = () => {
     const urlAdmin = urlParams.get('admin') === 'pablo'
     setIsAdmin(adminStatus || urlAdmin)
     
-    // Criar conversa automaticamente se não houver nenhuma ativa
-    const createInitialConversation = async () => {
-      if (!currentConversationId) {
-        const newId = `conv_${Date.now()}`
-        const newSessionId = `session_${Date.now()}`
-        
-        try {
-          const response = await fetch(`${API_URL}/api/conversations`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              id: newId,
-              session_id: newSessionId,
-              title: 'Nova conversa'
-            })
-          })
-          
-          if (response.ok) {
-            const newConv = await response.json()
-            setConversations(prev => [newConv, ...prev])
-            setCurrentConversationId(newId)
-            setSessionId(newSessionId)
-          }
-        } catch (error) {
-          console.error('Erro ao criar conversa inicial:', error)
-        }
-      }
-    }
-    
-    // Aguardar um pouco antes de criar para não conflitar com loadConversations
-    setTimeout(createInitialConversation, 500)
+    // Não criar conversa automaticamente - deixar o usuário criar quando quiser
+    // ou criar quando enviar a primeira mensagem
   }, [])
+
+  // Recarregar conversas quando o sidebar abrir para garantir que está atualizado
+  useEffect(() => {
+    if (sidebarOpen) {
+      loadConversations()
+    }
+  }, [sidebarOpen, loadConversations])
   
 
   // Atualizar conversa atual quando mensagens mudam (com debounce)
@@ -572,6 +557,9 @@ const MatteoPage = () => {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ last_message: lastMessage })
+        }).then(() => {
+          // Recarregar lista após atualizar para garantir sincronização
+          loadConversations()
         }).catch(console.error)
       }, 1000)
       
@@ -589,7 +577,7 @@ const MatteoPage = () => {
       
       return () => clearTimeout(timeoutId)
     }
-  }, [messages, currentConversationId])
+  }, [messages, currentConversationId, API_URL, loadConversations])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -674,11 +662,14 @@ const MatteoPage = () => {
       
       if (response.ok) {
         const newConv = await response.json()
+        // Atualizar estado local imediatamente
         setConversations(prev => [newConv, ...prev])
         setCurrentConversationId(newId)
         setSessionId(newSessionId)
         setMessages([])
         setSidebarOpen(false)
+        // Recarregar lista do servidor para garantir sincronização
+        setTimeout(() => loadConversations(), 300)
       } else {
         // Fallback local se API falhar
         const newConv = {
@@ -725,6 +716,8 @@ const MatteoPage = () => {
         setCurrentConversationId(fullConv.id)
         setSessionId(fullConv.sessionId)
         setMessages(fullConv.messages || [])
+        // Recarregar lista para garantir que está atualizada
+        loadConversations()
       } else {
         // Fallback para dados locais
         setCurrentConversationId(conv.id)
@@ -744,6 +737,12 @@ const MatteoPage = () => {
   const deleteConversation = async (convId, e) => {
     e.stopPropagation()
     
+    // Confirmação antes de deletar
+    const convTitle = conversations.find(c => c.id === convId)?.title || 'esta conversa'
+    if (!window.confirm(`Tem certeza que deseja deletar "${convTitle}"?`)) {
+      return
+    }
+    
     try {
       const response = await fetch(`${API_URL}/api/conversations/${convId}`, {
         method: 'DELETE'
@@ -753,13 +752,17 @@ const MatteoPage = () => {
         setConversations(prev => prev.filter(c => c.id !== convId))
         if (currentConversationId === convId) {
           setCurrentConversationId(null)
+          setSessionId(`session_${Date.now()}`)
           setMessages([])
         }
+        // Recarregar lista do servidor para garantir sincronização
+        setTimeout(() => loadConversations(), 300)
       } else {
         // Fallback local se API falhar
         setConversations(prev => prev.filter(c => c.id !== convId))
         if (currentConversationId === convId) {
           setCurrentConversationId(null)
+          setSessionId(`session_${Date.now()}`)
           setMessages([])
         }
       }
@@ -769,6 +772,7 @@ const MatteoPage = () => {
       setConversations(prev => prev.filter(c => c.id !== convId))
       if (currentConversationId === convId) {
         setCurrentConversationId(null)
+        setSessionId(`session_${Date.now()}`)
         setMessages([])
       }
     }
@@ -826,6 +830,7 @@ const MatteoPage = () => {
     if (!input.trim()) return
     
     // Criar conversa se não existir
+    let conversationCreated = false
     if (!currentConversationId) {
       const newId = `conv_${Date.now()}`
       const newSessionId = `session_${Date.now()}`
@@ -847,6 +852,7 @@ const MatteoPage = () => {
           setConversations(prev => [newConv, ...prev])
           setCurrentConversationId(newId)
           setSessionId(newSessionId)
+          conversationCreated = true
         } else {
           // Fallback local
           const newConv = {
@@ -861,14 +867,17 @@ const MatteoPage = () => {
           setConversations(prev => [newConv, ...prev])
           setCurrentConversationId(newId)
           setSessionId(newSessionId)
+          conversationCreated = true
         }
       } catch (error) {
         console.error('Erro ao criar conversa:', error)
         // Fallback local
+        const newId = `conv_${Date.now()}`
+        const newSessionId = `session_${Date.now()}`
         const newConv = {
           id: newId,
           sessionId: newSessionId,
-          title: title,
+          title: input.substring(0, 30) + (input.length > 30 ? '...' : ''),
           messages: [],
           lastMessage: input.substring(0, 50),
           createdAt: new Date().toISOString(),
@@ -877,6 +886,12 @@ const MatteoPage = () => {
         setConversations(prev => [newConv, ...prev])
         setCurrentConversationId(newId)
         setSessionId(newSessionId)
+        conversationCreated = true
+      }
+      
+      // Recarregar lista do servidor após criar conversa
+      if (conversationCreated) {
+        setTimeout(() => loadConversations(), 300)
       }
     }
     
@@ -920,6 +935,9 @@ const MatteoPage = () => {
       setConversations(prev => prev.map(conv =>
         conv.id === currentConversationId ? { ...conv, title } : conv
       ))
+      
+      // Recarregar lista para garantir sincronização
+      setTimeout(() => loadConversations(), 500)
     }
   }
 
@@ -957,6 +975,66 @@ const MatteoPage = () => {
     if (date.toDateString() === yesterday.toDateString()) return 'Ontem'
     return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
   }
+
+  const getDateGroup = (timestamp) => {
+    const date = new Date(timestamp)
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const weekAgo = new Date(today)
+    weekAgo.setDate(weekAgo.getDate() - 7)
+
+    if (date.toDateString() === today.toDateString()) return 'Hoje'
+    if (date.toDateString() === yesterday.toDateString()) return 'Ontem'
+    if (date > weekAgo) return 'Esta semana'
+    if (date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear()) return 'Este mês'
+    return 'Anteriores'
+  }
+
+  const renameConversation = async (convId, newTitle) => {
+    if (!newTitle.trim()) return
+    
+    try {
+      const response = await fetch(`${API_URL}/api/conversations/${convId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newTitle.trim() })
+      })
+      
+      if (response.ok) {
+        setConversations(prev => prev.map(conv =>
+          conv.id === convId ? { ...conv, title: newTitle.trim() } : conv
+        ))
+        loadConversations()
+      }
+    } catch (error) {
+      console.error('Erro ao renomear conversa:', error)
+    }
+    setEditingConversationId(null)
+    setEditingTitle('')
+  }
+
+  // Filtrar conversas por busca
+  const filteredConversations = useMemo(() => {
+    if (!searchQuery.trim()) return conversations
+    
+    const query = searchQuery.toLowerCase()
+    return conversations.filter(conv => 
+      conv.title?.toLowerCase().includes(query) ||
+      conv.lastMessage?.toLowerCase().includes(query)
+    )
+  }, [conversations, searchQuery])
+
+  // Agrupar conversas por data
+  const groupedConversations = useMemo(() => {
+    const groups = {}
+    filteredConversations.forEach(conv => {
+      const group = getDateGroup(conv.updatedAt)
+      if (!groups[group]) groups[group] = []
+      groups[group].push(conv)
+    })
+    return groups
+  }, [filteredConversations])
 
   // Sugestões iniciais
   const suggestions = [
@@ -1023,7 +1101,7 @@ const MatteoPage = () => {
         }`}
       >
         {/* Sidebar Header */}
-        <div className={`p-3 sm:p-4 border-b-2 ${tpmMode ? 'border-pink-400/70' : 'border-violet-400/70'}`}>
+        <div className={`p-3 sm:p-4 border-b-2 ${tpmMode ? 'border-pink-400/70' : 'border-violet-400/70'} space-y-2`}>
           <motion.button
             onClick={createNewConversation}
             whileHover={{ scale: 1.02, y: -2 }}
@@ -1037,50 +1115,149 @@ const MatteoPage = () => {
             <Icons.Plus />
             Nova conversa
           </motion.button>
+          
+          {/* Campo de busca */}
+          <div className={`relative ${tpmMode ? 'bg-pink-100/80' : 'bg-violet-100/80'} rounded-lg border-2 ${tpmMode ? 'border-pink-300/70' : 'border-violet-300/70'}`}>
+            <div className="absolute left-2 top-1/2 -translate-y-1/2">
+              <Icons.Search />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar conversas..."
+              className={`w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-transparent outline-none ${tpmMode ? 'text-rose-900 placeholder-rose-500' : 'text-violet-900 placeholder-violet-500'}`}
+            />
+            {searchQuery && (
+              <motion.button
+                onClick={() => setSearchQuery('')}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded ${tpmMode ? 'text-rose-600 hover:text-rose-800' : 'text-violet-600 hover:text-violet-800'}`}
+              >
+                <Icons.Close />
+              </motion.button>
+            )}
+          </div>
         </div>
 
         {/* Conversations List */}
         <div className="flex-1 overflow-y-auto p-2 sm:p-3">
-          <div className="space-y-1.5 sm:space-y-2">
-            {conversations.map(conv => (
+          {isLoadingConversations ? (
+            <div className="flex items-center justify-center py-8">
               <motion.div
-                key={conv.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: conv.id ? 0 : 0.1 }}
-                whileHover={{ scale: 1.02, x: 4 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => loadConversation(conv)}
-                className={`group flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg sm:rounded-xl cursor-pointer transition-all border-2 ${
-                  currentConversationId === conv.id 
-                    ? tpmMode 
-                      ? 'bg-gradient-to-r from-pink-400/90 to-rose-400/90 shadow-lg border-pink-500/90' 
-                      : 'bg-gradient-to-r from-violet-400/90 to-purple-400/90 shadow-lg border-violet-500/90'
-                    : tpmMode
-                      ? 'hover:bg-pink-300/80 border-pink-300/70 hover:border-pink-400/90 bg-pink-100/60'
-                      : 'hover:bg-violet-300/80 border-violet-300/70 hover:border-violet-400/90 bg-violet-100/60'
-                }`}
-              >
-                <div className="flex-shrink-0">
-                  <Icons.Chat />
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className={`w-8 h-8 border-4 ${tpmMode ? 'border-pink-500 border-t-transparent' : 'border-violet-500 border-t-transparent'} rounded-full`}
+              />
+            </div>
+          ) : Object.keys(groupedConversations).length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+              <div className="opacity-50 mb-3">
+                <Icons.Chat />
+              </div>
+              <p className={`text-sm font-semibold ${tpmMode ? 'text-rose-700' : 'text-violet-700'}`}>
+                {searchQuery ? 'Nenhuma conversa encontrada' : 'Nenhuma conversa ainda'}
+              </p>
+              <p className={`text-xs mt-1 ${tpmMode ? 'text-rose-600' : 'text-violet-600'}`}>
+                {searchQuery ? 'Tente outra busca' : 'Crie uma nova conversa para começar!'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {Object.entries(groupedConversations).map(([groupName, groupConvs]) => (
+                <div key={groupName}>
+                  <h3 className={`text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2 px-2 ${tpmMode ? 'text-rose-600' : 'text-violet-600'}`}>
+                    {groupName}
+                  </h3>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    {groupConvs.map(conv => (
+                      <motion.div
+                        key={conv.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.05 }}
+                        whileHover={{ scale: 1.02, x: 4 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`group flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg sm:rounded-xl cursor-pointer transition-all border-2 ${
+                          currentConversationId === conv.id 
+                            ? tpmMode 
+                              ? 'bg-gradient-to-r from-pink-400/90 to-rose-400/90 shadow-lg border-pink-500/90' 
+                              : 'bg-gradient-to-r from-violet-400/90 to-purple-400/90 shadow-lg border-violet-500/90'
+                            : tpmMode
+                              ? 'hover:bg-pink-300/80 border-pink-300/70 hover:border-pink-400/90 bg-pink-100/60'
+                              : 'hover:bg-violet-300/80 border-violet-300/70 hover:border-violet-400/90 bg-violet-100/60'
+                        }`}
+                      >
+                        <div className="flex-shrink-0 pt-0.5">
+                          <Icons.Chat />
+                        </div>
+                        <div 
+                          className="flex-1 min-w-0"
+                          onClick={() => {
+                            if (editingConversationId === conv.id) return
+                            loadConversation(conv)
+                          }}
+                        >
+                          {editingConversationId === conv.id ? (
+                            <input
+                              type="text"
+                              value={editingTitle}
+                              onChange={(e) => setEditingTitle(e.target.value)}
+                              onBlur={() => renameConversation(conv.id, editingTitle)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  renameConversation(conv.id, editingTitle)
+                                } else if (e.key === 'Escape') {
+                                  setEditingConversationId(null)
+                                  setEditingTitle('')
+                                }
+                              }}
+                              autoFocus
+                              className={`w-full text-xs sm:text-sm font-bold bg-transparent border-2 ${tpmMode ? 'border-pink-400 text-rose-950' : 'border-violet-400 text-violet-950'} rounded px-2 py-1 outline-none`}
+                            />
+                          ) : (
+                            <>
+                              <p 
+                                className={`text-xs sm:text-sm font-bold truncate ${tpmMode ? 'text-rose-950' : 'text-violet-950'}`}
+                                onDoubleClick={() => {
+                                  setEditingConversationId(conv.id)
+                                  setEditingTitle(conv.title)
+                                }}
+                                title="Duplo clique para renomear"
+                              >
+                                {conv.title}
+                              </p>
+                              {conv.lastMessage && (
+                                <p className={`text-[10px] sm:text-xs font-medium truncate mt-0.5 ${tpmMode ? 'text-rose-700' : 'text-violet-700'}`}>
+                                  {conv.lastMessage.length > 40 ? conv.lastMessage.substring(0, 40) + '...' : conv.lastMessage}
+                                </p>
+                              )}
+                              <p className={`text-[9px] sm:text-[10px] font-semibold mt-0.5 ${tpmMode ? 'text-rose-600' : 'text-violet-600'}`}>
+                                {formatDate(conv.updatedAt)}
+                              </p>
+                            </>
+                          )}
+                        </div>
+                        {editingConversationId !== conv.id && (
+                          <button
+                            onClick={(e) => deleteConversation(conv.id, e)}
+                            className={`p-1.5 sm:p-2 rounded-lg opacity-70 sm:opacity-0 group-hover:opacity-100 transition-all flex-shrink-0 mt-0.5 ${
+                              tpmMode 
+                                ? 'text-rose-600 hover:text-red-600 hover:bg-red-200/70' 
+                                : 'text-violet-600 hover:text-red-600 hover:bg-red-200/70'
+                            }`}
+                          >
+                            <Icons.Trash />
+                          </button>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-xs sm:text-sm font-bold truncate ${tpmMode ? 'text-rose-950' : 'text-violet-950'}`}>{conv.title}</p>
-                  <p className={`text-[10px] sm:text-xs font-semibold truncate ${tpmMode ? 'text-rose-800' : 'text-violet-800'}`}>{formatDate(conv.updatedAt)}</p>
-                </div>
-                <button
-                  onClick={(e) => deleteConversation(conv.id, e)}
-                  className={`p-1.5 sm:p-2 rounded-lg opacity-70 sm:opacity-0 group-hover:opacity-100 transition-all flex-shrink-0 ${
-                    tpmMode 
-                      ? 'text-rose-600 hover:text-red-600 hover:bg-red-200/70' 
-                      : 'text-violet-600 hover:text-red-600 hover:bg-red-200/70'
-                  }`}
-                >
-                  <Icons.Trash />
-                </button>
-              </motion.div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Sidebar Footer */}
