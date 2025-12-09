@@ -2129,13 +2129,15 @@ class handler(BaseHTTPRequestHandler):
                 return
             
             # Inicializar banco (com tratamento de erro)
-            try:
-                init_db()
-                # Salvar mensagem do usuário
-                save_chat_message(session_id, 'user', user_message)
-            except Exception as e:
-                print(f"⚠️ Erro ao salvar no banco: {e}")
-                # Continua mesmo sem salvar
+            # Não salvar mensagem do usuário se já foi salva como admin (Pablo)
+            if not (is_admin and sender == 'pablo'):
+                try:
+                    init_db()
+                    # Salvar mensagem do usuário
+                    save_chat_message(session_id, 'user', user_message)
+                except Exception as e:
+                    print(f"⚠️ Erro ao salvar no banco: {e}")
+                    # Continua mesmo sem salvar
             
             # Buscar histórico
             history = get_chat_history(session_id, limit=30)
@@ -2235,8 +2237,11 @@ class handler(BaseHTTPRequestHandler):
                         bot_response = f"Oi princesa! 💙\n\nTô passando por um limite de uso agora (já usei muitos tokens hoje). O Pablo precisa aumentar o limite da API.\n\nTenta de novo em {wait_time}, tá bom? Ou manda uma mensagem pro Pablo pra ele resolver isso! 😅"
                         
                         # Salvar mensagem do usuário e resposta mesmo com erro de rate limit
+                        # Não salvar mensagem do usuário se já foi salva antes (admin como Pablo ou já salva anteriormente)
                         try:
-                            save_chat_message(session_id, 'user', user_message)
+                            # Verificar se mensagem do usuário já foi salva (não salvar se for admin como Pablo)
+                            if not (is_admin and sender == 'pablo'):
+                                save_chat_message(session_id, 'user', user_message)
                             save_chat_message(session_id, 'assistant', bot_response)
                             
                             # Criar ou atualizar conversa APENAS se o bot respondeu

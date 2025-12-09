@@ -557,7 +557,16 @@ const MatteoPage = () => {
   
 
   // Atualizar conversa atual quando mensagens mudam (com debounce)
+  // Usar ref para evitar loops infinitos quando mensagens são recarregadas do banco
+  const isReloadingRef = useRef(false)
+  
   useEffect(() => {
+    // Não atualizar se estiver recarregando do banco
+    if (isReloadingRef.current) {
+      isReloadingRef.current = false
+      return
+    }
+    
     if (currentConversationId && messages.length > 0) {
       const lastMessage = messages[messages.length - 1]?.text?.substring(0, 50) + '...'
       
@@ -669,6 +678,35 @@ const MatteoPage = () => {
     setInput('')
     setSidebarOpen(false)
   }
+
+  // Função auxiliar para recarregar mensagens da conversa atual do banco
+  const reloadCurrentConversationMessages = useCallback(async (conversationId = null) => {
+    const convId = conversationId || currentConversationId
+    if (!convId) return Promise.resolve()
+    
+    try {
+      // Marcar que estamos recarregando para evitar loop no useEffect
+      isReloadingRef.current = true
+      
+      const response = await fetch(`${API_URL}/api/conversations/${convId}`)
+      if (response.ok) {
+        const fullConv = await response.json()
+        // Validar e mapear mensagens corretamente
+        const validatedMessages = (fullConv.messages || []).map((msg, index) => ({
+          id: msg.id || index + 1,
+          text: msg.text || msg.content || '',
+          sender: msg.sender || (msg.role === 'admin' ? 'pablo' : (msg.role === 'matteo_admin' ? 'matteo' : (msg.role === 'user' ? 'user' : 'bot'))),
+          timestamp: msg.timestamp || new Date().toISOString()
+        }))
+        setMessages(validatedMessages)
+        return Promise.resolve()
+      }
+      return Promise.reject(new Error('Failed to load conversation'))
+    } catch (error) {
+      console.error('Erro ao recarregar mensagens:', error)
+      return Promise.reject(error)
+    }
+  }, [currentConversationId, API_URL])
 
   const loadConversation = async (conv) => {
     try {
@@ -884,41 +922,64 @@ const MatteoPage = () => {
         return
       }
       
-      // Se for múltiplas mensagens (Pablo + resposta do Matteo)
-      if (responseData.is_multiple && responseData.messages && Array.isArray(responseData.messages)) {
-        responseData.messages.forEach((msg, index) => {
-          if (msg && msg.response && msg.sender) {
-            const message = {
-              id: Date.now() + index + 1,
-              text: msg.response,
-              sender: msg.sender,
-              timestamp: new Date().toISOString()
-            }
-            setMessages(prev => [...prev, message])
-          }
-        })
+      // Atualizar conversation_id se foi retornado pelo backend
+      const finalConversationId = responseData.conversation_id || currentConversationId
+      if (responseData.conversation_id && responseData.conversation_id !== currentConversationId) {
+        setCurrentConversationId(responseData.conversation_id)
       }
-      // Se for mensagem do admin (Pablo ou Matteo), adicionar com o sender correto
-      else if (responseData.isAdminMessage && responseData.response && responseData.sender) {
-        const adminMessage = {
-          id: Date.now() + 1,
-          text: responseData.response,
-          sender: responseData.sender,
-          timestamp: new Date().toISOString()
+      
+      // Sempre recarregar mensagens do banco após envio para evitar duplicação
+      // O backend já salvou todas as mensagens, então recarregamos para garantir sincronização
+      if (finalConversationId) {
+        // Aguardar um pouco para garantir que o backend salvou as mensagens
+        // Usar retry para garantir que as mensagens foram salvas
+        const reloadWithRetry = (retries = 2, delay = 600) => {
+          setTimeout(() => {
+            // Usar o conversation_id final para garantir que estamos recarregando a conversa correta
+            reloadCurrentConversationMessages(finalConversationId).then(() => {
+              // Sucesso - não precisa tentar novamente
+            }).catch(() => {
+              // Erro - tentar novamente se ainda tiver tentativas
+              if (retries > 0) {
+                reloadWithRetry(retries - 1, delay)
+              }
+            })
+          }, delay)
         }
-        setMessages(prev => [...prev, adminMessage])
-      } 
-      // Mensagem normal do bot
-      else if (responseData.response) {
-        const botMessage = {
-          id: Date.now() + 1,
-          text: responseData.response,
-          sender: responseData.sender || 'bot',
-          timestamp: new Date().toISOString()
-        }
-        setMessages(prev => [...prev, botMessage])
+        reloadWithRetry()
       } else {
-        console.error('Formato de resposta inválido:', responseData)
+        // Fallback: se não tiver conversation_id, adicionar manualmente (caso raro)
+        if (responseData.is_multiple && responseData.messages && Array.isArray(responseData.messages)) {
+          responseData.messages.forEach((msg, index) => {
+            if (msg && msg.response && msg.sender) {
+              const message = {
+                id: Date.now() + index + 1,
+                text: msg.response,
+                sender: msg.sender,
+                timestamp: new Date().toISOString()
+              }
+              setMessages(prev => [...prev, message])
+            }
+          })
+        } else if (responseData.isAdminMessage && responseData.response && responseData.sender) {
+          const adminMessage = {
+            id: Date.now() + 1,
+            text: responseData.response,
+            sender: responseData.sender,
+            timestamp: new Date().toISOString()
+          }
+          setMessages(prev => [...prev, adminMessage])
+        } else if (responseData.response) {
+          const botMessage = {
+            id: Date.now() + 1,
+            text: responseData.response,
+            sender: responseData.sender || 'bot',
+            timestamp: new Date().toISOString()
+          }
+          setMessages(prev => [...prev, botMessage])
+        } else {
+          console.error('Formato de resposta inválido:', responseData)
+        }
       }
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error)
