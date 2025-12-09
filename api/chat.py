@@ -843,7 +843,13 @@ def get_intimacy_level(session_id):
 
 client = None
 LLM_ENABLED = False
-LLM_MODEL = "llama-3.3-70b-versatile"
+# Modelo principal - pode ser alterado para economizar tokens
+# Opções: "llama-3.3-70b-versatile" (melhor qualidade, mais tokens)
+#         "llama-3.1-8b-instant" (boa qualidade, menos tokens)
+#         "mixtral-8x7b-32768" (boa qualidade, menos tokens)
+LLM_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
+# Modelo fallback para quando rate limit for atingido
+FALLBACK_MODEL = "llama-3.1-8b-instant"
 
 if OPENAI_AVAILABLE and GROQ_API_KEY:
     try:
@@ -1306,13 +1312,14 @@ class handler(BaseHTTPRequestHandler):
                 })
             
             # Primeira chamada - com ferramentas
+            # Reduzir max_tokens para economizar (de 500 para 400)
             try:
                 response = client.chat.completions.create(
                     model=LLM_MODEL,
                     messages=messages,
                     tools=MATTEO_TOOLS,
                     tool_choice="auto",
-                    max_tokens=500,
+                    max_tokens=400,  # Reduzido de 500 para economizar tokens
                     temperature=0.85,
                     top_p=0.9,
                 )
@@ -1320,43 +1327,58 @@ class handler(BaseHTTPRequestHandler):
                 # Tratar rate limit especificamente
                 error_str = str(api_error)
                 if "429" in error_str or "rate_limit" in error_str.lower() or "RateLimitError" in str(type(api_error)):
-                    print(f"⚠️ Rate limit atingido: {error_str}")
-                    # Extrair tempo de espera se disponível
-                    wait_time = "alguns minutos"
-                    if "try again in" in error_str:
+                    print(f"⚠️ Rate limit atingido com {LLM_MODEL}, tentando modelo fallback: {FALLBACK_MODEL}")
+                    
+                    # Tentar usar modelo fallback (menor, consome menos tokens)
+                    try:
+                        response = client.chat.completions.create(
+                            model=FALLBACK_MODEL,
+                            messages=messages,
+                            tools=MATTEO_TOOLS,
+                            tool_choice="auto",
+                            max_tokens=400,
+                            temperature=0.85,
+                            top_p=0.9,
+                        )
+                        print(f"✅ Usando modelo fallback {FALLBACK_MODEL} com sucesso!")
+                    except Exception as fallback_error:
+                        # Se fallback também falhar, retornar mensagem de erro
+                        print(f"❌ Fallback também falhou: {fallback_error}")
+                        wait_time = "alguns minutos"
+                        if "try again in" in error_str:
+                            try:
+                                import re
+                                match = re.search(r'try again in (\d+)m(\d+)', error_str)
+                                if match:
+                                    wait_time = f"{match.group(1)} minutos"
+                            except:
+                                pass
+                        
+                        bot_response = f"Oi princesa! 💙\n\nTô passando por um limite de uso agora (já usei muitos tokens hoje). O Pablo precisa aumentar o limite da API.\n\nTenta de novo em {wait_time}, tá bom? Ou manda uma mensagem pro Pablo pra ele resolver isso! 😅"
+                        
+                        # Salvar mensagem do usuário mesmo com erro
                         try:
-                            import re
-                            match = re.search(r'try again in (\d+)m(\d+)', error_str)
-                            if match:
-                                wait_time = f"{match.group(1)} minutos"
+                            save_chat_message(session_id, 'user', user_message)
+                            save_chat_message(session_id, 'assistant', bot_response)
+                            if conversation_id:
+                                update_conversation(conversation_id, last_message=bot_response[:50] + ('...' if len(bot_response) > 50 else ''))
                         except:
                             pass
-                    
-                    bot_response = f"Oi princesa! 💙\n\nTô passando por um limite de uso agora (já usei muitos tokens hoje). O Pablo precisa aumentar o limite da API.\n\nTenta de novo em {wait_time}, tá bom? Ou manda uma mensagem pro Pablo pra ele resolver isso! 😅"
-                    
-                    # Salvar mensagem do usuário mesmo com erro
-                    try:
-                        save_chat_message(session_id, 'user', user_message)
-                        save_chat_message(session_id, 'assistant', bot_response)
-                        if conversation_id:
-                            update_conversation(conversation_id, last_message=bot_response[:50] + ('...' if len(bot_response) > 50 else ''))
-                    except:
-                        pass
-                    
-                    # Retornar resposta de rate limit
-                    self.send_response(200)
-                    self.send_header('Content-Type', 'application/json; charset=utf-8')
-                    self.send_header('Access-Control-Allow-Origin', '*')
-                    self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({
-                        'response': bot_response,
-                        'session_id': session_id,
-                        'conversation_id': conversation_id,
-                        'status': 'rate_limit',
-                        'tools_used': []
-                    }, ensure_ascii=False).encode('utf-8'))
-                    return
+                        
+                        # Retornar resposta de rate limit
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'application/json; charset=utf-8')
+                        self.send_header('Access-Control-Allow-Origin', '*')
+                        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+                        self.end_headers()
+                        self.wfile.write(json.dumps({
+                            'response': bot_response,
+                            'session_id': session_id,
+                            'conversation_id': conversation_id,
+                            'status': 'rate_limit',
+                            'tools_used': []
+                        }, ensure_ascii=False).encode('utf-8'))
+                        return
                 else:
                     # Outros erros da API - re-lançar para tratamento geral
                     raise api_error
@@ -1402,25 +1424,37 @@ class handler(BaseHTTPRequestHandler):
                 
                 # Segunda chamada - com resultados das ferramentas
                 # IMPORTANTE: Precisamos passar tools novamente, mesmo na segunda chamada
-                try:
-                    final_response = client.chat.completions.create(
-                        model=LLM_MODEL,
-                        messages=messages,
-                        tools=MATTEO_TOOLS,  # Passar tools novamente para evitar erro 400
-                        tool_choice="auto",  # Permitir usar ferramentas novamente se necessário
-                        max_tokens=500,
-                        temperature=0.85,
-                        top_p=0.9,
-                    )
-                    bot_response = final_response.choices[0].message.content or ""
-                except Exception as api_error:
-                    # Se der rate limit na segunda chamada, usar resposta parcial
-                    error_str = str(api_error)
-                    if "429" in error_str or "rate_limit" in error_str.lower() or "RateLimitError" in str(type(api_error)):
-                        print(f"⚠️ Rate limit na segunda chamada, usando resposta parcial")
-                        bot_response = response_message.content or "Desculpa princesa, tô com limite de uso agora. Tenta de novo em alguns minutos! 💙"
-                    else:
-                        raise api_error
+                    try:
+                        final_response = client.chat.completions.create(
+                            model=LLM_MODEL,
+                            messages=messages,
+                            tools=MATTEO_TOOLS,  # Passar tools novamente para evitar erro 400
+                            tool_choice="auto",  # Permitir usar ferramentas novamente se necessário
+                            max_tokens=400,  # Reduzido para economizar tokens
+                            temperature=0.85,
+                            top_p=0.9,
+                        )
+                        bot_response = final_response.choices[0].message.content or ""
+                    except Exception as api_error:
+                        # Se der rate limit na segunda chamada, tentar fallback
+                        error_str = str(api_error)
+                        if "429" in error_str or "rate_limit" in error_str.lower() or "RateLimitError" in str(type(api_error)):
+                            print(f"⚠️ Rate limit na segunda chamada, tentando fallback")
+                            try:
+                                final_response = client.chat.completions.create(
+                                    model=FALLBACK_MODEL,
+                                    messages=messages,
+                                    tools=MATTEO_TOOLS,
+                                    tool_choice="auto",
+                                    max_tokens=400,
+                                    temperature=0.85,
+                                    top_p=0.9,
+                                )
+                                bot_response = final_response.choices[0].message.content or ""
+                            except:
+                                bot_response = response_message.content or "Desculpa princesa, tô com limite de uso agora. Tenta de novo em alguns minutos! 💙"
+                        else:
+                            raise api_error
                 
                 # Se ainda houver tool_calls na resposta final, executar também
                 if final_response.choices[0].message.tool_calls:
@@ -1465,16 +1499,28 @@ class handler(BaseHTTPRequestHandler):
                             messages=messages,
                             tools=MATTEO_TOOLS,
                             tool_choice="none",  # Forçar resposta final sem mais ferramentas
-                            max_tokens=500,
+                            max_tokens=400,  # Reduzido para economizar tokens
                             temperature=0.85,
                         )
                         bot_response = third_response.choices[0].message.content or ""
                     except Exception as api_error:
-                        # Se der rate limit na terceira chamada, usar resposta anterior
+                        # Se der rate limit na terceira chamada, tentar fallback
                         error_str = str(api_error)
                         if "429" in error_str or "rate_limit" in error_str.lower() or "RateLimitError" in str(type(api_error)):
-                            print(f"⚠️ Rate limit na terceira chamada, usando resposta anterior")
-                            # bot_response já está definido da chamada anterior
+                            print(f"⚠️ Rate limit na terceira chamada, tentando fallback")
+                            try:
+                                third_response = client.chat.completions.create(
+                                    model=FALLBACK_MODEL,
+                                    messages=messages,
+                                    tools=MATTEO_TOOLS,
+                                    tool_choice="none",
+                                    max_tokens=400,
+                                    temperature=0.85,
+                                )
+                                bot_response = third_response.choices[0].message.content or ""
+                            except:
+                                # bot_response já está definido da chamada anterior
+                                pass
                         else:
                             raise api_error
             
