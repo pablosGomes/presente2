@@ -12,7 +12,7 @@ from openai import OpenAI
 
 # ============== CONFIGURAÇÕES ==============
 POSTGRES_URL = os.environ.get("POSTGRES_URL") or os.environ.get("DATABASE_URL")
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+MISTRAL_API_KEY = os.environ.get("MISTRAL_API_KEY")
 VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY")
 VAPID_PUBLIC_KEY = "BJg... (Preencheremos via ENV)" 
 # O e-mail de contato para o VAPID
@@ -54,11 +54,11 @@ def get_subscriptions():
         return []
 
 def generate_proactive_message(hours_since):
-    if not GROQ_API_KEY:
+    if not MISTRAL_API_KEY:
         return "Oi princesa! Saudade de você... 💙"
 
     try:
-        client = OpenAI(api_key=GROQ_API_KEY, base_url="https://api.groq.com/openai/v1")
+        client = OpenAI(api_key=MISTRAL_API_KEY, base_url="https://api.mistral.ai/v1")
         
         context = "Ela sumiu por 24 horas." if hours_since > 24 else "É de manhã, hora de dar bom dia."
         if hours_since > 72: context = "Ela sumiu por 3 dias!"
@@ -67,10 +67,10 @@ def generate_proactive_message(hours_since):
 CONTEXTO: {context}
 Gere uma mensagem CURTA (máx 1 frase) e CARINHOSA de notificação para o celular dela.
 Exemplos: "Bom dia princesa! ☀️", "Sumiu hein? Saudade... 💙", "Tudo bem por aí, princesa?"
-NÃO use aspas. Seja natural."""
+NÃO use aspas. Seja natural e carinhoso."""
 
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="mistral-large-latest",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=50
         )

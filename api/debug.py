@@ -37,9 +37,9 @@ class handler(BaseHTTPRequestHandler):
         
         # Verificar variáveis de ambiente
         env_vars = {
-            'GROQ_API_KEY': {
-                'exists': bool(os.environ.get('GROQ_API_KEY')),
-                'first_chars': os.environ.get('GROQ_API_KEY', '')[:10] + '...' if os.environ.get('GROQ_API_KEY') else None
+            'MISTRAL_API_KEY': {
+                'exists': bool(os.environ.get('MISTRAL_API_KEY')),
+                'first_chars': os.environ.get('MISTRAL_API_KEY', '')[:10] + '...' if os.environ.get('MISTRAL_API_KEY') else None
             },
             'POSTGRES_URL': {
                 'exists': bool(os.environ.get('POSTGRES_URL')),
@@ -83,29 +83,29 @@ class handler(BaseHTTPRequestHandler):
                     'error': str(e)[:200]
                 }
         
-        # Testar Groq
-        groq_test = {'status': 'not_tested'}
-        if imports['openai'] and env_vars['GROQ_API_KEY']['exists']:
+        # Testar Mistral
+        mistral_test = {'status': 'not_tested'}
+        if imports['openai'] and env_vars['MISTRAL_API_KEY']['exists']:
             try:
                 from openai import OpenAI
                 client = OpenAI(
-                    api_key=os.environ.get('GROQ_API_KEY'),
-                    base_url="https://api.groq.com/openai/v1"
+                    api_key=os.environ.get('MISTRAL_API_KEY'),
+                    base_url="https://api.mistral.ai/v1"
                 )
                 # Teste simples
                 response = client.chat.completions.create(
-                    model="llama-3.3-70b-versatile",
+                    model="mistral-large-latest",
                     messages=[{"role": "user", "content": "Diga apenas 'OK'"}],
                     max_tokens=10,
                     temperature=0
                 )
-                groq_test = {
+                mistral_test = {
                     'status': 'working',
-                    'model': 'llama-3.3-70b-versatile',
+                    'model': 'mistral-large-latest',
                     'response': response.choices[0].message.content
                 }
             except Exception as e:
-                groq_test = {
+                mistral_test = {
                     'status': 'error',
                     'error': str(e)[:200]
                 }
@@ -123,7 +123,7 @@ class handler(BaseHTTPRequestHandler):
             'imports': imports,
             'environment': env_vars,
             'database_test': db_test,
-            'groq_test': groq_test,
+            'mistral_test': mistral_test,
             'python': python_info,
             'recommendations': []
         }
@@ -133,23 +133,23 @@ class handler(BaseHTTPRequestHandler):
             response['recommendations'].append('⚠️ Biblioteca OpenAI não instalada - execute: pip install openai')
         if not imports['psycopg2']:
             response['recommendations'].append('⚠️ Biblioteca psycopg2 não instalada - execute: pip install psycopg2-binary')
-        if not env_vars['GROQ_API_KEY']['exists']:
-            response['recommendations'].append('❌ GROQ_API_KEY não configurada - adicione nas variáveis de ambiente da Vercel')
+        if not env_vars['MISTRAL_API_KEY']['exists']:
+            response['recommendations'].append('❌ MISTRAL_API_KEY não configurada - adicione nas variáveis de ambiente da Vercel')
         if not env_vars['POSTGRES_URL']['exists'] and not env_vars['DATABASE_URL']['exists']:
             response['recommendations'].append('❌ Banco de dados não configurado - configure POSTGRES_URL ou DATABASE_URL')
         if db_test['status'] == 'error':
             response['recommendations'].append('❌ Erro na conexão com banco - verifique a URL de conexão')
-        if groq_test['status'] == 'error':
-            response['recommendations'].append('❌ Erro na API do Groq - verifique a API key')
+        if mistral_test['status'] == 'error':
+            response['recommendations'].append('❌ Erro na API do Mistral - verifique a API key')
         
         # Status final
         all_ok = (
             imports['openai'] and
             imports['psycopg2'] and
-            env_vars['GROQ_API_KEY']['exists'] and
+            env_vars['MISTRAL_API_KEY']['exists'] and
             (env_vars['POSTGRES_URL']['exists'] or env_vars['DATABASE_URL']['exists']) and
             db_test.get('status') == 'connected' and
-            groq_test.get('status') == 'working'
+            mistral_test.get('status') == 'working'
         )
         
         response['status'] = 'ready' if all_ok else 'not_ready'

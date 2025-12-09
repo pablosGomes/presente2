@@ -33,7 +33,7 @@ class handler(BaseHTTPRequestHandler):
         """Health check com verificação de dependências"""
         
         # Verificar configurações
-        groq_configured = bool(os.environ.get('GROQ_API_KEY'))
+        mistral_configured = bool(os.environ.get('MISTRAL_API_KEY'))
         db_configured = bool(os.environ.get('POSTGRES_URL') or os.environ.get('DATABASE_URL'))
         
         # Testar conexão com banco se disponível
@@ -56,16 +56,16 @@ class handler(BaseHTTPRequestHandler):
             db_status = 'not_configured'
         
         # Status geral
-        all_ok = groq_configured and (db_status == 'connected') and OPENAI_AVAILABLE
+        all_ok = mistral_configured and (db_status == 'connected') and OPENAI_AVAILABLE
         
         response = {
             'status': 'healthy' if all_ok else 'degraded',
             'timestamp': datetime.utcnow().isoformat(),
             'message': '🎆 Matteo API está funcionando!' if all_ok else '⚠️ API com problemas',
             'checks': {
-                'groq_api': {
-                    'configured': groq_configured,
-                    'status': 'ok' if groq_configured else 'missing_api_key'
+                'mistral_api': {
+                    'configured': mistral_configured,
+                    'status': 'ok' if mistral_configured else 'missing_api_key'
                 },
                 'database': {
                     'configured': db_configured,
