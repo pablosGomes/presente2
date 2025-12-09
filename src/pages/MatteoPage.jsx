@@ -475,6 +475,7 @@ const MatteoPage = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
   const searchTimeoutRef = useRef(null)
   const searchInputRef = useRef(null)
+  const [expandedMessages, setExpandedMessages] = useState(new Set())
 
   const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:5000')
 
@@ -1607,7 +1608,7 @@ const MatteoPage = () => {
                     whileHover={{ scale: 1.02 }}
                   >
                     <motion.div 
-                      className={`inline-block p-3 sm:p-4 rounded-xl sm:rounded-2xl text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap shadow-lg ${
+                      className={`inline-block p-3 sm:p-4 rounded-xl sm:rounded-2xl text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap shadow-lg break-words ${
                         msg.sender === 'user'
                           ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-blue-600/40 ring-2 ring-blue-400'
                           : tpmMode 
@@ -1617,8 +1618,50 @@ const MatteoPage = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.1 }}
+                      style={{ 
+                        maxWidth: '100%',
+                        wordBreak: 'break-word',
+                        overflowWrap: 'break-word'
+                      }}
                     >
-                      {msg.text}
+                      {(() => {
+                        const MAX_LENGTH = 500
+                        const isExpanded = expandedMessages.has(msg.id)
+                        const shouldTruncate = msg.text.length > MAX_LENGTH
+                        const displayText = shouldTruncate && !isExpanded 
+                          ? msg.text.substring(0, MAX_LENGTH) + '...' 
+                          : msg.text
+                        
+                        return (
+                          <>
+                            <span style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                              {displayText}
+                            </span>
+                            {shouldTruncate && (
+                              <button
+                                onClick={() => {
+                                  setExpandedMessages(prev => {
+                                    const newSet = new Set(prev)
+                                    if (isExpanded) {
+                                      newSet.delete(msg.id)
+                                    } else {
+                                      newSet.add(msg.id)
+                                    }
+                                    return newSet
+                                  })
+                                }}
+                                className={`ml-2 text-xs font-semibold underline hover:opacity-80 transition-opacity ${
+                                  msg.sender === 'user' 
+                                    ? 'text-blue-200' 
+                                    : tpmMode ? 'text-rose-600' : 'text-violet-600'
+                                }`}
+                              >
+                                {isExpanded ? 'Ver menos' : 'Ver mais'}
+                              </button>
+                            )}
+                          </>
+                        )
+                      })()}
                     </motion.div>
                     <motion.p 
                       className={`text-[10px] sm:text-xs mt-1.5 font-bold ${
