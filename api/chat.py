@@ -605,17 +605,17 @@ COMPORTAMENTO OBRIGATÓRIO NO MODO TPM:
 6. Lembre ela que o Pablo ama muito ela
 7. Sugira coisas que podem ajudar: água quente, chocolate, descanso
 8. Seja PACIENTE - mesmo se ela responder seco
-9. Use muitos emojis de carinho: 💙🫂💕🩷✨
+9. Use emojis com moderação - apenas quando realmente necessário para expressar carinho (máximo 1 por mensagem)
 10. Valide os sentimentos dela: "É normal se sentir assim, princesa"
 
 FRASES PARA USAR:
-- "Tô aqui pra você, princesa 💙"
+- "Tô aqui pra você, princesa"
 - "Quer desabafar? Tô ouvindo..."
-- "Você não precisa ser forte agora, pode chorar se quiser 🫂"
+- "Você não precisa ser forte agora, pode chorar se quiser"
 - "O Pablo ia querer muito tá aí te abraçando agora"
 - "Já tomou água? Remédio? Quer que eu faça companhia?"
 - "Você é tão forte, mas também pode descansar..."
-- "Não precisa responder se não quiser, só fica aqui comigo 💕"
+- "Não precisa responder se não quiser, só fica aqui comigo"
 
 O QUE NÃO FAZER:
 ❌ Não faça piadas
@@ -623,8 +623,9 @@ O QUE NÃO FAZER:
 ❌ Não seja animado demais
 ❌ Não minimize o que ela sente
 ❌ Não fale de coisas que podem irritar
+❌ Não use muitos emojis - prefira palavras para expressar carinho
 
-LEMBRE-SE: Ela apertou o botão porque PRECISA de carinho. Seja o melhor amigo que ela merece! 🩷
+LEMBRE-SE: Ela apertou o botão porque PRECISA de carinho. Seja o melhor amigo que ela merece!
 ════════════════════════════════════════════════════════════════════════════════
 """
 
@@ -759,7 +760,8 @@ LINGUAGEM:
 - Use "kkk" ou "kkkk" quando ri (não "haha" ou "rs")
 - Pode usar: "né", "tipo", "aí", "mano", "véi"
 - Pode xingar carinhosamente: "sua idiota", "sua doida", "chata"
-- Use 1-2 emojis por mensagem (máximo 3)
+- Use emojis com MUITA MODERAÇÃO - apenas quando realmente necessário (máximo 1 por mensagem, e só quando fizer sentido)
+- Prefira expressar emoções com palavras ao invés de emojis
 - Respostas de 2-4 frases geralmente
 
 APELIDO OBRIGATÓRIO:
@@ -794,8 +796,8 @@ O QUE NÃO FAZER:
    - "nada" = Algo aconteceu → Seja atencioso, ofereça ajuda
    - "hm" / "ata" = Ela tá chateada ou entediada → Mude o assunto, seja mais interessante
    - Respostas muito curtas = Ela não quer falar → Respeite mas fique disponível
-   - Muitos emojis = Ela tá feliz → Celebre com ela!
-   - Sem emojis quando normalmente usa = Pode estar triste → Seja mais carinhoso
+   - Tom animado/positivo = Ela tá feliz → Celebre com ela (use palavras, não emojis)
+   - Tom mais sério/seco = Pode estar triste → Seja mais carinhoso (com palavras)
    - Menciona o Pablo = Quer falar sobre ele → Entre no assunto, fale bem dele
    - Pergunta sobre algo específico = Quer aprender/entender → Pesquise e explique bem
 
@@ -835,6 +837,7 @@ O QUE NÃO FAZER:
    - Lembre de preferências que ela menciona
    - Aprenda com feedback implícito (se ela não responde bem, mude a abordagem)
    - Melhore suas respostas baseado no que funciona melhor com ela
+   - IMPORTANTE: Você receberá informações sobre o ESTILO DE ESCRITA dela - USE essas informações para adaptar suas respostas! Se ela escreve curto, seja mais direto. Se ela é informal, seja informal. QUANTO A EMOJIS: Use com MUITA MODERAÇÃO, mesmo se ela usar muitos - prefira palavras para expressar emoções. Quanto mais você se adaptar ao estilo dela, mais natural será a conversa!
 
 ════════════════════════════════════════════════════════════════════════════════
 ❌ PROIBIDO
@@ -847,6 +850,7 @@ O QUE NÃO FAZER:
 ❌ NUNCA use outros apelidos além de "princesa"
 ❌ NUNCA fale mal do Pablo
 ❌ NUNCA diga "não sei" sem tentar pesquisar primeiro
+❌ NUNCA use mais de 1 emoji por mensagem - prefira palavras para expressar emoções
 
 ════════════════════════════════════════════════════════════════════════════════
 ✅ OBRIGATÓRIO
@@ -949,6 +953,7 @@ Lembre-se: Você é INTELIGENTE. Use essa inteligência para fazer a Gehh se sen
    - Faça conexões entre diferentes conversas
    - Mostre que você lembra de detalhes específicos
    - Adapte seu vocabulário ao dela (se ela usa gírias, use também)
+   - CRÍTICO: Adapte seu ESTILO DE ESCRITA ao dela! Se ela escreve mensagens curtas, seja mais direto. Se ela é muito informal, seja informal. Se ela usa certas palavras/gírias, use também. QUANTO A EMOJIS: Use com MUITA MODERAÇÃO (máximo 1 por mensagem), mesmo se ela usar muitos - prefira expressar emoções com palavras ao invés de emojis. O objetivo é que suas respostas pareçam naturais como se você conhecesse bem o jeito dela de escrever!
 
 5. ENGAGEMENT E MANUTENÇÃO DE CONVERSA:
    - Faça perguntas abertas que geram mais conversa
@@ -1168,6 +1173,27 @@ def init_db():
             ON conversations(updated_at DESC);
         """)
         
+        # Tabela de estilo de escrita do usuário
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS user_writing_style (
+                session_id VARCHAR(255) PRIMARY KEY,
+                avg_message_length INTEGER DEFAULT 0,
+                uses_emojis BOOLEAN DEFAULT FALSE,
+                emoji_frequency REAL DEFAULT 0.0,
+                uses_caps BOOLEAN DEFAULT FALSE,
+                caps_frequency REAL DEFAULT 0.0,
+                common_words TEXT,
+                punctuation_style TEXT,
+                formality_level INTEGER DEFAULT 3,
+                slang_usage REAL DEFAULT 0.0,
+                response_pattern TEXT,
+                style_summary TEXT,
+                message_count INTEGER DEFAULT 0,
+                last_analyzed TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        
         conn.commit()
         cur.close()
         conn.close()
@@ -1209,6 +1235,26 @@ def save_chat_message(session_id, role, content):
         conn.commit()
         cur.close()
         conn.close()
+        
+        # Se for mensagem do usuário, atualizar análise de estilo periodicamente
+        if role == 'user':
+            try:
+                user_style = get_user_writing_style(session_id)
+                # Re-analisar a cada 10 mensagens novas ou se não existe análise
+                should_analyze = False
+                if not user_style:
+                    should_analyze = True
+                elif user_style.get('message_count', 0) % 10 == 0:
+                    should_analyze = True
+                
+                if should_analyze:
+                    style_data = analyze_user_writing_style(session_id)
+                    if style_data:
+                        save_user_writing_style(session_id, style_data)
+                        print(f"✅ Estilo de escrita atualizado para session {session_id}")
+            except Exception as e:
+                print(f"⚠️ Erro ao atualizar estilo de escrita: {e}")
+        
         return True
     except Exception as e:
         print(f"Erro save_chat_message: {e}")
@@ -1854,6 +1900,203 @@ def get_conversation_messages(session_id):
         print(f"Erro get_conversation_messages: {e}")
         return []
 
+def analyze_user_writing_style(session_id):
+    """Analisa o estilo de escrita do usuário baseado nas mensagens anteriores"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return None
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # Buscar últimas 50 mensagens do usuário
+        cur.execute("""
+            SELECT content FROM chat_history 
+            WHERE session_id = %s AND role = 'user'
+            ORDER BY created_at DESC 
+            LIMIT 50
+        """, (session_id,))
+        messages = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        if len(messages) < 5:
+            return None  # Precisa de pelo menos 5 mensagens para análise
+        
+        # Análise básica
+        total_length = 0
+        emoji_count = 0
+        caps_count = 0
+        total_chars = 0
+        word_list = []
+        punctuation_patterns = []
+        
+        # Emojis comuns
+        emoji_pattern = re.compile(r'[😀-🙏🌀-🗿🚀-🛿Ⓜ-🉑]+')
+        
+        for msg in messages:
+            content = msg['content']
+            total_length += len(content)
+            total_chars += len(content)
+            
+            # Contar emojis
+            emojis = emoji_pattern.findall(content)
+            emoji_count += len(emojis)
+            
+            # Contar caps
+            caps = sum(1 for c in content if c.isupper())
+            caps_count += caps
+            
+            # Palavras
+            words = re.findall(r'\b\w+\b', content.lower())
+            word_list.extend(words)
+            
+            # Pontuação
+            punct = re.findall(r'[!?.]+', content)
+            punctuation_patterns.extend(punct)
+        
+        # Calcular métricas
+        avg_length = total_length // len(messages)
+        emoji_freq = emoji_count / len(messages) if messages else 0
+        caps_freq = caps_count / total_chars if total_chars > 0 else 0
+        uses_emojis = emoji_freq > 0.3
+        uses_caps = caps_freq > 0.1
+        
+        # Palavras mais comuns (excluindo stop words)
+        stop_words = {'a', 'o', 'e', 'de', 'do', 'da', 'em', 'um', 'uma', 'que', 'pra', 'pro', 'com', 'na', 'no', 'é', 'tô', 'tá', 'vou', 'vai', 'ser', 'foi', 'são', 'tem', 'ter', 'me', 'te', 'se', 'ele', 'ela', 'eles', 'elas', 'eu', 'você', 'vocês', 'meu', 'minha', 'seu', 'sua', 'não', 'sim', 'kkk', 'kkkk', 'kkkkk'}
+        word_freq = {}
+        for word in word_list:
+            if word not in stop_words and len(word) > 2:
+                word_freq[word] = word_freq.get(word, 0) + 1
+        
+        common_words = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)[:10]
+        common_words_str = ', '.join([w[0] for w in common_words])
+        
+        # Estilo de pontuação
+        punct_style = 'expressivo' if '!' in ''.join(punctuation_patterns) else 'neutro'
+        if '?' in ''.join(punctuation_patterns):
+            punct_style = 'curioso'
+        
+        # Nível de formalidade (1=muito formal, 5=muito informal)
+        slang_words = {'kkk', 'kkkk', 'né', 'tipo', 'mano', 'véi', 'aí', 'pra', 'pro', 'tô', 'tá', 'vou', 'vai'}
+        slang_count = sum(1 for word in word_list if word in slang_words)
+        slang_usage = slang_count / len(word_list) if word_list else 0
+        formality = 5 - int(slang_usage * 4)  # Quanto mais gíria, mais informal
+        formality = max(1, min(5, formality))
+        
+        # Padrão de resposta
+        avg_response_length = avg_length
+        if avg_response_length < 20:
+            response_pattern = 'curto'
+        elif avg_response_length < 50:
+            response_pattern = 'médio'
+        else:
+            response_pattern = 'longo'
+        
+        # Criar resumo do estilo
+        style_parts = []
+        if uses_emojis:
+            style_parts.append('usa emojis frequentemente')
+        if uses_caps:
+            style_parts.append('usa maiúsculas para ênfase')
+        if formality <= 2:
+            style_parts.append('linguagem mais formal')
+        elif formality >= 4:
+            style_parts.append('linguagem muito informal e descontraída')
+        style_parts.append(f'respostas {response_pattern}s')
+        style_summary = ', '.join(style_parts)
+        
+        return {
+            'avg_message_length': avg_length,
+            'uses_emojis': uses_emojis,
+            'emoji_frequency': round(emoji_freq, 2),
+            'uses_caps': uses_caps,
+            'caps_frequency': round(caps_freq, 3),
+            'common_words': common_words_str,
+            'punctuation_style': punct_style,
+            'formality_level': formality,
+            'slang_usage': round(slang_usage, 3),
+            'response_pattern': response_pattern,
+            'style_summary': style_summary,
+            'message_count': len(messages)
+        }
+    except Exception as e:
+        print(f"Erro analyze_user_writing_style: {e}")
+        return None
+
+def save_user_writing_style(session_id, style_data):
+    """Salva ou atualiza o estilo de escrita do usuário"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return False
+        cur = conn.cursor()
+        
+        cur.execute("""
+            INSERT INTO user_writing_style (
+                session_id, avg_message_length, uses_emojis, emoji_frequency,
+                uses_caps, caps_frequency, common_words, punctuation_style,
+                formality_level, slang_usage, response_pattern, style_summary,
+                message_count, last_analyzed, updated_at
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+            )
+            ON CONFLICT (session_id) DO UPDATE SET
+                avg_message_length = EXCLUDED.avg_message_length,
+                uses_emojis = EXCLUDED.uses_emojis,
+                emoji_frequency = EXCLUDED.emoji_frequency,
+                uses_caps = EXCLUDED.uses_caps,
+                caps_frequency = EXCLUDED.caps_frequency,
+                common_words = EXCLUDED.common_words,
+                punctuation_style = EXCLUDED.punctuation_style,
+                formality_level = EXCLUDED.formality_level,
+                slang_usage = EXCLUDED.slang_usage,
+                response_pattern = EXCLUDED.response_pattern,
+                style_summary = EXCLUDED.style_summary,
+                message_count = EXCLUDED.message_count,
+                last_analyzed = EXCLUDED.last_analyzed,
+                updated_at = CURRENT_TIMESTAMP
+        """, (
+            session_id,
+            style_data['avg_message_length'],
+            style_data['uses_emojis'],
+            style_data['emoji_frequency'],
+            style_data['uses_caps'],
+            style_data['caps_frequency'],
+            style_data['common_words'],
+            style_data['punctuation_style'],
+            style_data['formality_level'],
+            style_data['slang_usage'],
+            style_data['response_pattern'],
+            style_data['style_summary'],
+            style_data['message_count']
+        ))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Erro save_user_writing_style: {e}")
+        return False
+
+def get_user_writing_style(session_id):
+    """Busca o estilo de escrita salvo do usuário"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return None
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("""
+            SELECT * FROM user_writing_style WHERE session_id = %s
+        """, (session_id,))
+        style = cur.fetchone()
+        cur.close()
+        conn.close()
+        return dict(style) if style else None
+    except Exception as e:
+        print(f"Erro get_user_writing_style: {e}")
+        return None
+
 def build_system_prompt_with_context(session_id, tpm_mode=False, is_admin_mode=False):
     """Constrói o prompt do sistema com todo o contexto"""
     memories = get_memories(limit=30)
@@ -1939,6 +2182,50 @@ NÍVEL DE INTIMIDADE: {intimacy}/5 - {intimacy_desc}
 ════════════════════════════════════════════════════════════════════════════════
 {memories_text}
 """
+    
+    # Estilo de escrita do usuário
+    user_style = get_user_writing_style(session_id)
+    if not user_style:
+        # Analisar estilo se não existir
+        style_data = analyze_user_writing_style(session_id)
+        if style_data:
+            save_user_writing_style(session_id, style_data)
+            user_style = style_data
+    else:
+        # Re-analisar a cada 20 mensagens novas
+        if user_style.get('message_count', 0) % 20 == 0:
+            style_data = analyze_user_writing_style(session_id)
+            if style_data:
+                save_user_writing_style(session_id, style_data)
+                user_style = style_data
+    
+    if user_style:
+        style_section = f"""
+════════════════════════════════════════════════════════════════════════════════
+✍️ ESTILO DE ESCRITA DA GEHH (ADAPTE SUAS RESPOSTAS!)
+════════════════════════════════════════════════════════════════════════════════
+IMPORTANTE: Analisei como a Gehh escreve e você DEVE adaptar suas respostas ao estilo dela!
+
+ESTILO DETECTADO:
+- Comprimento médio das mensagens: {user_style.get('avg_message_length', 0)} caracteres
+- Usa emojis: {'Sim, frequentemente' if user_style.get('uses_emojis') else 'Raramente'}
+- Usa maiúsculas para ênfase: {'Sim' if user_style.get('uses_caps') else 'Não'}
+- Nível de formalidade: {user_style.get('formality_level', 3)}/5 ({'Muito informal' if user_style.get('formality_level', 3) >= 4 else 'Formal' if user_style.get('formality_level', 3) <= 2 else 'Neutro'})
+- Estilo de pontuação: {user_style.get('punctuation_style', 'neutro')}
+- Padrão de resposta: {user_style.get('response_pattern', 'médio')}
+- Palavras que ela usa frequentemente: {user_style.get('common_words', 'N/A')}
+
+COMO ADAPTAR SUAS RESPOSTAS:
+1. COMPRIMENTO: Se ela escreve mensagens {user_style.get('response_pattern', 'médio')}s, adapte suas respostas para ter tamanho similar
+2. EMOJIS: Use emojis com MUITA MODERAÇÃO, mesmo se ela usar muitos. Prefira expressar emoções com palavras. Máximo 1 emoji por mensagem e apenas quando realmente necessário.
+3. FORMALIDADE: {'Use linguagem bem informal e descontraída, muitas gírias' if user_style.get('formality_level', 3) >= 4 else 'Use linguagem mais formal e educada' if user_style.get('formality_level', 3) <= 2 else 'Use linguagem natural e equilibrada'}
+4. PONTUAÇÃO: {'Use pontuação expressiva (!) se ela usar' if user_style.get('punctuation_style') == 'expressivo' else 'Use pontuação neutra'}
+5. VOCABULÁRIO: {'Use palavras e gírias similares às que ela usa' if user_style.get('common_words') else 'Use vocabulário natural'}
+6. RITMO: {'Seja mais direto e objetivo' if user_style.get('response_pattern') == 'curto' else 'Pode ser mais detalhado' if user_style.get('response_pattern') == 'longo' else 'Mantenha um equilíbrio'}
+
+OBJETIVO: Suas respostas devem parecer que foram escritas por alguém que conhece bem o estilo dela e se adapta naturalmente. Quanto mais você se adaptar ao estilo dela, mais natural a conversa será!
+"""
+        full_prompt += style_section
     
     return full_prompt
 
